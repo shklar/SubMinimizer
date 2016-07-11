@@ -1,68 +1,121 @@
-﻿using System;
-using Microsoft.AspNet.Identity;
-using Microsoft.AspNet.Identity.Owin;
-using Microsoft.Owin;
+﻿using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
-using Microsoft.Owin.Security.Google;
+using Microsoft.Owin.Security.OpenIdConnect;
 using Owin;
-using CogsMinimizer.Models;
+using System;
+using System.Configuration;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using System.Web;
+using System.Web.Mvc;
+using Microsoft.Owin.Builder;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace CogsMinimizer
 {
     public partial class Startup
     {
-        // For more information on configuring authentication, please visit http://go.microsoft.com/fwlink/?LinkId=301864
+        private DataAccess db = new DataAccess();
         public void ConfigureAuth(IAppBuilder app)
         {
-            // Configure the db context, user manager and signin manager to use a single instance per request
-            app.CreatePerOwinContext(ApplicationDbContext.Create);
-            app.CreatePerOwinContext<ApplicationUserManager>(ApplicationUserManager.Create);
-            app.CreatePerOwinContext<ApplicationSignInManager>(ApplicationSignInManager.Create);
+            System.Web.Helpers.AntiForgeryConfig.UniqueClaimTypeIdentifier = ClaimTypes.NameIdentifier;
 
-            // Enable the application to use a cookie to store information for the signed in user
-            // and to use a cookie to temporarily store information about a user logging in with a third party login provider
-            // Configure the sign in cookie
-            app.UseCookieAuthentication(new CookieAuthenticationOptions
-            {
-                AuthenticationType = DefaultAuthenticationTypes.ApplicationCookie,
-                LoginPath = new PathString("/Account/Login"),
-                Provider = new CookieAuthenticationProvider
+            string ClientId = ConfigurationManager.AppSettings["ida:ClientID"];
+            string Password = ConfigurationManager.AppSettings["ida:Password"];
+            string Authority = string.Format(ConfigurationManager.AppSettings["ida:Authority"], "common");
+            string GraphAPIIdentifier = ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"];
+            string AzureResourceManagerIdentifier = ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"];
+
+            app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
+            app.UseCookieAuthentication(new CookieAuthenticationOptions { });
+            app.UseOpenIdConnectAuthentication(
+                new OpenIdConnectAuthenticationOptions
                 {
-                    // Enables the application to validate the security stamp when the user logs in.
-                    // This is a security feature which is used when you change a password or add an external login to your account.  
-                    OnValidateIdentity = SecurityStampValidator.OnValidateIdentity<ApplicationUserManager, ApplicationUser>(
-                        validateInterval: TimeSpan.FromMinutes(30),
-                        regenerateIdentity: (manager, user) => user.GenerateUserIdentityAsync(manager))
-                }
-            });            
-            app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
+                    ClientId = ClientId,
+                    Authority = Authority,
+                    TokenValidationParameters = new System.IdentityModel.Tokens.TokenValidationParameters
+                    {
+                        // we inject our own multitenant validation logic
+                        ValidateIssuer = false,
+                    },
+                    Notifications = new OpenIdConnectAuthenticationNotifications()
+                    {
+                        RedirectToIdentityProvider = (context) =>
+                        {
+                            // This ensures that the address used for sign in and sign out is picked up dynamically from the request
+                            // this allows you to deploy your app (to Azure Web Sites, for example) without having to change settings
+                            // Remember that the base URL of the address used here must be provisioned in Azure AD beforehand.
+                            //string appBaseUrl = context.Request.Scheme + "://" + context.Request.Host + context.Request.PathBase;
 
-            // Enables the application to temporarily store user information when they are verifying the second factor in the two-factor authentication process.
-            app.UseTwoFactorSignInCookie(DefaultAuthenticationTypes.TwoFactorCookie, TimeSpan.FromMinutes(5));
+                            object obj = null;
+                            if (context.OwinContext.Environment.TryGetValue("Authority", out obj))
+                            {
+                                string authority = obj as string;
+                                if (authority != null)
+                                {
+                                    context.ProtocolMessage.IssuerAddress = authority;
+                                }
+                            }
+                            if (context.OwinContext.Environment.TryGetValue("DomainHint", out obj))
+                            {
+                                string domainHint = obj as string;
+                                if (domainHint != null)
+                                {
+                                    context.ProtocolMessage.SetParameter("domain_hint", domainHint);
+                                }
+                            }
+                            context.ProtocolMessage.RedirectUri = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path);
+                            context.ProtocolMessage.PostLogoutRedirectUri = new UrlHelper(HttpContext.Current.Request.RequestContext).Action
+                                ("Index", "Home", null, HttpContext.Current.Request.Url.Scheme);
+                            //context.ProtocolMessage.Resource = GraphAPIIdentifier;
+                            context.ProtocolMessage.Resource = AzureResourceManagerIdentifier;
+                            return Task.FromResult(0);
+                        },
+                        AuthorizationCodeReceived = (context) =>
+                        {
+                            ClientCredential credential = new ClientCredential(ClientId, Password);
+                            string tenantID = context.AuthenticationTicket.Identity.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid").Value;
+                            string signedInUserUniqueName = context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.Name).Value.Split('#')[context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.Name).Value.Split('#').Length - 1];
 
-            // Enables the application to remember the second login verification factor such as phone or email.
-            // Once you check this option, your second step of verification during the login process will be remembered on the device where you logged in from.
-            // This is similar to the RememberMe option when you log in.
-            app.UseTwoFactorRememberBrowserCookie(DefaultAuthenticationTypes.TwoFactorRememberBrowserCookie);
+                            var tokenCache = new ADALTokenCache(signedInUserUniqueName);
+                            tokenCache.Clear();
 
-            // Uncomment the following lines to enable logging in with third party login providers
-            //app.UseMicrosoftAccountAuthentication(
-            //    clientId: "",
-            //    clientSecret: "");
+                            AuthenticationContext authContext = new AuthenticationContext(string.Format("https://login.windows.net/{0}", tenantID), tokenCache);
 
-            //app.UseTwitterAuthentication(
-            //   consumerKey: "",
-            //   consumerSecret: "");
+                            //var items = authContext.TokenCache.ReadItems().ToList();
 
-            //app.UseFacebookAuthentication(
-            //   appId: "",
-            //   appSecret: "");
+                            AuthenticationResult result1 = authContext.AcquireTokenByAuthorizationCode(
+                                context.Code, new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)), credential);
 
-            //app.UseGoogleAuthentication(new GoogleOAuth2AuthenticationOptions()
-            //{
-            //    ClientId = "",
-            //    ClientSecret = ""
-            //});
+                            //items = authContext.TokenCache.ReadItems().ToList();
+
+                            //AuthenticationResult result2 = authContext.AcquireTokenSilent(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"], credential,
+                            //    new UserIdentifier(signedInUserUniqueName, UserIdentifierType.RequiredDisplayableId));
+
+                            //items = authContext.TokenCache.ReadItems().ToList();
+
+                            return Task.FromResult(0);
+                        },
+                        // we use this notification for injecting our custom logic
+                        SecurityTokenValidated = (context) =>
+                        {
+                            // retriever caller data from the incoming principal
+                            string issuer = context.AuthenticationTicket.Identity.FindFirst("iss").Value;
+                            if (!issuer.StartsWith("https://sts.windows.net/"))
+                                // the caller is not from a trusted issuer - throw to block the authentication flow
+                                throw new System.IdentityModel.Tokens.SecurityTokenValidationException();
+
+                            return Task.FromResult(0);
+                        },
+                        //AuthenticationFailed = (context) =>
+                        //{
+                        //    context.OwinContext.Response.Redirect(new UrlHelper(HttpContext.Current.Request.RequestContext).
+                        //        Action("Index", "Home", null, HttpContext.Current.Request.Url.Scheme));
+                        //    context.HandleResponse(); // Suppress the exception
+                        //    return Task.FromResult(0);
+                        //}
+                    }
+                });
         }
     }
 }
