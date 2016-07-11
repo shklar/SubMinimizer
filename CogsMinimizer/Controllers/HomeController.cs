@@ -22,7 +22,7 @@ namespace CogsMinimizer.Controllers
 
         public ActionResult Contact()
         {
-            ViewBag.Message = "Your contact page.";
+            ViewBag.Message = "This is a personal project. Please contact me for any questions.";
 
             return View();
         }
