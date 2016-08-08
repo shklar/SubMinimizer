@@ -27,7 +27,7 @@
                     <h4>Azure Subscription</h4>
                 </td>
                 <td>
-                    <h4>Monitored by CloudSense?</h4>
+                    <h4>Availability</h4>
                 </td>
             </tr>
             @foreach (KeyValuePair<string, CogsMinimizer.Models.Subscription> entry in Model.UserSubscriptions)
@@ -38,8 +38,10 @@
                         @subscription.DisplayName
                         <br />
                         &nbsp;&nbsp;<small>Subscription Id: @subscription.Id</small>
+                       <!--
                         <br />
                         &nbsp;&nbsp;<small>Organization Id: @subscription.OrganizationId</small>
+                       -->
                     </td>
                     <td>
                         @if (subscription.IsConnected)
@@ -62,7 +64,7 @@
                             if (@subscription.AzureAccessNeedsToBeRepaired)
                             {
                                 <br />
-                                <small>&nbsp;&nbsp; Access in Azure needs to be repaired: </small>
+                                <small>&nbsp;&nbsp; Azure access needs to be repaired: </small>
                                 @Html.ActionLink("Repair", "RepairAccess", "Subscription", new
                            {
                                Id = @subscription.Id,
@@ -74,10 +76,9 @@
                         }
                         else
                         {
-                            <text>No. </text>
                             if (Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))
                             {
-                                @Html.ActionLink("Connect", "Connect", "Subscription", new
+                                @Html.ActionLink("Analyze", "Analyze", "Subscription", new
                            {
                                Id = @subscription.Id,
                                OrganizationId = @subscription.OrganizationId,
@@ -88,7 +89,7 @@
                         }
                         @if (!Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))
                         {
-                            <text>(You can't manage access for this subscription.)</text>
+                            <text>(You do not have the required access for this subscription.)</text>
                         }
                     </td>
                 </tr>
