@@ -9,6 +9,11 @@ namespace CogsMinimizer.Models
     public class Resource    
     {
         /// <summary>
+        /// Resource ID
+        /// </summary>
+        public string Id { get; set; }
+
+        /// <summary>
         /// Azure name of the resource
         /// </summary>
         public string Name { get; set; }
@@ -21,17 +26,17 @@ namespace CogsMinimizer.Models
         /// <summary>
         /// The name of the resource owner 
         /// </summary>
-        public string Owner { get; private set; }
-        
-        /// <summary>
-        /// Indicates whether this resource is actually legitimate and should be kep
-        /// </summary>
-        public bool Required { get; set; }
-
+        public string Owner { get; set; }
+       
         /// <summary>
         /// The resource Group to which this resource belongs
         /// </summary>
         public string ResourceGroup { get; set; }
+
+        /// <summary>
+        /// The first date when the resource was encountered
+        /// </summary>
+        public DateTime FirstFound { get; set; }
 
     }
 }

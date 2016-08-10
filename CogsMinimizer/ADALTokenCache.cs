@@ -37,6 +37,7 @@ namespace CogsMinimizer
 
             // look up the entry in the DB
             Cache = db.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+
             // place the entry in memory
             this.Deserialize((Cache == null) ? null : Cache.cacheBits);
         }
@@ -85,6 +86,7 @@ namespace CogsMinimizer
             {
                 // check for an existing entry
                 Cache = db.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+                Cache = null;
                 if (Cache == null)
                 {
                     // if no existing entry for that user, create a new one
