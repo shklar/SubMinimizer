@@ -1,6 +1,7 @@
 ﻿using CogsMinimizer.Models;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity.Migrations;
 using System.Linq;
 using System.Security.Claims;
 using System.Web;
@@ -52,12 +53,14 @@ namespace CogsMinimizer.Controllers
                             model.UserSubscriptions.Add(subscription.Id, subscription);
                             if (AzureResourceManagerUtil.UserCanManageAccessForSubscription(subscription.Id, org.Id))
                                 model.UserCanManageAccessForSubscriptions.Add(subscription.Id);
+                            db.Subscriptions.AddOrUpdate(subscription);
                         }
                     }
                     else
                         model.DisconnectedUserOrganizations.Add(org.Id);
                 }
             }
+            db.SaveChanges();
             return View(model);
         }
 

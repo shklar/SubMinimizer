@@ -11,11 +11,12 @@ namespace CogsMinimizer.Models
         public string Id { get; set; }
         [NotMapped]
         public string DisplayName { get; set; }
-        [NotMapped]
         public string OrganizationId { get; set; }
         [NotMapped]
         public bool IsConnected { get; set; }
+        [NotMapped]
         public DateTime ConnectedOn { get; set; }
+        [NotMapped]
         public string ConnectedBy { get; set; }
         [NotMapped]
         public bool AzureAccessNeedsToBeRepaired { get; set; }

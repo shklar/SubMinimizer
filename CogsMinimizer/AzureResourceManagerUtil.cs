@@ -9,12 +9,15 @@ using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Web.Helpers;
+using Microsoft.Azure;
 using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Azure.Management.ResourceManager.Models;
 using Microsoft.Azure.Management.Authorization;
 using Microsoft.Azure.Management.Authorization.Models;
+using Microsoft.Azure.Management.Resources;
 using Microsoft.Rest;
 using Microsoft.Rest.Azure;
+using ResourceManagementClient = Microsoft.Azure.Management.ResourceManager.ResourceManagementClient;
 using Subscription = CogsMinimizer.Models.Subscription;
 
 namespace CogsMinimizer
@@ -25,7 +28,8 @@ namespace CogsMinimizer
         {
             List<Organization> organizations = new List<Organization>();
 
-            string tenantId = ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid").Value;
+            string tenantId =
+                ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid").Value;
             var signedInUserUniqueName = GetSignedInUserUniqueName();
 
             try
@@ -35,14 +39,18 @@ namespace CogsMinimizer
                     ConfigurationManager.AppSettings["ida:Password"]);
                 // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
                 AuthenticationContext authContext = new AuthenticationContext(
-                    string.Format(ConfigurationManager.AppSettings["ida:Authority"], tenantId), new ADALTokenCache(signedInUserUniqueName));
-                AuthenticationResult result = authContext.AcquireTokenSilent(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"], credential,
-                    new UserIdentifier(signedInUserUniqueName, UserIdentifierType.RequiredDisplayableId));
+                    string.Format(ConfigurationManager.AppSettings["ida:Authority"], tenantId),
+                    new ADALTokenCache(signedInUserUniqueName));
+                AuthenticationResult result =
+                    authContext.AcquireTokenSilent(
+                        ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"], credential,
+                        new UserIdentifier(signedInUserUniqueName, UserIdentifierType.RequiredDisplayableId));
 
 
 
                 // Get a list of Organizations of which the user is a member            
-                string requestUrl = string.Format("{0}/tenants?api-version={1}", ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"],
+                string requestUrl = string.Format("{0}/tenants?api-version={1}",
+                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"],
                     ConfigurationManager.AppSettings["ida:AzureResourceManagerAPIVersion"]);
 
                 // Make the GET request
@@ -68,13 +76,17 @@ namespace CogsMinimizer
                             Id = organization.tenantId,
                             //DisplayName = AzureADGraphAPIUtil.GetOrganizationDisplayName(organization.tenantId),
                             objectIdOfCloudSenseServicePrincipal =
-                                AzureADGraphAPIUtil.GetObjectIdOfServicePrincipalInOrganization(organization.tenantId, ConfigurationManager.AppSettings["ida:ClientID"])
+                                AzureADGraphAPIUtil.GetObjectIdOfServicePrincipalInOrganization(organization.tenantId,
+                                    ConfigurationManager.AppSettings["ida:ClientID"])
                         });
                 }
             }
-            catch { }
+            catch
+            {
+            }
             return organizations;
         }
+
         public static List<Subscription> GetUserSubscriptions(string organizationId)
         {
             List<Subscription> subscriptions = null;
@@ -87,7 +99,8 @@ namespace CogsMinimizer
                 subscriptions = new List<Subscription>();
 
                 // Get subscriptions to which the user has some kind of access
-                string requestUrl = string.Format("{0}/subscriptions?api-version={1}", ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"],
+                string requestUrl = string.Format("{0}/subscriptions?api-version={1}",
+                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"],
                     ConfigurationManager.AppSettings["ida:AzureResourceManagerAPIVersion"]);
 
                 // Make the GET request
@@ -112,14 +125,18 @@ namespace CogsMinimizer
                         {
                             Id = subscription.subscriptionId,
                             DisplayName = subscription.displayName,
-                            OrganizationId = organizationId
+                            OrganizationId = organizationId,
+
                         });
                 }
             }
-            catch { }
+            catch
+            {
+            }
 
             return subscriptions;
         }
+
         public static bool UserCanManageAccessForSubscription(string subscriptionId, string organizationId)
         {
             bool ret = false;
@@ -130,8 +147,10 @@ namespace CogsMinimizer
 
 
                 // Get permissions of the user on the subscription
-                string requestUrl = string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
-                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId, ConfigurationManager.AppSettings["ida:ARMAuthorizationPermissionsAPIVersion"]);
+                string requestUrl =
+                    string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
+                        ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
+                        ConfigurationManager.AppSettings["ida:ARMAuthorizationPermissionsAPIVersion"]);
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -156,7 +175,8 @@ namespace CogsMinimizer
                         foreach (string action in permissions.actions)
                         {
                             var actionPattern = "^" + Regex.Escape(action.ToLower()).Replace("\\*", ".*") + "$";
-                            permissionMatch = Regex.IsMatch("microsoft.authorization/roleassignments/write", actionPattern);
+                            permissionMatch = Regex.IsMatch("microsoft.authorization/roleassignments/write",
+                                actionPattern);
                             if (permissionMatch) break;
                         }
                         // if one of the actions match, check that the NotActions don't
@@ -164,7 +184,8 @@ namespace CogsMinimizer
                         {
                             foreach (string notAction in permissions.notActions)
                             {
-                                var notActionPattern = "^" + Regex.Escape(notAction.ToLower()).Replace("\\*", ".*") + "$";
+                                var notActionPattern = "^" + Regex.Escape(notAction.ToLower()).Replace("\\*", ".*") +
+                                                       "$";
                                 if (Regex.IsMatch("microsoft.authorization/roleassignments/write", notActionPattern))
                                     permissionMatch = false;
                                 if (!permissionMatch) break;
@@ -178,7 +199,9 @@ namespace CogsMinimizer
                     }
                 }
             }
-            catch { }
+            catch
+            {
+            }
 
             return ret;
         }
@@ -220,13 +243,19 @@ namespace CogsMinimizer
                 ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
                     ConfigurationManager.AppSettings["ida:Password"]);
                 // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
-                AuthenticationContext authContext = new AuthenticationContext(string.Format(ConfigurationManager.AppSettings["ida:Authority"], organizationId));
-                AuthenticationResult result = authContext.AcquireToken(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"], credential);
+                AuthenticationContext authContext =
+                    new AuthenticationContext(string.Format(ConfigurationManager.AppSettings["ida:Authority"],
+                        organizationId));
+                AuthenticationResult result =
+                    authContext.AcquireToken(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"],
+                        credential);
 
 
                 // Get permissions of the app on the subscription
-                string requestUrl = string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
-                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId, ConfigurationManager.AppSettings["ida:ARMAuthorizationPermissionsAPIVersion"]);
+                string requestUrl =
+                    string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
+                        ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
+                        ConfigurationManager.AppSettings["ida:ARMAuthorizationPermissionsAPIVersion"]);
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -249,7 +278,8 @@ namespace CogsMinimizer
                     {
                         bool permissionMatch = false;
                         foreach (string action in permissions.actions)
-                            if (action.Equals("*/read", StringComparison.CurrentCultureIgnoreCase) || action.Equals("*", StringComparison.CurrentCultureIgnoreCase))
+                            if (action.Equals("*/read", StringComparison.CurrentCultureIgnoreCase) ||
+                                action.Equals("*", StringComparison.CurrentCultureIgnoreCase))
                             {
                                 permissionMatch = true;
                                 break;
@@ -258,7 +288,8 @@ namespace CogsMinimizer
                         if (permissionMatch)
                         {
                             foreach (string notAction in permissions.notActions)
-                                if (notAction.Equals("*", StringComparison.CurrentCultureIgnoreCase) || notAction.EndsWith("/read", StringComparison.CurrentCultureIgnoreCase))
+                                if (notAction.Equals("*", StringComparison.CurrentCultureIgnoreCase) ||
+                                    notAction.EndsWith("/read", StringComparison.CurrentCultureIgnoreCase))
                                 {
                                     permissionMatch = false;
                                     break;
@@ -272,11 +303,15 @@ namespace CogsMinimizer
                     }
                 }
             }
-            catch { }
+            catch
+            {
+            }
 
             return ret;
         }
-        public static void GrantRoleToServicePrincipalOnSubscription(string objectId, string subscriptionId, string organizationId)
+
+        public static void GrantRoleToServicePrincipalOnSubscription(string objectId, string subscriptionId,
+            string organizationId)
         {
 
             try
@@ -285,33 +320,46 @@ namespace CogsMinimizer
 
                 // Create role assignment for application on the subscription
                 string roleAssignmentId = Guid.NewGuid().ToString();
-                string roleDefinitionId = GetRoleId(ConfigurationManager.AppSettings["ida:RequiredARMRoleOnSubscription"], subscriptionId, organizationId);
+                string roleDefinitionId =
+                    GetRoleId(ConfigurationManager.AppSettings["ida:RequiredARMRoleOnSubscription"], subscriptionId,
+                        organizationId);
 
-                string requestUrl = string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/roleassignments/{2}?api-version={3}",
-                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId, roleAssignmentId,
-                    ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleAssignmentsAPIVersion"]);
+                string requestUrl =
+                    string.Format(
+                        "{0}/subscriptions/{1}/providers/microsoft.authorization/roleassignments/{2}?api-version={3}",
+                        ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
+                        roleAssignmentId,
+                        ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleAssignmentsAPIVersion"]);
 
                 HttpClient client = new HttpClient();
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, requestUrl);
                 request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
-                StringContent content = new StringContent("{\"properties\": {\"roleDefinitionId\":\"" + roleDefinitionId + "\",\"principalId\":\"" + objectId + "\"}}");
+                StringContent content =
+                    new StringContent("{\"properties\": {\"roleDefinitionId\":\"" + roleDefinitionId +
+                                      "\",\"principalId\":\"" + objectId + "\"}}");
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 request.Content = content;
                 HttpResponseMessage response = client.SendAsync(request).Result;
             }
-            catch { }
+            catch
+            {
+            }
         }
-        public static void RevokeRoleFromServicePrincipalOnSubscription(string objectId, string subscriptionId, string organizationId)
+
+        public static void RevokeRoleFromServicePrincipalOnSubscription(string objectId, string subscriptionId,
+            string organizationId)
         {
-      
+
             try
             {
                 AuthenticationResult result = AcquireUserToken(organizationId);
 
                 // Get rolesAssignments to application on the subscription
-                string requestUrl = string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/roleassignments?api-version={2}&$filter=principalId eq '{3}'",
-                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
-                    ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleAssignmentsAPIVersion"], objectId);
+                string requestUrl =
+                    string.Format(
+                        "{0}/subscriptions/{1}/providers/microsoft.authorization/roleassignments?api-version={2}&$filter=principalId eq '{3}'",
+                        ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
+                        ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleAssignmentsAPIVersion"], objectId);
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -341,8 +389,11 @@ namespace CogsMinimizer
                     }
                 }
             }
-            catch { }
+            catch
+            {
+            }
         }
+
         public static string GetRoleId(string roleName, string subscriptionId, string organizationId)
         {
             string roleId = null;
@@ -352,9 +403,11 @@ namespace CogsMinimizer
                 AuthenticationResult result = AcquireUserToken(organizationId);
 
                 // Get subscriptions to which the user has some kind of access
-                string requestUrl = string.Format("{0}/subscriptions/{1}/providers/Microsoft.Authorization/roleDefinitions?api-version={2}",
-                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
-                    ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleDefinitionsAPIVersion"]);
+                string requestUrl =
+                    string.Format(
+                        "{0}/subscriptions/{1}/providers/Microsoft.Authorization/roleDefinitions?api-version={2}",
+                        ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
+                        ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleDefinitionsAPIVersion"]);
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -376,14 +429,17 @@ namespace CogsMinimizer
                     var roleDefinitionsResult = (Json.Decode(responseContent)).value;
 
                     foreach (var roleDefinition in roleDefinitionsResult)
-                        if ((roleDefinition.properties.roleName as string).Equals(roleName, StringComparison.CurrentCultureIgnoreCase))
+                        if ((roleDefinition.properties.roleName as string).Equals(roleName,
+                            StringComparison.CurrentCultureIgnoreCase))
                         {
                             roleId = roleDefinition.id;
                             break;
                         }
                 }
             }
-            catch { }
+            catch
+            {
+            }
 
             return roleId;
         }
@@ -391,12 +447,13 @@ namespace CogsMinimizer
         public static IEnumerable<GenericResource> GetResourceList(string subscriptionId, string organizationId)
         {
             var resourceClient = GetResourceManagementClient(subscriptionId, organizationId);
-            var resourceList = resourceClient.Resources.List();
+            var resourceList = ResourcesOperationsExtensions.List(resourceClient.Resources);
             return resourceList;
 
         }
 
-        public static IEnumerable<GenericResource> GetResourceList(string subscriptionId, string organizationId, string groupName)
+        public static IEnumerable<GenericResource> GetResourceList(string subscriptionId, string organizationId,
+            string groupName)
         {
             var resourceClient = GetResourceManagementClient(subscriptionId, organizationId);
             var resourceList = resourceClient.ResourceGroups.ListResources(groupName);
@@ -409,19 +466,23 @@ namespace CogsMinimizer
         {
             var resourceClient = GetResourceManagementClient(subscriptionId, organizationId);
 
-            var resourceGroupsList = resourceClient.ResourceGroups.List();
-            
+            var resourceGroupsList = ResourceGroupsOperationsExtensions.List(resourceClient.ResourceGroups);
+
             return resourceGroupsList;
 
         }
 
-        public static IEnumerable<ClassicAdministrator> GetSubscriptionAdmins(string subscriptionId, string organizationId)
+        public static IEnumerable<ClassicAdministrator> GetSubscriptionAdmins(string subscriptionId,
+            string organizationId)
         {
             var authClient = GetAuthorizationManagementClient(subscriptionId, organizationId);
             var admins = authClient.ClassicAdministrators.List("2015-06-01");
             return admins;
 
         }
+
+        #region Management Clients
+
 
         private static ResourceManagementClient GetResourceManagementClient(string subscriptionId, string organizationId)
         {
@@ -432,13 +493,61 @@ namespace CogsMinimizer
             return resourceClient;
         }
 
-        private static AuthorizationManagementClient GetAuthorizationManagementClient(string subscriptionId, string organizationId)
+        //private static Microsoft.Azure.Management.Resources.ResourceManagementClient GetOldResourceManagementClient(
+        //    string subscriptionId, string organizationId)
+        //{
+        //    AuthenticationResult result = AcquireUserToken(organizationId);
+
+        //    var credentials = new TokenCredentials(result.AccessToken);
+
+        //    var resourceClient = new Microsoft.Azure.Management.Resources.ResourceManagementClient() 
+        //    return resourceClient;
+        //}
+
+        private static AuthorizationManagementClient GetAuthorizationManagementClient(string subscriptionId,
+            string organizationId)
         {
             AuthenticationResult result = AcquireUserToken(organizationId);
 
             var credentials = new TokenCredentials(result.AccessToken);
-            var authorizationManagementClient = new AuthorizationManagementClient(credentials) { SubscriptionId = subscriptionId };
+            var authorizationManagementClient = new AuthorizationManagementClient(credentials)
+            {
+                SubscriptionId = subscriptionId
+            };
             return authorizationManagementClient;
+        }
+
+        #endregion
+
+        public static void DeleteResource(string subscriptionId, string organizationId, string resourceGroupName,
+            string azureresourceid)
+        {
+            var resourceClient = GetResourceManagementClient(subscriptionId, organizationId);
+            //var oldclient = new Microsoft.Azure.Management.Resources.ResourceManagementClient();
+
+
+
+            var groupResources = resourceClient.ResourceGroups.ListResources(resourceGroupName);
+            var foundResource = groupResources.FirstOrDefault(x => x.Id.Equals(azureresourceid));
+            if (foundResource != null)
+            {
+                var resourceNameSpace = foundResource.Type.Split('/')[0];
+                var resourceType = foundResource.Type.Split('/')[1];
+
+                try
+                {
+                    resourceClient.Resources.Delete(resourceGroupName, resourceNameSpace, "", resourceType,
+                        foundResource.Name, "2014-04-01");
+                }
+                catch (Exception)
+                {
+
+                    throw;
+                }
+            }
+
+            return;
+
         }
     }
 }

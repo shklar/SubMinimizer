@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity.Migrations.Model;
+using System.Data.Entity.ModelConfiguration.Conventions;
 using System.Linq;
 using System.Web;
 
@@ -11,6 +14,8 @@ namespace CogsMinimizer.Models
         /// <summary>
         /// Resource ID
         /// </summary>
+
+        
         public string Id { get; set; }
 
         /// <summary>
@@ -36,7 +41,25 @@ namespace CogsMinimizer.Models
         /// <summary>
         /// The first date when the resource was encountered
         /// </summary>
-        public DateTime FirstFound { get; set; }
+        [DataType(DataType.Date)]
+        [Display(Name = "FirstFound")]
+        public DateTime FirstFoundDate { get; set; }
+       
+        /// <summary>
+        /// The Azure Resource ID
+        /// </summary>
+        public string AzureResourceIdentifier { get; set; }
+
+        /// <summary>
+        /// Indicates whether this resource has outlived the configured threshold
+        /// </summary>
+        [NotMapped]
+        public bool Expired { get; set; }
+
+        /// <summary>
+        /// The subscription id of the resource
+        /// </summary>
+        public string SubscriptionId { get; set; }
 
     }
 }

@@ -1,14 +1,12 @@
-﻿@model IEnumerable<CogsMinimizer.Models.Resource>
+﻿@using System.Runtime.InteropServices.ComTypes
+@model IEnumerable<CogsMinimizer.Models.Resource>
 
 @{
     ViewBag.Title = "Analyze";
 }
 
-<h2>Analyze</h2>
+<h2>Subscription Resources</h2>
 
-<p>
-    @Html.ActionLink("Create New", "Create")
-</p>
 <table class="table">
     <tr>
         <th>
@@ -24,34 +22,35 @@
             @Html.DisplayNameFor(model => model.Owner)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.FirstFound)
+            @Html.DisplayNameFor(model => model.FirstFoundDate)
         </th>
         <th></th>
     </tr>
 
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.Name)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Type)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.ResourceGroup)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Owner)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.FirstFound)
-        </td>
-        <td>
-            @Html.ActionLink("Edit", "Edit", new { /* id=item.PrimaryKey */ }) |
-            @Html.ActionLink("Details", "Details", new { /* id=item.PrimaryKey */ }) |
-            @Html.ActionLink("Delete", "Delete", new { /* id=item.PrimaryKey */ })
-        </td>
-    </tr>
-}
+@foreach (var item in Model)
+{
+    string rowClass = item.Expired ? "alert alert - warning" : null;
+    <tr class="@rowClass">
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Type)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ResourceGroup)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Owner)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FirstFoundDate)
+            </td>
+            <td>
+                @Html.ActionLink("Reclaim", "Reclaim", new { Id = item.Id}, new { @class = "btn btn-info btn-xs" }) |
+                @Html.ActionLink("Delete", "Delete", new {SubscriptionId = item.SubscriptionId, AzureResourceId = item.AzureResourceIdentifier, }, new { @class = "btn btn-danger btn-xs"})
+            </td >
+        </tr>
+    }
 
 </table>

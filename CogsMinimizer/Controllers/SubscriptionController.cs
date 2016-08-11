@@ -22,7 +22,7 @@ namespace CogsMinimizer.Controllers
 
             var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(subscription.Id, subscription.OrganizationId);
 
-            var selectedResourceGroups = resourceGroups.Take(1);
+            var selectedResourceGroups = resourceGroups;
 
             using (var db = new DataAccess())
             {
@@ -36,19 +36,27 @@ namespace CogsMinimizer.Controllers
                     foreach (var genericResource in resourceList)
                     {
                         var owner = findOwner(genericResource.Name, adminAliases);
-                        var oldEntry = db.Resources.FirstOrDefault(x => x.Id.Equals(subscription.Id + "_" + group.Name + "_" + genericResource.Name));
-                        DateTime firstEncountered = oldEntry == null ? DateTime.UtcNow.Date : oldEntry.FirstFound ;
-                        
+                        var oldEntry = db.Resources.FirstOrDefault(x => x.AzureResourceIdentifier.Equals(genericResource.Id));
 
-                        var resource = new Resource
+                       var resource = oldEntry;
+
+                        if (oldEntry==null)
                         {
-                            Id = subscription.Id +"_" + group.Name+"_"+genericResource.Name,
-                            Name = genericResource.Name,
-                            Type = genericResource.Type,
-                            ResourceGroup = group.Name,
-                            FirstFound = firstEncountered,
-                            Owner = owner
-                        };
+                            resource = new Resource
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                AzureResourceIdentifier = genericResource.Id,
+                                Name = genericResource.Name,
+                                Type = genericResource.Type,
+                                ResourceGroup = group.Name,
+                                FirstFoundDate = DateTime.UtcNow.Date,
+                                Owner = owner,
+                                Expired = false,
+                                SubscriptionId = subscription.Id
+                            };
+                           
+                        }
+                        resource.Expired = DateTime.UtcNow.Date.Subtract(resource.FirstFoundDate).Days > 7;
                         model.Add(resource);
                         db.Resources.AddOrUpdate(resource);
                     }
@@ -62,7 +70,8 @@ namespace CogsMinimizer.Controllers
                     //Do nothing
                 }
             }
-            return View(model);
+            
+            return View(model.OrderBy(x=>x.FirstFoundDate));
         }
 
         private IEnumerable<string> GetAliases(IEnumerable<ClassicAdministrator> admins)
@@ -77,5 +86,20 @@ namespace CogsMinimizer.Controllers
             var owner = aliases.FirstOrDefault(resourceName.Contains);
             return owner;
         }
+
+        public ActionResult Delete(string subscriptionId, string AzureResourceId)
+        {
+            using (var db = new DataAccess())
+            {
+                var resource = db.Resources.FirstOrDefault(x => x.AzureResourceIdentifier.Equals(AzureResourceId));
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
+                if (subscription != null && resource != null)
+                {
+                    AzureResourceManagerUtil.DeleteResource(subscriptionId, subscription.OrganizationId, resource.ResourceGroup, resource.AzureResourceIdentifier);
+                }
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
     }
 }
