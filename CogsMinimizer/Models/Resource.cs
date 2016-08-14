@@ -44,6 +44,13 @@ namespace CogsMinimizer.Models
         [DataType(DataType.Date)]
         [Display(Name = "FirstFound")]
         public DateTime FirstFoundDate { get; set; }
+
+        /// <summary>
+        /// The date on which this resource would expire
+        /// </summary>
+        [DataType(DataType.Date)]
+        [Display(Name = "Expiration")]
+        public DateTime ExpirationDate { get; set; }
        
         /// <summary>
         /// The Azure Resource ID

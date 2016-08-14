@@ -8,6 +8,11 @@
 <h4>Subscription name: @Model.SubscriptionData.DisplayName</h4>
 <h4>Subscription id: @Model.SubscriptionData.Id</h4>
 
+@Html.ActionLink("Delete Expired", "DeleteExpired",
+                           new { SubscriptionId = Model.SubscriptionData.Id},
+                           new { @class = "btn btn-danger" })
+<br/>
+
 <table class="table">
     <tr>
         <th>
@@ -24,6 +29,9 @@
         </th>
         <th>
             @Html.DisplayNameFor(model => model.Resources.First().FirstFoundDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Resources.First().ExpirationDate)
         </th>
         <th>
             Actions
@@ -50,7 +58,13 @@
                 @Html.DisplayFor(modelItem => item.FirstFoundDate)
             </td>
             <td>
-                @Html.ActionLink("Reclaim", "Reclaim", new { Id = item.Id }, new { @class = "btn btn-info btn-xs" }) | 
+                @Html.DisplayFor(modelItem => item.ExpirationDate)
+            </td>
+            <td>
+                @Html.ActionLink("Extend", "Extend",
+                    new {subscriptionId = item.SubscriptionId, resourceId = item.Id},
+                    new {@class = "btn btn-info btn-xs"}) |
+
                 @Html.ActionLink("Delete", "Delete",
                            new { SubscriptionId = item.SubscriptionId, AzureResourceId = item.AzureResourceIdentifier, },
                            new { @class = "btn btn-danger btn-xs" })

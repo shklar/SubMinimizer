@@ -225,7 +225,7 @@ namespace CogsMinimizer
             return result;
         }
 
-        private static string GetSignedInUserUniqueName()
+        public static string GetSignedInUserUniqueName()
         {
             string signedInUserUniqueName =
                 ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value.Split('#')[
@@ -542,7 +542,7 @@ namespace CogsMinimizer
                 catch (Exception)
                 {
 
-                    throw;
+                   // throw;
                 }
             }
 
