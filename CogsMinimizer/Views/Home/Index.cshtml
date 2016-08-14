@@ -82,6 +82,7 @@
                            {
                                Id = @subscription.Id,
                                OrganizationId = @subscription.OrganizationId,
+                               DisplayName = @subscription.DisplayName,
                                ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
                            },
                                     new { @class = "btn btn-success btn-xs" })

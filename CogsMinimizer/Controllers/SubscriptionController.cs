@@ -13,9 +13,9 @@ namespace CogsMinimizer.Controllers
     public class SubscriptionController : Controller
     {
         // GET: Subscription
-        public ActionResult Analyze([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
+        public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string servicePrincipalObjectId)
         {
-            var model = new List<Resource>();
+            var resources = new List<Resource>();
             var subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(subscription.Id, subscription.OrganizationId);
             var aliases = GetAliases(subscriptionAdmins);
             var adminAliases = aliases.ToList();
@@ -57,7 +57,7 @@ namespace CogsMinimizer.Controllers
                            
                         }
                         resource.Expired = DateTime.UtcNow.Date.Subtract(resource.FirstFoundDate).Days > 7;
-                        model.Add(resource);
+                        resources.Add(resource);
                         db.Resources.AddOrUpdate(resource);
                     }
                 }
@@ -70,8 +70,10 @@ namespace CogsMinimizer.Controllers
                     //Do nothing
                 }
             }
-            
-            return View(model.OrderBy(x=>x.FirstFoundDate));
+
+            var orderedResources = resources.OrderBy(x => x.FirstFoundDate);
+            var model = new SubscriptionAnalyzeViewModel {Resources = orderedResources, SubscriptionData = subscription};
+            return View(model);
         }
 
         private IEnumerable<string> GetAliases(IEnumerable<ClassicAdministrator> admins)

@@ -1,36 +1,39 @@
-﻿@using System.Runtime.InteropServices.ComTypes
-@model IEnumerable<CogsMinimizer.Models.Resource>
+﻿@model CogsMinimizer.Models.SubscriptionAnalyzeViewModel
 
 @{
-    ViewBag.Title = "Analyze";
+    ViewBag.Title = "Analyze Subscription";
 }
 
 <h2>Subscription Resources</h2>
+<h4>Subscription name: @Model.SubscriptionData.DisplayName</h4>
+<h4>Subscription id: @Model.SubscriptionData.Id</h4>
 
 <table class="table">
     <tr>
         <th>
-            @Html.DisplayNameFor(model => model.Name)
+            @Html.DisplayNameFor(model => model.Resources.First().Name)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Type)
+            @Html.DisplayNameFor(model => model.Resources.First().Type)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.ResourceGroup)
+            @Html.DisplayNameFor(model => model.Resources.First().ResourceGroup)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.Owner)
+            @Html.DisplayNameFor(model => model.Resources.First().Owner)
         </th>
         <th>
-            @Html.DisplayNameFor(model => model.FirstFoundDate)
+            @Html.DisplayNameFor(model => model.Resources.First().FirstFoundDate)
         </th>
-        <th></th>
+        <th>
+            Actions
+        </th>
     </tr>
 
-@foreach (var item in Model)
-{
-    string rowClass = item.Expired ? "alert alert - warning" : null;
-    <tr class="@rowClass">
+    @foreach (var item in Model.Resources)
+    {
+        string rowClass = item.Expired ? "alert alert - warning" : null;
+        <tr class="@rowClass">
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
             </td>
@@ -47,9 +50,11 @@
                 @Html.DisplayFor(modelItem => item.FirstFoundDate)
             </td>
             <td>
-                @Html.ActionLink("Reclaim", "Reclaim", new { Id = item.Id}, new { @class = "btn btn-info btn-xs" }) |
-                @Html.ActionLink("Delete", "Delete", new {SubscriptionId = item.SubscriptionId, AzureResourceId = item.AzureResourceIdentifier, }, new { @class = "btn btn-danger btn-xs"})
-            </td >
+                @Html.ActionLink("Reclaim", "Reclaim", new { Id = item.Id }, new { @class = "btn btn-info btn-xs" }) | 
+                @Html.ActionLink("Delete", "Delete",
+                           new { SubscriptionId = item.SubscriptionId, AzureResourceId = item.AzureResourceIdentifier, },
+                           new { @class = "btn btn-danger btn-xs" })
+            </td>
         </tr>
     }
 
