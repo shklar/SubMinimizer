@@ -44,12 +44,12 @@
                        -->
                     </td>
                     <td>
-                        @if (false && subscription.IsConnected)
+                        @if (subscription.IsConnected)
                         {
                             <text>Yes. </text>
                             <br />
                             <small>&nbsp;&nbsp; Connected By: @subscription.ConnectedBy </small>
-                            <small>&nbsp; Connected On: @subscription.ConnectedOn.ToShortDateString() </small>
+                            <small>&nbsp; Connected On: @subscription.ConnectedOn?.ToShortDateString() </small>
                             if (Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))
                             {
 
@@ -86,6 +86,16 @@
                                ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
                            },
                                     new { @class = "btn btn-success btn-xs" })
+
+                                <small>&nbsp;&nbsp;</small>
+
+                                 @Html.ActionLink("Connect", "Connect", "Subscription", new
+                             {
+                                 Id = @subscription.Id,
+                                 OrganizationId = @subscription.OrganizationId,
+                                 ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
+                             },
+                                    new { @class = "btn btn-info btn-xs" })
                             }
                         }
                         @if (!Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))

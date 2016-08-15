@@ -11,11 +11,13 @@ using Resource = CogsMinimizer.Models.Resource;
 
 namespace CogsMinimizer.Controllers
 {
+    [Authorize]
     public class SubscriptionController : Controller
     {
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
 
         // GET: Subscription
+        
         public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
         {
             var resources = new List<Resource>();
@@ -168,6 +170,61 @@ namespace CogsMinimizer.Controllers
                 db.SaveChanges();
             }
             return RedirectToAction("Index", "Home");
+        }
+
+        private DataAccess db = new DataAccess();
+
+        public ActionResult Connect([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
+        {
+            if (ModelState.IsValid)
+            {
+                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
+                if (AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, subscription.OrganizationId))
+                {
+                    subscription.ConnectedBy = (System.Security.Claims.ClaimsPrincipal.Current).FindFirst(ClaimTypes.Name).Value;
+                    subscription.ConnectedOn = DateTime.UtcNow;
+
+                    db.Subscriptions.AddOrUpdate(subscription);
+                    db.SaveChanges();
+                }
+            }
+
+            return RedirectToAction("Index", "Home");
+        }
+        public ActionResult Disconnect([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
+        {
+            if (ModelState.IsValid)
+            {
+                AzureResourceManagerUtil.RevokeRoleFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
+
+                Subscription s = db.Subscriptions.Find(subscription.Id);
+                if (s != null)
+                {
+                    db.Subscriptions.Remove(s);
+                    db.SaveChanges();
+                }
+
+            }
+
+            return RedirectToAction("Index", "Home");
+        }
+        public ActionResult RepairAccess([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
+        {
+            if (ModelState.IsValid)
+            {
+                AzureResourceManagerUtil.RevokeRoleFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
+                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
+            }
+
+            return RedirectToAction("Index", "Home");
+        }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                db.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }
