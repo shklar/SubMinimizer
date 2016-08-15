@@ -21,8 +21,8 @@ namespace CogsMinimizer.Controllers
             var resources = new List<Resource>();
             var subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(subscription.Id,
                 subscription.OrganizationId);
-            var aliases = GetAliases(subscriptionAdmins);
-            var adminAliases = aliases.ToList();
+            var emails = GetEmails(subscriptionAdmins);
+            var adminEmails = emails.ToList();
 
             var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(subscription.Id, subscription.OrganizationId);
 
@@ -40,7 +40,7 @@ namespace CogsMinimizer.Controllers
                     // var owner = findOwner(x.Name, adminAliases);
                     foreach (var genericResource in resourceList)
                     {
-                        var owner = findOwner(genericResource.Name, adminAliases);
+                        var owner = findOwner(genericResource.Name, adminEmails);
                         var oldEntry =
                             db.Resources.FirstOrDefault(x => x.AzureResourceIdentifier.Equals(genericResource.Id));
 
@@ -85,16 +85,24 @@ namespace CogsMinimizer.Controllers
             return View(model);
         }
 
-        private IEnumerable<string> GetAliases(IEnumerable<ClassicAdministrator> admins)
+        private static string GetAlias(string email)
         {
-            var aliases = admins.Select(x => x.Properties.EmailAddress);
-            aliases = aliases.Select(x => x.Substring(0, x.IndexOf('@')));
-            return aliases;
+           
+            var alias = email.Substring(0, email.IndexOf('@'));
+            return alias;
         }
 
-        private static string findOwner(string resourceName, List<string> aliases)
+        private static IEnumerable<string> GetEmails(IEnumerable<ClassicAdministrator> admins)
         {
-            var owner = aliases.FirstOrDefault(resourceName.Contains);
+            var emails = admins.Select(x => x.Properties.EmailAddress);
+            return emails;
+        }
+
+
+
+        private static string findOwner(string resourceName, List<string> emails)
+        {
+            var owner = emails.FirstOrDefault(x=>resourceName.Contains(GetAlias(x)));
             return owner;
         }
 
@@ -122,7 +130,7 @@ namespace CogsMinimizer.Controllers
 
         private bool HasExpired(Resource resource)
         {
-            return DateTime.UtcNow.Subtract(resource.FirstFoundDate).Days > EXPIRATION_INTERVAL_IN_DAYS;
+            return resource.ExpirationDate.Date < DateTime.UtcNow.Date;
         }
 
         private static DateTime GetNewExpirationDate()
