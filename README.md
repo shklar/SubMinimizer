@@ -1,3 +1,4 @@
 # CogsMinimizer
 Seek and destroy Azure resources which nobody uses anymore
-http://cogsminimizer.azurewebsites.net/
+http://subminimizer.azurewebsites.net/
+
