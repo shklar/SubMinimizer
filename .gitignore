@@ -245,3 +245,4 @@ ModelManifest.xml
 
 # FAKE - F# Make
 .fake/
+/OfflineSubscriptionManager/App.Secrets.config
