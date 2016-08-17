@@ -4,7 +4,7 @@
 }
 
 <div class="jumbotron">
-    <h1>SubMini</h1>
+    <h1>SubMinimizer</h1>
     <p class="lead">Helps you detect and delete the idle resources in you Azure subscriptions and save money</p>
     <p><a href="https://github.com/shklar/CogsMinimizer" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
 </div>
@@ -46,31 +46,46 @@
                     <td>
                         @if (subscription.IsConnected)
                         {
-                            <text>Yes. </text>
-                            <br />
-                            <small>&nbsp;&nbsp; Connected By: @subscription.ConnectedBy </small>
-                            <small>&nbsp; Connected On: @subscription.ConnectedOn?.ToShortDateString() </small>
+                            
                             if (Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))
                             {
+                                @Html.ActionLink("Analyze", "Analyze", "Subscription",
+                               new
+                               {
+                                   Id = @subscription.Id,
+                                   OrganizationId = @subscription.OrganizationId,
+                                   DisplayName = @subscription.DisplayName,
+                                   ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
+                               },
+                               new { @class = "btn btn-success btn-xs" })
 
-                                @Html.ActionLink("Disconnect", "Disconnect", "Subscription", new
-                           {
-                               Id = @subscription.Id,
-                               OrganizationId = @subscription.OrganizationId,
-                               ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
-                           },
+                                <small>&nbsp;&nbsp;</small>
+
+                                @Html.ActionLink("Disconnect", "Disconnect", "Subscription",
+                               new
+                               {
+                                   Id = @subscription.Id,
+                                   OrganizationId = @subscription.OrganizationId,
+                                   ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
+                               },
                                     new { @class = "btn btn-danger btn-xs" })
+
+                                <br />
+                                <small>Connected By: @subscription.ConnectedBy </small>
+                                <br />
+                                <small>Connected On: @subscription.ConnectedOn </small>
                             }
                             if (@subscription.AzureAccessNeedsToBeRepaired)
                             {
                                 <br />
                                 <small>&nbsp;&nbsp; Azure access needs to be repaired: </small>
-                                @Html.ActionLink("Repair", "RepairAccess", "Subscription", new
-                           {
-                               Id = @subscription.Id,
-                               OrganizationId = @subscription.OrganizationId,
-                               ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
-                           },
+                                @Html.ActionLink("Repair", "RepairAccess", "Subscription",
+                               new
+                               {
+                                   Id = @subscription.Id,
+                                   OrganizationId = @subscription.OrganizationId,
+                                   ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
+                               },
                                     new { @class = "btn btn-info btn-xs" })
                             }
                         }
@@ -78,24 +93,16 @@
                         {
                             if (Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))
                             {
-                                @Html.ActionLink("Analyze", "Analyze", "Subscription", new
-                           {
-                               Id = @subscription.Id,
-                               OrganizationId = @subscription.OrganizationId,
-                               DisplayName = @subscription.DisplayName,
-                               ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
-                           },
-                                    new { @class = "btn btn-success btn-xs" })
 
-                                <small>&nbsp;&nbsp;</small>
 
-                                 @Html.ActionLink("Connect", "Connect", "Subscription", new
-                             {
-                                 Id = @subscription.Id,
-                                 OrganizationId = @subscription.OrganizationId,
-                                 ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
-                             },
-                                    new { @class = "btn btn-info btn-xs" })
+                                @Html.ActionLink("Connect", "Connect", "Subscription",
+                               new
+                               {
+                                   Id = @subscription.Id,
+                                   OrganizationId = @subscription.OrganizationId,
+                                   ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
+                               },
+                               new { @class = "btn btn-info btn-xs" })
                             }
                         }
                         @if (!Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))

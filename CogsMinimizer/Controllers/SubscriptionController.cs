@@ -28,8 +28,7 @@ namespace CogsMinimizer.Controllers
 
             var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(subscription.Id, subscription.OrganizationId);
 
-            //Todo: increase to all resource groups
-            var selectedResourceGroups = resourceGroups.Take(1);
+            var selectedResourceGroups = resourceGroups;
 
             using (var db = new DataAccess())
             {

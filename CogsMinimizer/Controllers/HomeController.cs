@@ -34,14 +34,14 @@ namespace CogsMinimizer.Controllers
                     if (subscriptions != null)
                     {
                         var devSubscriptions = subscriptions.Where(s => s.DisplayName.Contains("ATA") || s.DisplayName.Contains("ATD"));
-                        //var devSubscriptions = subscriptions;
+                     
                         foreach (var subscription in devSubscriptions)
                         {
 
                             Subscription s = db.Subscriptions.Find(subscription.Id);
                             if (s != null)
                             {
-                                subscription.IsConnected = s.ConnectedOn != null;
+                                subscription.IsConnected = true;
                                 subscription.ConnectedOn = s.ConnectedOn;
                                 subscription.ConnectedBy = s.ConnectedBy;
                                 subscription.AzureAccessNeedsToBeRepaired = !AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, org.Id);
@@ -54,7 +54,7 @@ namespace CogsMinimizer.Controllers
                             model.UserSubscriptions.Add(subscription.Id, subscription);
                             if (AzureResourceManagerUtil.UserCanManageAccessForSubscription(subscription.Id, org.Id))
                                 model.UserCanManageAccessForSubscriptions.Add(subscription.Id);
-                            db.Subscriptions.AddOrUpdate(subscription);
+                          
                         }
                     }
                     else
@@ -62,6 +62,8 @@ namespace CogsMinimizer.Controllers
                 }
             }
             db.SaveChanges();
+
+    
             return View(model);
         }
 

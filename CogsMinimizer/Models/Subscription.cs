@@ -15,7 +15,7 @@ namespace CogsMinimizer.Models
         [NotMapped]
         public bool IsConnected { get; set; }
        
-        public DateTime? ConnectedOn { get; set; }
+        public DateTime ConnectedOn { get; set; }
      
         public string ConnectedBy { get; set; }
         [NotMapped]
