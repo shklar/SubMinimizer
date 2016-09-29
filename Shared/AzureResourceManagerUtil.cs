@@ -1,26 +1,22 @@
-﻿using CogsMinimizer.Models;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Web.Helpers;
-using Microsoft.Azure;
-using Microsoft.Azure.Management.ResourceManager;
-using Microsoft.Azure.Management.ResourceManager.Models;
+using CogsMinimizer.Shared;
 using Microsoft.Azure.Management.Authorization;
 using Microsoft.Azure.Management.Authorization.Models;
-using Microsoft.Azure.Management.Resources;
+using Microsoft.Azure.Management.ResourceManager;
+using Microsoft.Azure.Management.ResourceManager.Models;
 using Microsoft.Rest;
-using Microsoft.Rest.Azure;
 using ResourceManagementClient = Microsoft.Azure.Management.ResourceManager.ResourceManagementClient;
-using Subscription = CogsMinimizer.Models.Subscription;
+using Subscription = CogsMinimizer.Shared.Subscription;
 
-namespace CogsMinimizer
+namespace CogsMinimizer.Shared
 {
     public static class AzureResourceManagerUtil
     {
@@ -523,28 +519,29 @@ namespace CogsMinimizer
             string azureresourceid)
         {
             var resourceClient = GetResourceManagementClient(subscriptionId, organizationId);
-            //var oldclient = new Microsoft.Azure.Management.Resources.ResourceManagementClient();
-
-
-
-            var groupResources = resourceClient.ResourceGroups.ListResources(resourceGroupName);
-            var foundResource = groupResources.FirstOrDefault(x => x.Id.Equals(azureresourceid));
-            if (foundResource != null)
-            {
-                var resourceNameSpace = foundResource.Type.Split('/')[0];
-                var resourceType = foundResource.Type.Split('/')[1];
+            
+          
+           // var groupResources = resourceClient.ResourceGroups.ListResources(resourceGroupName);
+            //var foundResource = groupResources.FirstOrDefault(x => x.Id.Equals(azureresourceid));
+            //if (foundResource != null)
+           // {
+             //   var resourceNameSpace = foundResource.Type.Split('/')[0];
+              //  var resourceType = foundResource.Type.Split('/')[1];
 
                 try
                 {
-                    resourceClient.Resources.Delete(resourceGroupName, resourceNameSpace, "", resourceType,
-                        foundResource.Name, "2014-04-01");
-                }
-                catch (Exception)
+
+                //resourceClient.Resources.DeleteById(azureresourceid.TrimStart(new char [] {'/'}), "2014-04-01");
+                resourceClient.Resources.DeleteById(azureresourceid, "2014-04-01");
+                //  resourceClient.Resources.Delete(resourceGroupName, resourceNameSpace, "", resourceType,
+                //    foundResource.Name, "2014-04-01");
+            }
+                catch (Exception e)
                 {
 
-                   // throw;
+                    var message = e.ToString();
                 }
-            }
+           // }
 
             return;
 

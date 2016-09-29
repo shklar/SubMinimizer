@@ -15,9 +15,8 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using System;
 using System.Data.Entity;
 using System.Linq;
-using CogsMinimizer.Models;
 
-namespace CogsMinimizer
+namespace CogsMinimizer.Shared
 {
     public class ADALTokenCache : TokenCache
     {

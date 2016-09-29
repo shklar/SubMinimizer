@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Web;
 using System.Web.Mvc;
+using CogsMinimizer.Shared;
 
 namespace CogsMinimizer.Controllers
 {

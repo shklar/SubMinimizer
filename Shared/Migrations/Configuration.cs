@@ -1,3 +1,5 @@
+using CogsMinimizer.Shared;
+
 namespace CogsMinimizer.Migrations
 {
     using System;
@@ -5,7 +7,7 @@ namespace CogsMinimizer.Migrations
     using System.Data.Entity.Migrations;
     using System.Linq;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<CogsMinimizer.DataAccess>
+    public sealed class Configuration : DbMigrationsConfiguration<DataAccess>
     {
         public Configuration()
         {
@@ -15,7 +17,7 @@ namespace CogsMinimizer.Migrations
             ContextKey = "CogsMinimizer.DataAccess";
         }
 
-        protected override void Seed(CogsMinimizer.DataAccess context)
+        protected override void Seed(DataAccess context)
         {
             //  This method will be called after migrating to the latest version.
 

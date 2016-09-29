@@ -8,7 +8,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using Microsoft.Owin.Builder;
+using CogsMinimizer.Shared;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace CogsMinimizer

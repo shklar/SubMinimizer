@@ -1,4 +1,4 @@
-﻿namespace CogsMinimizer.Models
+﻿namespace CogsMinimizer.Shared
 {
     public class Organization
     {

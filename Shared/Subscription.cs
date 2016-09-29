@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CogsMinimizer.Models
+namespace CogsMinimizer.Shared
 {
     /// <summary>
     /// Represents a subscription that can be managed

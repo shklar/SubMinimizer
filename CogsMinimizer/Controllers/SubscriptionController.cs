@@ -6,8 +6,9 @@ using System.IdentityModel.Claims;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using CogsMinimizer.Shared;
 using Microsoft.Azure.Management.Authorization.Models;
-using Resource = CogsMinimizer.Models.Resource;
+using Resource = CogsMinimizer.Shared.Resource;
 
 namespace CogsMinimizer.Controllers
 {
@@ -28,7 +29,8 @@ namespace CogsMinimizer.Controllers
 
             var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(subscription.Id, subscription.OrganizationId);
 
-            var selectedResourceGroups = resourceGroups;
+            //todo fix this
+            var selectedResourceGroups = resourceGroups.Take(3);
 
             using (var db = new DataAccess())
             {
@@ -154,6 +156,7 @@ namespace CogsMinimizer.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        //Extends the duration of a resource so that it does not get reported or deleted as expired
         public ActionResult Extend(string subscriptionId, string resourceId)
         {
             using (var db = new DataAccess())
