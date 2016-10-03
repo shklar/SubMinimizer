@@ -49,7 +49,7 @@ namespace CogsMinimizer.Controllers
 
                         var resource = oldEntry;
                         var foundDate = DateTime.UtcNow.Date;
-                        var exporatoinDate = foundDate.AddDays(EXPIRATION_INTERVAL_IN_DAYS);
+                        var exporatoinDate = foundDate.AddDays(Subscription.DEFAULT_EXPIRATION_INTERVAL_IN_DAYS);
 
                         if (oldEntry == null)
                         {

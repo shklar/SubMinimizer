@@ -30,32 +30,17 @@ namespace OfflineSubscriptionManager
             {
                 foreach (var sub in db.Subscriptions)
                 {
-                    message += sub.Id + " "+ sub.ConnectedBy + Environment.NewLine ;
+                    SubscriptionAnalysis analysis = new SubscriptionAnalysis(db, sub);
+                    SubscriptionAnalysisResult analysisResult = analysis.AnalyzeSubscription();
                 } 
             }
-
-            //string connString = ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString;
-            //using (var conn = new SqlConnection(connString))
-            //{
-            //    conn.Open();
-
-            
-            //    using (SqlCommand command = new SqlCommand(@"select * from Subscriptions "))
-            //    {
-            //        command.Connection = conn;
-            //        using (SqlDataReader reader = command.ExecuteReader())
-            //        {
-            //            while (reader.Read())
-            //            {
-            //                content += reader.GetString(0) + Environment.NewLine;
-            //            }
-            //        }
-            //    }
-            //}
 
             SendEmail(message).Wait();
 
         }
+
+  
+
 
         static async Task SendEmail(string contentMessage)
         {

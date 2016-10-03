@@ -8,8 +8,10 @@ namespace CogsMinimizer.Shared
     /// </summary>
     public class Subscription
     {
+        public const int DEFAULT_EXPIRATION_INTERVAL_IN_DAYS = 7;
+
         public string Id { get; set; }
-        [NotMapped]
+       
         public string DisplayName { get; set; }
         public string OrganizationId { get; set; }
         [NotMapped]
@@ -20,5 +22,7 @@ namespace CogsMinimizer.Shared
         public string ConnectedBy { get; set; }
         [NotMapped]
         public bool AzureAccessNeedsToBeRepaired { get; set; }
+
+        public int ExpirationIntervalInDays  { get; set; }
     }
 }

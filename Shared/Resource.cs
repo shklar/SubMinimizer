@@ -27,6 +27,11 @@ namespace CogsMinimizer.Shared
         /// The name of the resource owner 
         /// </summary>
         public string Owner { get; set; }
+
+        /// <summary>
+        /// Yes if the owner was explicitly confirmed by the user. False if inferred by the application
+        /// </summary>
+        public bool ConfirmedOwner { get; set; }
        
         /// <summary>
         /// The resource Group to which this resource belongs
@@ -46,6 +51,11 @@ namespace CogsMinimizer.Shared
         [DataType(DataType.Date)]
         [Display(Name = "Expiration")]
         public DateTime ExpirationDate { get; set; }
+
+        /// <summary>
+        /// The last time the application analyzed this resource
+        /// </summary>
+        public DateTime LastVisitedTime { get; set; }
        
         /// <summary>
         /// The Azure Resource ID
