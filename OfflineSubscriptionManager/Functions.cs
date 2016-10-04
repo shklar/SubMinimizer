@@ -18,40 +18,71 @@ namespace OfflineSubscriptionManager
     public class Functions
     {
         // This function will be triggered based on the schedule you have set for this WebJob
-        // This function will enqueue a message on an Azure Queue called queue
         [NoAutomaticTrigger]
         public static void ManualTrigger(TextWriter log)
         {
-            log.WriteLine("Function is invoked with value");
-     
-            string message = "Expired resources report:" + Environment.NewLine;
+            ProcessSubscriptions();
+        }
 
+        /// <summary>
+        /// The main method triggered periodically. Analyzes each one of the registered subscriptions 
+        /// and reports to the customer
+        /// </summary>
+        private static void ProcessSubscriptions()
+        {
             using (var db = new DataAccess())
             {
                 foreach (var sub in db.Subscriptions)
                 {
+                    //Analyze the subscription
                     SubscriptionAnalysis analysis = new SubscriptionAnalysis(db, sub);
                     SubscriptionAnalysisResult analysisResult = analysis.AnalyzeSubscription();
-                } 
+                    sub.LastAnalysisDate = analysisResult.AnalysisStartTime.Date;
+                    
+                    //Persist analysis results to DB
+                    db.SaveChanges();
+
+                    //Report the outcome of the analysis
+                    ReportSubscriptionAnalysisResult(analysisResult);
+                }
             }
-
-            SendEmail(message).Wait();
-
+            // SendEmail(message).Wait();
         }
 
-  
+        private static void ReportSubscriptionAnalysisResult(SubscriptionAnalysisResult analysisResult)
+        {
+            //Email to = new Email("maximsh@microsoft.com");
+            Subscription sub = analysisResult.AnalyzedSubscription;
+            Email to = new Email(sub.ConnectedBy);
+            string subject = $"SubMinimizer: Subscription Analysis report for {sub.DisplayName}";
+
+            string message = $"<H2>Subscription name : {sub.DisplayName}</H2>";
+            message += $"<H2>Subscription ID : {sub.Id} </H2>";
+            message += $"<h3>Analysis Date : {sub.LastAnalysisDate}</h3>";
+            message += "<br>";
+
+            if (analysisResult.ExpiredResources.Count == 0)
+            {
+                message += "<h3>No expired resources found</h3>";
+            }
+            else
+            {
+                message += $"<h3>Found {analysisResult.ExpiredResources.Count} expired resources</h3>";
+            }
+
+            SendEmail(subject , message, to).Wait();
+        }
 
 
-        static async Task SendEmail(string contentMessage)
+        static async Task SendEmail(string subject, string contentMessage, Email to)
         {
             string apiKey = ConfigurationManager.AppSettings["API_KEY"];
             dynamic sg = new SendGridAPIClient(apiKey);
 
-            Email from = new Email("maximsh@subminimizer.com");
-            string subject = "Sending with SendGrid is Fun";
-            Email to = new Email("maximsh@microsoft.com");
-            Content content = new Content("text/plain", contentMessage);
-            content.Value += DateTime.UtcNow.ToShortTimeString();
+            Email from = new Email("noreply@subminimizer.com");
+            
+            Content content = new Content("text/html", contentMessage);
+            
             Mail mail = new Mail(from, subject, to, content);
 
             dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());

@@ -55,7 +55,7 @@ namespace CogsMinimizer.Shared
         /// <summary>
         /// The last time the application analyzed this resource
         /// </summary>
-        public DateTime LastVisitedTime { get; set; }
+        public DateTime LastVisitedDate { get; set; }
        
         /// <summary>
         /// The Azure Resource ID

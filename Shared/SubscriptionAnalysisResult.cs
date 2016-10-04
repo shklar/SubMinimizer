@@ -10,18 +10,20 @@ namespace CogsMinimizer.Shared
     /// </summary>
     public class SubscriptionAnalysisResult
     {
+
         /// <summary>
         /// Ctor
         /// </summary>
-        public SubscriptionAnalysisResult()
+        public SubscriptionAnalysisResult(Subscription sub)
         {
-                ExpiredResources = new List<Resource>();
+            this.AnalyzedSubscription = sub;
+            ExpiredResources = new List<Resource>();
         }
 
         /// <summary>
         /// The subscription that was analyzed
         /// </summary>
-        public Subscription AnalyzedSubscription { get; set; }
+        public Subscription AnalyzedSubscription { get; private set; }
         /// <summary>
         /// Indicates whether the application had permissions to analyze the subscription
         /// </summary>

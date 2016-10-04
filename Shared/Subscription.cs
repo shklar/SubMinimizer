@@ -24,5 +24,7 @@ namespace CogsMinimizer.Shared
         public bool AzureAccessNeedsToBeRepaired { get; set; }
 
         public int ExpirationIntervalInDays  { get; set; }
+
+        public DateTime LastAnalysisDate { get; set; }
     }
 }

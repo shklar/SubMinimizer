@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CogsMinimizer.Shared;
 using Microsoft.Azure.WebJobs;
 
 namespace OfflineSubscriptionManager
@@ -15,6 +17,10 @@ namespace OfflineSubscriptionManager
         static void Main()
         {
             var host = new JobHost();
+
+            Database.SetInitializer(new MigrateDatabaseToLatestVersion<DataAccess,
+               CogsMinimizer.Migrations.Configuration>());
+
             // The following code will invoke a function called ManualTrigger and 
             // pass in data (value in this case) to the function
             host.Call(typeof(Functions).GetMethod("ManualTrigger"));

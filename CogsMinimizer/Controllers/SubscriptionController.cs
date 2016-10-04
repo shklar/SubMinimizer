@@ -176,7 +176,7 @@ namespace CogsMinimizer.Controllers
 
         private DataAccess db = new DataAccess();
 
-        public ActionResult Connect([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
+        public ActionResult Connect([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string servicePrincipalObjectId)
         {
             if (ModelState.IsValid)
             {
@@ -185,6 +185,9 @@ namespace CogsMinimizer.Controllers
                 {
                     subscription.ConnectedBy = (System.Security.Claims.ClaimsPrincipal.Current).FindFirst(ClaimTypes.Name).Value;
                     subscription.ConnectedOn = DateTime.UtcNow;
+                    subscription.IsConnected = true;
+                    subscription.AzureAccessNeedsToBeRepaired = false;
+                    subscription.LastAnalysisDate = DateTime.UtcNow.Date;
 
                     db.Subscriptions.AddOrUpdate(subscription);
                     db.SaveChanges();

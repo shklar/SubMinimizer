@@ -35,7 +35,7 @@ namespace CogsMinimizer.Shared
             m_Db = dbAccess;
             m_analyzedSubscription = sub;
 
-            m_analysisResult = new SubscriptionAnalysisResult();
+            m_analysisResult = new SubscriptionAnalysisResult(sub);
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace CogsMinimizer.Shared
             //Successfully accessed the subscription. Process the resources.
             else
             {
-                AnalyzeSubscriptionResources();
+               // AnalyzeSubscriptionResources();
             }
 
             //Record the end time of the analysis
@@ -108,7 +108,7 @@ namespace CogsMinimizer.Shared
             }
 
             //Clean up any resources in the DB that were no longer found (probably deleted)
-            var unvisitedResources = m_Db.Resources.Where(x => x.LastVisitedTime < m_analysisResult.AnalysisStartTime.Date);
+            var unvisitedResources = m_Db.Resources.Where(x => x.LastVisitedDate < m_analysisResult.AnalysisStartTime.Date);
             foreach (var unvisitedResource in unvisitedResources)
             {
                 m_Db.Resources.Remove(unvisitedResource);
@@ -161,7 +161,7 @@ namespace CogsMinimizer.Shared
             }
 
             //update the visit time
-            resourceEntryFromDb.LastVisitedTime = m_analysisResult.AnalysisStartTime.Date;
+            resourceEntryFromDb.LastVisitedDate = m_analysisResult.AnalysisStartTime.Date;
 
             m_Db.Resources.AddOrUpdate(resourceEntryFromDb);
         }
