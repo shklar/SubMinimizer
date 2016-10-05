@@ -35,8 +35,8 @@ namespace OfflineSubscriptionManager
                 foreach (var sub in db.Subscriptions.ToList())
                 {
                     //Analyze the subscription
-                    SubscriptionAnalysis analysis = new SubscriptionAnalysis(db, sub);
-                    SubscriptionAnalysisResult analysisResult = analysis.AnalyzeSubscription();
+                    SubscriptionAnalyzer analyzer = new SubscriptionAnalyzer(db, sub, true);
+                    SubscriptionAnalysisResult analysisResult = analyzer.AnalyzeSubscription();
                     sub.LastAnalysisDate = analysisResult.AnalysisStartTime.Date;
                     
                     //Persist analysis results to DB
@@ -56,7 +56,19 @@ namespace OfflineSubscriptionManager
             Email to = new Email(sub.ConnectedBy);
             string subject = $"SubMinimizer: Subscription Analysis report for {sub.DisplayName}";
 
-            string message = $"<H2>Subscription name : {sub.DisplayName}</H2>";
+            string message = @"<!DOCTYPE html>
+                            <html>
+                            <head>
+                            <style>
+                            table, th, td {
+                                border: 1px solid black;
+                                border-collapse: collapse;
+                            }
+                            </style>
+                            </head>
+                            <body>";
+
+            message += $"<H2>Subscription name : {sub.DisplayName}</H2>";
             message += $"<H2>Subscription ID : {sub.Id} </H2>";
             message += $"<h3>Analysis Date : {sub.LastAnalysisDate}</h3>";
             message += "<br>";
@@ -67,10 +79,30 @@ namespace OfflineSubscriptionManager
             }
             else
             {
-                message += $"<h3>Found {analysisResult.ExpiredResources.Count} expired resources</h3>";
+                message += $"<h3>Found {analysisResult.ExpiredResources.Count} expired resources :</h3>";
+                message += GetHTMLTableForResources(analysisResult.ExpiredResources);
             }
 
+            message += "</body></html>";
+
             SendEmail(subject , message, to).Wait();
+        }
+
+        private static string GetHTMLTableForResources(IEnumerable<Resource> resources)
+        {
+            string result = "<Table>";
+            foreach (var resource in resources)
+            {
+                result += "<tr>";
+
+                result += $"<td>{resource.Name}</td>";
+                result += $"<td>{resource.ResourceGroup}</td>";
+
+                result += "</tr>";
+            }
+            result += "</Table>";
+
+            return result;
         }
 
 

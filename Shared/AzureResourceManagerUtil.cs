@@ -26,7 +26,7 @@ namespace CogsMinimizer.Shared
 
             string tenantId =
                 ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid").Value;
-            var signedInUserUniqueName = GetSignedInUserUniqueName();
+            var signedInUserUniqueName = AzureAuthUtils.GetSignedInUserUniqueName();
 
             try
             {
@@ -90,7 +90,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
 
                 subscriptions = new List<Subscription>();
 
@@ -139,7 +139,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
 
 
                 // Get permissions of the user on the subscription
@@ -202,46 +202,7 @@ namespace CogsMinimizer.Shared
             return ret;
         }
 
-        private static AuthenticationResult AcquireUserToken(string organizationId)
-        {
-            // Get user name
-            var signedInUserUniqueName = GetSignedInUserUniqueName();
-
-            // Aquire Access Token to call Azure Resource Manager
-            ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
-                ConfigurationManager.AppSettings["ida:Password"]);
-            // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
-            AuthenticationContext authContext = new AuthenticationContext(
-                string.Format(ConfigurationManager.AppSettings["ida:Authority"], organizationId),
-                new ADALTokenCache(signedInUserUniqueName));
-            AuthenticationResult result =
-                authContext.AcquireTokenSilent(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"],
-                    credential,
-                    new UserIdentifier(signedInUserUniqueName, UserIdentifierType.RequiredDisplayableId));
-            return result;
-        }
-
-        private static AuthenticationResult AcquireAppToken(string organizationId)
-        {
-            // Aquire App Only Access Token to call Azure Resource Manager - Client Credential OAuth Flow
-            ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
-                ConfigurationManager.AppSettings["ida:Password"]);
-            // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
-            AuthenticationContext authContext =
-                new AuthenticationContext(string.Format(ConfigurationManager.AppSettings["ida:Authority"], organizationId));
-            AuthenticationResult result =
-                authContext.AcquireToken(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"],
-                    credential);
-            return result;
-        }
-
-        public static string GetSignedInUserUniqueName()
-        {
-            string signedInUserUniqueName =
-                ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value.Split('#')[
-                    ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value.Split('#').Length - 1];
-            return signedInUserUniqueName;
-        }
+       
 
         public static bool ServicePrincipalHasReadAccessToSubscription(string subscriptionId, string organizationId)
         {
@@ -249,7 +210,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AcquireAppToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
 
                 // Get permissions of the app on the subscription
                 string requestUrl =
@@ -316,7 +277,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
 
                 // Create role assignment for application on the subscription
                 string roleAssignmentId = Guid.NewGuid().ToString();
@@ -352,7 +313,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
 
                 // Get rolesAssignments to application on the subscription
                 string requestUrl =
@@ -400,7 +361,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
 
                 // Get subscriptions to which the user has some kind of access
                 string requestUrl =
@@ -444,61 +405,64 @@ namespace CogsMinimizer.Shared
             return roleId;
         }
 
-        public static IEnumerable<GenericResource> GetResourceList(string subscriptionId, string organizationId)
-        {
-            var resourceClient = GetResourceManagementClient(subscriptionId, organizationId);
-            var resourceList = ResourcesOperationsExtensions.List(resourceClient.Resources);
-            return resourceList;
-
-        }
-
-        public static IEnumerable<GenericResource> GetResourceList(string subscriptionId, string organizationId,
+        public static IEnumerable<GenericResource> GetResourceList(ResourceManagementClient resourceClient,
             string groupName)
         {
-            var resourceClient = GetResourceManagementClient(subscriptionId, organizationId);
             var resourceList = resourceClient.ResourceGroups.ListResources(groupName);
             return resourceList;
-
         }
 
 
-        public static IEnumerable<ResourceGroup> GetResourceGroups(string subscriptionId, string organizationId)
-        {
-            var resourceClient = GetResourceManagementClient(subscriptionId, organizationId);
-
-            var resourceGroupsList = ResourceGroupsOperationsExtensions.List(resourceClient.ResourceGroups);
-
+        public static IEnumerable<ResourceGroup> GetResourceGroups(ResourceManagementClient resourceClient)
+        {     
+            var resourceGroupsList = resourceClient.ResourceGroups.List();
             return resourceGroupsList;
-
         }
 
         public static IEnumerable<ClassicAdministrator> GetSubscriptionAdmins(
-            AuthenticationResult authToken, string subscriptionId,
-            string organizationId)
+            AuthorizationManagementClient authClient)
         {
-            var authClient = GetAuthorizationManagementClient(subscriptionId, organizationId);
             var admins = authClient.ClassicAdministrators.List("2015-06-01");
             return admins;
-
         }
 
         #region Management Clients
 
-
-        private static ResourceManagementClient GetResourceManagementClient(string subscriptionId, string organizationId)
+        public static ResourceManagementClient GetUserResourceManagementClient(string subscriptionId, string organizationId)
         {
-            AuthenticationResult result = AcquireUserToken(organizationId);
+            AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
 
             var credentials = new TokenCredentials(result.AccessToken);
             var resourceClient = new ResourceManagementClient(credentials) {SubscriptionId = subscriptionId};
             return resourceClient;
         }
 
+        public static ResourceManagementClient GetAppResourceManagementClient(string subscriptionId, string organizationId)
+        {
+            AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
 
-        private static AuthorizationManagementClient GetAuthorizationManagementClient(string subscriptionId,
+            var credentials = new TokenCredentials(result.AccessToken);
+            var resourceClient = new ResourceManagementClient(credentials) { SubscriptionId = subscriptionId };
+            return resourceClient;
+        }
+
+        public static AuthorizationManagementClient GetUserAuthorizationManagementClient(string subscriptionId,
             string organizationId)
         {
-            AuthenticationResult result = AcquireUserToken(organizationId);
+            AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
+
+            var credentials = new TokenCredentials(result.AccessToken);
+            var authorizationManagementClient = new AuthorizationManagementClient(credentials)
+            {
+                SubscriptionId = subscriptionId
+            };
+            return authorizationManagementClient;
+        }
+
+        public static AuthorizationManagementClient GetAppAuthorizationManagementClient(string subscriptionId,
+         string organizationId)
+        {
+            AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
 
             var credentials = new TokenCredentials(result.AccessToken);
             var authorizationManagementClient = new AuthorizationManagementClient(credentials)
@@ -510,34 +474,17 @@ namespace CogsMinimizer.Shared
 
         #endregion
 
-        public static void DeleteResource(string subscriptionId, string organizationId, string resourceGroupName,
-            string azureresourceid)
+        public static void DeleteResource(ResourceManagementClient resourceClient, string azureresourceid)
         {
-            var resourceClient = GetResourceManagementClient(subscriptionId, organizationId);
-            
-          
-           // var groupResources = resourceClient.ResourceGroups.ListResources(resourceGroupName);
-            //var foundResource = groupResources.FirstOrDefault(x => x.Id.Equals(azureresourceid));
-            //if (foundResource != null)
-           // {
-             //   var resourceNameSpace = foundResource.Type.Split('/')[0];
-              //  var resourceType = foundResource.Type.Split('/')[1];
+            try
+            {
 
-                try
-                {
-
-                //resourceClient.Resources.DeleteById(azureresourceid.TrimStart(new char [] {'/'}), "2014-04-01");
                 resourceClient.Resources.DeleteById(azureresourceid, "2014-04-01");
-                //  resourceClient.Resources.Delete(resourceGroupName, resourceNameSpace, "", resourceType,
-                //    foundResource.Name, "2014-04-01");
             }
-                catch (Exception e)
-                {
-
-                    var message = e.ToString();
-                }
-           // }
-
+            catch (Exception e)
+            {
+                var message = e.ToString();
+            }
             return;
 
         }

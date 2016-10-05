@@ -5,12 +5,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Azure.Management.Authorization;
 using Microsoft.Azure.Management.Authorization.Models;
+using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Azure.Management.ResourceManager.Models;
 
 namespace CogsMinimizer.Shared
 {
-    public class SubscriptionAnalysis
+    public class SubscriptionAnalyzer
     {
 
         /// <summary>
@@ -23,17 +25,26 @@ namespace CogsMinimizer.Shared
         /// </summary>
         private Subscription m_analyzedSubscription;
 
+        private readonly bool m_isOfflineMode;
+
         private SubscriptionAnalysisResult m_analysisResult;
+
+        private ResourceManagementClient m_resourceManagementClient;
+
+        private AuthorizationManagementClient m_authorizationManagementClient;
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="dbAccess"></param>
         /// <param name="sub"></param>
-        public SubscriptionAnalysis(DataAccess dbAccess, Subscription sub)
+        /// <param name="isOfflineMode">Indicates whether the analysis is run offline or with user interaction
+        /// </param>
+        public SubscriptionAnalyzer(DataAccess dbAccess, Subscription sub, bool isOfflineMode)
         {
             m_Db = dbAccess;
             m_analyzedSubscription = sub;
+            m_isOfflineMode = isOfflineMode;
 
             m_analysisResult = new SubscriptionAnalysisResult(sub);
         }
@@ -47,6 +58,25 @@ namespace CogsMinimizer.Shared
             //Record the start time of the analysis process
             DateTime startTime = DateTime.UtcNow;
             m_analysisResult.AnalysisStartTime = startTime;
+
+            if (m_isOfflineMode)
+            {
+                m_resourceManagementClient = AzureResourceManagerUtil.GetAppResourceManagementClient(
+                    m_analyzedSubscription.Id,
+                    m_analyzedSubscription.OrganizationId);
+                m_authorizationManagementClient = AzureResourceManagerUtil.GetAppAuthorizationManagementClient(
+                    m_analyzedSubscription.Id,
+                    m_analyzedSubscription.OrganizationId);
+            }
+            else 
+            {
+                m_resourceManagementClient = AzureResourceManagerUtil.GetUserResourceManagementClient(
+                    m_analyzedSubscription.Id,
+                    m_analyzedSubscription.OrganizationId);
+                m_authorizationManagementClient = AzureResourceManagerUtil.GetUserAuthorizationManagementClient(
+                    m_analyzedSubscription.Id,
+                    m_analyzedSubscription.OrganizationId);
+            }
 
             //Verify that the application indeed has access to the subscription
             bool isApplicationAutohrizedToReadSubscription =
@@ -62,7 +92,8 @@ namespace CogsMinimizer.Shared
             //Successfully accessed the subscription. Process the resources.
             else
             {
-               // AnalyzeSubscriptionResources();
+                m_analysisResult.IsSubscriptionAccessible = true;
+                AnalyzeSubscriptionResources();
             }
 
             //Record the end time of the analysis
@@ -73,19 +104,16 @@ namespace CogsMinimizer.Shared
         private void AnalyzeSubscriptionResources()
         {
             var resources = new List<Resource>();
-            var subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(m_analyzedSubscription.Id,
-                m_analyzedSubscription.OrganizationId);
+            var subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(m_authorizationManagementClient);
             var emails = GetEmails(subscriptionAdmins);
             var adminEmails = emails.ToList();
 
-            var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(m_analyzedSubscription.Id, 
-                m_analyzedSubscription.OrganizationId);
+            var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(m_resourceManagementClient);
 
             //Go over all the resource groups
             foreach (var group in resourceGroups)
             {
-                var resourceList = AzureResourceManagerUtil.GetResourceList(m_analyzedSubscription.Id,
-                    m_analyzedSubscription.OrganizationId, group.Name);
+                var resourceList = AzureResourceManagerUtil.GetResourceList(m_resourceManagementClient, group.Name);
 
                 //Go over all the resource
                 foreach (var genericResource in resourceList)
@@ -137,6 +165,7 @@ namespace CogsMinimizer.Shared
                                ExpirationDate =
                                    m_analysisResult.AnalysisStartTime.Date.Add(
                                        TimeSpan.FromDays(Subscription.DEFAULT_EXPIRATION_INTERVAL_IN_DAYS)),
+                               LastVisitedDate = m_analysisResult.AnalysisStartTime.Date,
                                Owner = owner,
                                ConfirmedOwner = false,
                                Expired = false,
