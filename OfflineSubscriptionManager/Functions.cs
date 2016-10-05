@@ -32,7 +32,7 @@ namespace OfflineSubscriptionManager
         {
             using (var db = new DataAccess())
             {
-                foreach (var sub in db.Subscriptions)
+                foreach (var sub in db.Subscriptions.ToList())
                 {
                     //Analyze the subscription
                     SubscriptionAnalysis analysis = new SubscriptionAnalysis(db, sub);

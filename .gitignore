@@ -246,3 +246,4 @@ ModelManifest.xml
 # FAKE - F# Make
 .fake/
 /OfflineSubscriptionManager/App.Secrets.config
+/CogsMinimizer/App.Secrets.config

@@ -221,6 +221,20 @@ namespace CogsMinimizer.Shared
             return result;
         }
 
+        private static AuthenticationResult AcquireAppToken(string organizationId)
+        {
+            // Aquire App Only Access Token to call Azure Resource Manager - Client Credential OAuth Flow
+            ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
+                ConfigurationManager.AppSettings["ida:Password"]);
+            // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
+            AuthenticationContext authContext =
+                new AuthenticationContext(string.Format(ConfigurationManager.AppSettings["ida:Authority"], organizationId));
+            AuthenticationResult result =
+                authContext.AcquireToken(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"],
+                    credential);
+            return result;
+        }
+
         public static string GetSignedInUserUniqueName()
         {
             string signedInUserUniqueName =
@@ -235,17 +249,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                // Aquire App Only Access Token to call Azure Resource Manager - Client Credential OAuth Flow
-                ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
-                    ConfigurationManager.AppSettings["ida:Password"]);
-                // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
-                AuthenticationContext authContext =
-                    new AuthenticationContext(string.Format(ConfigurationManager.AppSettings["ida:Authority"],
-                        organizationId));
-                AuthenticationResult result =
-                    authContext.AcquireToken(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"],
-                        credential);
-
+                AuthenticationResult result = AcquireAppToken(organizationId);
 
                 // Get permissions of the app on the subscription
                 string requestUrl =
@@ -468,7 +472,8 @@ namespace CogsMinimizer.Shared
 
         }
 
-        public static IEnumerable<ClassicAdministrator> GetSubscriptionAdmins(string subscriptionId,
+        public static IEnumerable<ClassicAdministrator> GetSubscriptionAdmins(
+            AuthenticationResult authToken, string subscriptionId,
             string organizationId)
         {
             var authClient = GetAuthorizationManagementClient(subscriptionId, organizationId);
@@ -489,16 +494,6 @@ namespace CogsMinimizer.Shared
             return resourceClient;
         }
 
-        //private static Microsoft.Azure.Management.Resources.ResourceManagementClient GetOldResourceManagementClient(
-        //    string subscriptionId, string organizationId)
-        //{
-        //    AuthenticationResult result = AcquireUserToken(organizationId);
-
-        //    var credentials = new TokenCredentials(result.AccessToken);
-
-        //    var resourceClient = new Microsoft.Azure.Management.Resources.ResourceManagementClient() 
-        //    return resourceClient;
-        //}
 
         private static AuthorizationManagementClient GetAuthorizationManagementClient(string subscriptionId,
             string organizationId)
