@@ -57,20 +57,26 @@ namespace OfflineSubscriptionManager
             string subject = $"SubMinimizer: Subscription Analysis report for {sub.DisplayName}";
 
             string message = @"<!DOCTYPE html>
-                            <html>
-                            <head>
-                            <style>
-                            table, th, td {
-                                border: 1px solid black;
-                                border-collapse: collapse;
-                            }
-                            </style>
+                            <html lang=""en"">
+                            <head>    
+                                <meta content=""text/html; charset=utf-8"" http-equiv=""Content-Type"">
+                                <title>
+                                    Upcoming topics
+                                </title>
+                                <style type=""text/css"">
+                                    HTML{background-color: #e8e8e8;}
+                                    .courses-table{font-size: 16px; padding: 3px; border-collapse: collapse; border-spacing: 0;}
+                                    .courses-table .description{color: #505050;}
+                                    .courses-table td{border: 1px solid #D1D1D1; background-color: #F3F3F3; padding: 0 10px;}
+                                    .courses-table th{border: 1px solid #424242; color: #FFFFFF;text-align: left; padding: 0 10px;}
+                                    .green{background-color: #6B9852;}
+                                </style>
                             </head>
                             <body>";
 
             message += $"<H2>Subscription name : {sub.DisplayName}</H2>";
             message += $"<H2>Subscription ID : {sub.Id} </H2>";
-            message += $"<h3>Analysis Date : {sub.LastAnalysisDate}</h3>";
+            message += $"<h3>Analysis Date : {GetShortDate(sub.LastAnalysisDate)}</h3>";
             message += "<br>";
 
             if (analysisResult.ExpiredResources.Count == 0)
@@ -90,13 +96,25 @@ namespace OfflineSubscriptionManager
 
         private static string GetHTMLTableForResources(IEnumerable<Resource> resources)
         {
-            string result = "<Table>";
+            string result = "<Table class=\"courses-table\">";
+
+            result += "<tr>";
+            result += "<th class=\"green\">Name</th>";
+            result += "<th class=\"green\">Group</th>";
+            result += "<th class=\"green\">Owner</th>";
+            result += "<th class=\"green\">Expiration Date</th>";
+
+            result += "</tr>";
+
             foreach (var resource in resources)
             {
                 result += "<tr>";
 
                 result += $"<td>{resource.Name}</td>";
                 result += $"<td>{resource.ResourceGroup}</td>";
+                string unclearOwner = resource.Owner != null && !resource.ConfirmedOwner ? "(?)" : string.Empty;
+                result += $"<td>{resource.Owner} {unclearOwner}</td>";
+                result += $"<td>{GetShortDate(resource.ExpirationDate)}</td>";
 
                 result += "</tr>";
             }
@@ -118,6 +136,11 @@ namespace OfflineSubscriptionManager
             Mail mail = new Mail(from, subject, to, content);
 
             dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
+        }
+
+        private static string GetShortDate(DateTime dateTime)
+        {
+            return dateTime.ToString("dd MMMM yyyy");
         }
     }
 }

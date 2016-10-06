@@ -20,72 +20,48 @@ namespace CogsMinimizer.Controllers
         // GET: Subscription
         
         public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
+        {       
+            var model = GetResourcesViewModel(subscription.Id);
+            return View(model);
+        }
+
+        //Extends the duration of a resource so that it does not get reported or deleted as expired
+        public ActionResult Extend(string subscriptionId, string resourceId)
         {
-            var resources = new List<Resource>();
-            var subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(subscription.Id,
-                subscription.OrganizationId);
-            var emails = GetEmails(subscriptionAdmins);
-            var adminEmails = emails.ToList();
-
-            var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(subscription.Id, subscription.OrganizationId);
-
-            //todo fix this
-            var selectedResourceGroups = resourceGroups.Take(3);
-
             using (var db = new DataAccess())
             {
-                var oldResources = db.Resources;
+                var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(subscriptionId) && x.Id.Equals(resourceId));
 
-                foreach (var group in selectedResourceGroups)
+                if (resource != null)
                 {
-                    var resourceList = AzureResourceManagerUtil.GetResourceList(subscription.Id,
-                        subscription.OrganizationId, group.Name);
-                    // var owner = findOwner(x.Name, adminAliases);
-                    foreach (var genericResource in resourceList)
-                    {
-                        var owner = findOwner(genericResource.Name, adminEmails);
-                        var oldEntry =
-                            db.Resources.FirstOrDefault(x => x.AzureResourceIdentifier.Equals(genericResource.Id));
-
-                        var resource = oldEntry;
-                        var foundDate = DateTime.UtcNow.Date;
-                        var exporatoinDate = foundDate.AddDays(Subscription.DEFAULT_EXPIRATION_INTERVAL_IN_DAYS);
-
-                        if (oldEntry == null)
-                        {
-                            resource = new Resource
-                            {
-                                Id = Guid.NewGuid().ToString(),
-                                AzureResourceIdentifier = genericResource.Id,
-                                Name = genericResource.Name,
-                                Type = genericResource.Type,
-                                ResourceGroup = group.Name,
-                                FirstFoundDate = foundDate,
-                                ExpirationDate = exporatoinDate,
-                                Owner = owner,
-                                Expired = false,
-                                SubscriptionId = subscription.Id
-                            };
-
-                        }
-                        resource.Expired = HasExpired(resource);
-                        resources.Add(resource);
-                        db.Resources.AddOrUpdate(resource);
-                    }
+                    resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                    resource.ExpirationDate = GetNewExpirationDate();
                 }
-                try
-                {
-                    db.SaveChanges();
-                }
-                catch (Exception e)
-                {
-                    //Do nothing
-                }
+                db.Resources.AddOrUpdate(resource);
+                db.SaveChanges();
             }
 
-            var orderedResources = resources.OrderBy(x => x.FirstFoundDate);
+            var model = GetResourcesViewModel(subscriptionId);
+            return View("Analyze",model);
+        }
+
+        private SubscriptionAnalyzeViewModel GetResourcesViewModel(string subscriptionId)
+        {
+            var resources = new List<Resource>();
+
+            Subscription subscription = null;
+            using (var db = new DataAccess())
+            {
+                var expiredResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId))
+                    .Where(HasExpired);
+                resources.AddRange(expiredResources);
+                subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
+
+            }
+
+            var orderedResources = resources.OrderBy(x => x.ExpirationDate);
             var model = new SubscriptionAnalyzeViewModel {Resources = orderedResources, SubscriptionData = subscription};
-            return View(model);
+            return model;
         }
 
         private static string GetAlias(string email)
@@ -103,11 +79,6 @@ namespace CogsMinimizer.Controllers
 
 
 
-        private static string findOwner(string resourceName, List<string> emails)
-        {
-            var owner = emails.FirstOrDefault(x=>resourceName.Contains(GetAlias(x)));
-            return owner;
-        }
 
         public ActionResult Delete(string subscriptionId, string AzureResourceId)
         {
@@ -123,9 +94,9 @@ namespace CogsMinimizer.Controllers
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
                 if (subscription != null && resource != null)
                 {
-                    AzureResourceManagerUtil.DeleteResource(subscriptionId, subscription.OrganizationId,
-                        resource.ResourceGroup,
-                        resource.AzureResourceIdentifier);
+                    //AzureResourceManagerUtil.DeleteResource(subscriptionId, subscription.OrganizationId,
+                    //    resource.ResourceGroup,
+                    //    resource.AzureResourceIdentifier);
                 }
             }
         }
@@ -153,26 +124,11 @@ namespace CogsMinimizer.Controllers
                     DeleteResource(subscriptionId, resource.AzureResourceIdentifier);
                 }
             }
+           
             return RedirectToAction("Index", "Home");
         }
 
-        //Extends the duration of a resource so that it does not get reported or deleted as expired
-        public ActionResult Extend(string subscriptionId, string resourceId)
-        {
-            using (var db = new DataAccess())
-            { 
-                var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(subscriptionId) && x.Id.Equals(resourceId));
-               
-                if (resource != null)
-                {
-                    resource.Owner = AzureResourceManagerUtil.GetSignedInUserUniqueName();
-                    resource.ExpirationDate= GetNewExpirationDate();
-                }
-                db.Resources.AddOrUpdate(resource);
-                db.SaveChanges();
-            }
-            return RedirectToAction("Index", "Home");
-        }
+  
 
         private DataAccess db = new DataAccess();
 
@@ -206,6 +162,16 @@ namespace CogsMinimizer.Controllers
                 if (s != null)
                 {
                     db.Subscriptions.Remove(s);
+
+                    //Delete from the DB all resources in this subscription 
+                    foreach (var resource in db.Resources.ToList())
+                    {
+                        if (resource.SubscriptionId.Equals(subscription.Id))
+                        {
+                            db.Resources.Remove(resource);
+                        }
+                    }
+
                     db.SaveChanges();
                 }
 
