@@ -24,6 +24,7 @@ namespace CogsMinimizer.Shared
         /// The subscription that was analyzed
         /// </summary>
         public Subscription AnalyzedSubscription { get; private set; }
+ 
         /// <summary>
         /// Indicates whether the application had permissions to analyze the subscription
         /// </summary>

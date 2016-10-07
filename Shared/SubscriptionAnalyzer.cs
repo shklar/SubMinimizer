@@ -169,7 +169,8 @@ namespace CogsMinimizer.Shared
                                Owner = owner,
                                ConfirmedOwner = false,
                                Expired = false,
-                               SubscriptionId = m_analyzedSubscription.Id
+                               SubscriptionId = m_analyzedSubscription.Id,
+                               Status = ResourceStatus.Valid
                            };
 
             m_Db.Resources.Add(resource);
@@ -181,17 +182,15 @@ namespace CogsMinimizer.Shared
         /// <param name="resourceEntryFromDb"></param>
         private void UpdateKnownResource(Resource resourceEntryFromDb)
         {
-            //Resource is still good
+            //Resource has expired
             if (resourceEntryFromDb.ExpirationDate < m_analysisResult.AnalysisStartTime.Date)
             {
-                //Resource has expired
-
+                resourceEntryFromDb.Status = ResourceStatus.Expired;
                 m_analysisResult.ExpiredResources.Add(resourceEntryFromDb);
             }
 
             //update the visit time
             resourceEntryFromDb.LastVisitedDate = m_analysisResult.AnalysisStartTime.Date;
-
             m_Db.Resources.AddOrUpdate(resourceEntryFromDb);
         }
 

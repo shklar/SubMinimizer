@@ -73,5 +73,11 @@ namespace CogsMinimizer.Shared
         /// </summary>
         public string SubscriptionId { get; set; }
 
+        /// <summary>
+        /// Inidcates the status of the resource (valid, expired, pending deletion etc.)
+        /// </summary>
+        public ResourceStatus  Status { get; set; }
+        
+
     }
 }

@@ -36,6 +36,7 @@ namespace CogsMinimizer.Controllers
                 {
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
                     resource.ExpirationDate = GetNewExpirationDate();
+                    resource.Status = ResourceStatus.Valid;
                 }
                 db.Resources.AddOrUpdate(resource);
                 db.SaveChanges();
@@ -80,26 +81,25 @@ namespace CogsMinimizer.Controllers
 
 
 
-        public ActionResult Delete(string subscriptionId, string AzureResourceId)
-        {
-            DeleteResource(subscriptionId, AzureResourceId);
-            return RedirectToAction("Index", "Home");
-        }
-
-        private static void DeleteResource(string subscriptionId, string AzureResourceId)
+        public ActionResult Delete(string subscriptionId, string resourceId)
         {
             using (var db = new DataAccess())
             {
-                var resource = db.Resources.FirstOrDefault(x => x.AzureResourceIdentifier.Equals(AzureResourceId));
-                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
-                if (subscription != null && resource != null)
+                var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(subscriptionId) && x.Id.Equals(resourceId));
+
+                if (resource != null)
                 {
-                    //AzureResourceManagerUtil.DeleteResource(subscriptionId, subscription.OrganizationId,
-                    //    resource.ResourceGroup,
-                    //    resource.AzureResourceIdentifier);
+                    resource.Status = ResourceStatus.MarkedForDeletion;
+                    db.Resources.AddOrUpdate(resource);
+                    db.SaveChanges();
                 }
             }
+
+            var model = GetResourcesViewModel(subscriptionId);
+            return View("Analyze", model);
         }
+
+   
 
 
         private bool HasExpired(Resource resource)
@@ -112,6 +112,11 @@ namespace CogsMinimizer.Controllers
            return DateTime.UtcNow.AddDays(EXPIRATION_INTERVAL_IN_DAYS);
         }
 
+        /// <summary>
+        /// Marks all the expired resources in the subscription for deletion
+        /// </summary>
+        /// <param name="subscriptionId"></param>
+        /// <returns></returns>
         public ActionResult DeleteExpired(string subscriptionId)
         {
             using (var db = new DataAccess())
@@ -121,11 +126,15 @@ namespace CogsMinimizer.Controllers
 
                 foreach (var resource in expiredResources)
                 {
-                    DeleteResource(subscriptionId, resource.AzureResourceIdentifier);
+                    resource.Status = ResourceStatus.MarkedForDeletion;
+                    db.Resources.AddOrUpdate(resource);
                 }
+               
+                db.SaveChanges();
             }
-           
-            return RedirectToAction("Index", "Home");
+
+            var model = GetResourcesViewModel(subscriptionId);
+            return View("Analyze", model);
         }
 
   

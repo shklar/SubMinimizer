@@ -12,6 +12,7 @@
                            new { SubscriptionId = Model.SubscriptionData.Id},
                            new { @class = "btn btn-danger" })
 <br/>
+<br/>
 
 <table class="table">
     <tr>
@@ -32,6 +33,9 @@
         </th>
         <th>
             @Html.DisplayNameFor(model => model.Resources.First().ExpirationDate)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Resources.First().Status)
         </th>
         <th>
             Actions
@@ -61,12 +65,15 @@
                 @Html.DisplayFor(modelItem => item.ExpirationDate)
             </td>
             <td>
+                @Html.DisplayFor(modelItem => item.Status)
+            </td>
+            <td>
                 @Html.ActionLink("Extend", "Extend",
                     new {subscriptionId = item.SubscriptionId, resourceId = item.Id},
                     new {@class = "btn btn-info btn-xs"})
 
                 @Html.ActionLink("Delete", "Delete",
-                           new { SubscriptionId = item.SubscriptionId, AzureResourceId = item.AzureResourceIdentifier, },
+                           new { SubscriptionId = item.SubscriptionId, resourceId = item.Id},
                            new { @class = "btn btn-danger btn-xs" })
             </td>
         </tr>
