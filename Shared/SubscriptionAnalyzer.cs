@@ -79,12 +79,12 @@ namespace CogsMinimizer.Shared
             }
 
             //Verify that the application indeed has access to the subscription
-            bool isApplicationAutohrizedToReadSubscription =
+            bool isApplicationAutohrizedToForSubscription =
                 AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(m_analyzedSubscription.Id,
                 m_analyzedSubscription.OrganizationId);
 
             //Couldn't access the subcription
-            if (!isApplicationAutohrizedToReadSubscription)
+            if (!isApplicationAutohrizedToForSubscription)
             {
                 m_analysisResult.IsSubscriptionAccessible = false;
             }
@@ -93,6 +93,7 @@ namespace CogsMinimizer.Shared
             else
             {
                 m_analysisResult.IsSubscriptionAccessible = true;
+                DeleteMarkedResources();
                 AnalyzeSubscriptionResources();
             }
 
@@ -101,9 +102,38 @@ namespace CogsMinimizer.Shared
             return m_analysisResult;
         }
 
+        /// <summary>
+        /// Deletes all the resources that were marked for deletion
+        /// </summary>
+        private void DeleteMarkedResources()
+        {
+            var resourcesMarkedForDeletion =
+                m_Db.Resources.Where(x => x.SubscriptionId.Equals(m_analyzedSubscription.Id) &&
+                x.Status == ResourceStatus.MarkedForDeletion).ToList();
+
+            //Try to delete the resources that are marked for delete
+            foreach (var resource in resourcesMarkedForDeletion)
+            {
+                try
+                {
+                    //AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier);
+                    m_Db.Resources.Remove(resource);
+                    m_analysisResult.DeletedResources.Add(resource);
+                }
+                catch (Exception e)
+                {
+                    m_analysisResult.FailedDeleteResources.Add(resource);                  
+                }
+            }
+
+            m_Db.SaveChanges();
+        }
+
+        /// <summary>
+        /// Review all the resources in the subscription
+        /// </summary>
         private void AnalyzeSubscriptionResources()
         {
-            var resources = new List<Resource>();
             var subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(m_authorizationManagementClient);
             var emails = GetEmails(subscriptionAdmins);
             var adminEmails = emails.ToList();
@@ -135,8 +165,14 @@ namespace CogsMinimizer.Shared
                 }
             }
 
+            m_Db.SaveChanges();
+
             //Clean up any resources in the DB that were no longer found (probably deleted)
-            var unvisitedResources = m_Db.Resources.Where(x => x.LastVisitedDate < m_analysisResult.AnalysisStartTime.Date);
+            var unvisitedResources = m_Db.Resources.Where(x => x.SubscriptionId.Equals(m_analyzedSubscription.Id) &&
+            x.LastVisitedDate < m_analysisResult.AnalysisStartTime.Date).ToList();
+
+            m_analysisResult.NotFoundResources = unvisitedResources;
+
             foreach (var unvisitedResource in unvisitedResources)
             {
                 m_Db.Resources.Remove(unvisitedResource);
@@ -174,6 +210,7 @@ namespace CogsMinimizer.Shared
                            };
 
             m_Db.Resources.Add(resource);
+            m_analysisResult.NewResources.Add(resource);
         }
 
         /// <summary>

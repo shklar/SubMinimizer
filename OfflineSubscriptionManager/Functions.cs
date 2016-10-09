@@ -64,12 +64,12 @@ namespace OfflineSubscriptionManager
                                     Upcoming topics
                                 </title>
                                 <style type=""text/css"">
-                                    HTML{background-color: #e8e8e8;}
+                                    HTML{background-color: #ffffff;}
                                     .courses-table{font-size: 16px; padding: 3px; border-collapse: collapse; border-spacing: 0;}
                                     .courses-table .description{color: #505050;}
                                     .courses-table td{border: 1px solid #D1D1D1; background-color: #F3F3F3; padding: 0 10px;}
                                     .courses-table th{border: 1px solid #424242; color: #FFFFFF;text-align: left; padding: 0 10px;}
-                                    .green{background-color: #6B9852;}
+                                    .tableheadercolor{background-color: #111111;}
                                 </style>
                             </head>
                             <body>";
@@ -85,8 +85,32 @@ namespace OfflineSubscriptionManager
             }
             else
             {
-                message += $"<h3>Found {analysisResult.ExpiredResources.Count} expired resources :</h3>";
+                message += $"<h3>Found {analysisResult.ExpiredResources.Count} expired resource(s):</h3>";
                 message += GetHTMLTableForResources(analysisResult.ExpiredResources);
+            }
+
+            if (analysisResult.DeletedResources.Count != 0)
+            {
+                message += $"<h3>Deleted {analysisResult.DeletedResources.Count} resource(s):</h3>";
+                message += GetHTMLTableForResources(analysisResult.DeletedResources);
+            }
+
+            if (analysisResult.FailedDeleteResources.Count != 0)
+            {
+                message += $"<h3>Failed deleting {analysisResult.FailedDeleteResources.Count} resource(s):</h3>";
+                message += GetHTMLTableForResources(analysisResult.FailedDeleteResources);
+            }
+
+            if (analysisResult.NotFoundResources.Count != 0)
+            {
+                message += $"<h3>Couldn't find {analysisResult.NotFoundResources.Count} resource(s):</h3>";
+                message += GetHTMLTableForResources(analysisResult.NotFoundResources);
+            }
+
+            if (analysisResult.NewResources.Count != 0)
+            {
+                message += $"<h3>Found {analysisResult.NewResources.Count} new resource(s) :</h3>";
+                message += GetHTMLTableForResources(analysisResult.NewResources);
             }
 
             message += "</body></html>";
@@ -99,10 +123,10 @@ namespace OfflineSubscriptionManager
             string result = "<Table class=\"courses-table\">";
 
             result += "<tr>";
-            result += "<th class=\"green\">Name</th>";
-            result += "<th class=\"green\">Group</th>";
-            result += "<th class=\"green\">Owner</th>";
-            result += "<th class=\"green\">Expiration Date</th>";
+            result += "<th class=\"tableheadercolor\">Name</th>";
+            result += "<th class=\"tableheadercolor\">Group</th>";
+            result += "<th class=\"tableheadercolor\">Owner</th>";
+            result += "<th class=\"tableheadercolor\">Expiration Date</th>";
 
             result += "</tr>";
 
@@ -110,7 +134,7 @@ namespace OfflineSubscriptionManager
             {
                 result += "<tr>";
 
-                result += $"<td>{resource.Name}</td>";
+                result += $"<td><a href=\"https://ms.portal.azure.com/#resource{resource.AzureResourceIdentifier}\">{resource.Name}</a></td>";
                 result += $"<td>{resource.ResourceGroup}</td>";
                 string unclearOwner = resource.Owner != null && !resource.ConfirmedOwner ? "(?)" : string.Empty;
                 result += $"<td>{resource.Owner} {unclearOwner}</td>";

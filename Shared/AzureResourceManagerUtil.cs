@@ -474,7 +474,7 @@ namespace CogsMinimizer.Shared
 
         #endregion
 
-        public static void DeleteResource(ResourceManagementClient resourceClient, string azureresourceid)
+        public static void DeleteAzureResource(ResourceManagementClient resourceClient, string azureresourceid)
         {
             try
             {
