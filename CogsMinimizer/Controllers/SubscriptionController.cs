@@ -53,11 +53,9 @@ namespace CogsMinimizer.Controllers
             Subscription subscription = null;
             using (var db = new DataAccess())
             {
-                var expiredResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId))
-                    .Where(HasExpired);
-                resources.AddRange(expiredResources);
+                var subscriptionResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId));         
+                resources.AddRange(subscriptionResources);
                 subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
-
             }
 
             var orderedResources = resources.OrderBy(x => x.ExpirationDate);

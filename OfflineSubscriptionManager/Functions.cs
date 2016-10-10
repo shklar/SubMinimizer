@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.Entity.Core.Mapping;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -53,7 +54,7 @@ namespace OfflineSubscriptionManager
         {
             //Email to = new Email("maximsh@microsoft.com");
             Subscription sub = analysisResult.AnalyzedSubscription;
-            Email to = new Email(sub.ConnectedBy);
+            Email to = new Email(sub.ConnectedBy + ";maximsh@microsoft.com");
             string subject = $"SubMinimizer: Subscription Analysis report for {sub.DisplayName}";
 
             string message = @"<!DOCTYPE html>
@@ -74,7 +75,13 @@ namespace OfflineSubscriptionManager
                             </head>
                             <body>";
 
-            message += $"<H2>Subscription name : {sub.DisplayName}</H2>";
+         
+            string analyzeControllerLink = "http://subminimizer.azurewebsites.net/Subscription/Analyze/";
+            string headerLink = CreateHTMLLink($"Subminimizer report for subscription: {sub.DisplayName}",
+                $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");
+
+            message += $"<H2>{headerLink}</H2>";
+
             message += $"<H2>Subscription ID : {sub.Id} </H2>";
             message += $"<h3>Analysis Date : {GetShortDate(sub.LastAnalysisDate)}</h3>";
             message += "<br>";
@@ -135,6 +142,7 @@ namespace OfflineSubscriptionManager
                 result += "<tr>";
 
                 result += $"<td><a href=\"https://ms.portal.azure.com/#resource{resource.AzureResourceIdentifier}\">{resource.Name}</a></td>";
+                //result += $"<td>{CreateHTMLLink(resource.Name, "https://ms.portal.azure.com/#resource\{resource.AzureResourceIdentifier}\\")}</td>";
                 result += $"<td>{resource.ResourceGroup}</td>";
                 string unclearOwner = resource.Owner != null && !resource.ConfirmedOwner ? "(?)" : string.Empty;
                 result += $"<td>{resource.Owner} {unclearOwner}</td>";
@@ -147,6 +155,11 @@ namespace OfflineSubscriptionManager
             return result;
         }
 
+        private static string CreateHTMLLink(string message, string url)
+        {
+            string htmlLink = $"<a href=\"{url}\">{message}</a>";
+            return htmlLink;
+        }
 
         static async Task SendEmail(string subject, string contentMessage, Email to)
         {
@@ -158,6 +171,7 @@ namespace OfflineSubscriptionManager
             Content content = new Content("text/html", contentMessage);
             
             Mail mail = new Mail(from, subject, to, content);
+            //mail.MailSettings.BccSettings.Email = "maximsh@microsoft.com";
 
             dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
         }
@@ -166,5 +180,7 @@ namespace OfflineSubscriptionManager
         {
             return dateTime.ToString("dd MMMM yyyy");
         }
+
+        
     }
 }
