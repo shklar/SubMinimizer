@@ -54,7 +54,7 @@ namespace OfflineSubscriptionManager
         {
             //Email to = new Email("maximsh@microsoft.com");
             Subscription sub = analysisResult.AnalyzedSubscription;
-            Email to = new Email(sub.ConnectedBy + ";maximsh@microsoft.com");
+            Email to = new Email(sub.ConnectedBy);
             string subject = $"SubMinimizer: Subscription Analysis report for {sub.DisplayName}";
 
             string message = @"<!DOCTYPE html>
@@ -171,9 +171,13 @@ namespace OfflineSubscriptionManager
             Content content = new Content("text/html", contentMessage);
             
             Mail mail = new Mail(from, subject, to, content);
-            //mail.MailSettings.BccSettings.Email = "maximsh@microsoft.com";
+            var bccList = new List<Email>();
+            bccList.Add(new Email("maximsh@microsoft.com"));
+            bccList.Add(new Email("eviten@microsoft.com"));
 
-            dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
+            mail.Personalization[0].Bccs = bccList;
+
+           dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
         }
 
         private static string GetShortDate(DateTime dateTime)

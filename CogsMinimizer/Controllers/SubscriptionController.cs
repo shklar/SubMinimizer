@@ -78,7 +78,12 @@ namespace CogsMinimizer.Controllers
 
 
 
-
+        /// <summary>
+        /// Marks a single resource for delete
+        /// </summary>
+        /// <param name="subscriptionId"></param>
+        /// <param name="resourceId"></param>
+        /// <returns></returns>
         public ActionResult Delete(string subscriptionId, string resourceId)
         {
             using (var db = new DataAccess())
