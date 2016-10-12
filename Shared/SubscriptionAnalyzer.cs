@@ -160,7 +160,7 @@ namespace CogsMinimizer.Shared
                     //Got this resource in the DB already
                     else
                     {
-                        UpdateKnownResource(resourceEntryFromDb);
+                        UpdateKnownResource(resourceEntryFromDb, adminEmails);
                     }              
                 }
             }
@@ -188,7 +188,7 @@ namespace CogsMinimizer.Shared
         /// <param name="groupName"></param>
         private void StoreNewFoundResource(GenericResource genericResource, List<string> adminEmails, string groupName)
         {
-            var owner = FindOwner(genericResource.Name, adminEmails);
+            var owner = FindOwner(genericResource.Name, groupName, adminEmails);
 
             var resource = new Resource
                            {
@@ -217,9 +217,20 @@ namespace CogsMinimizer.Shared
         /// Updates the state of a previously encountered resource
         /// </summary>
         /// <param name="resourceEntryFromDb"></param>
-        private void UpdateKnownResource(Resource resourceEntryFromDb)
+        /// <param name="adminEmails"></param>
+        private void UpdateKnownResource(Resource resourceEntryFromDb, List<string> adminEmails)
         {
-            //Resource has expired
+            //Try to update the owner if it is unknown
+            if (resourceEntryFromDb.Owner == null)
+            {
+                var foundOwner = FindOwner(resourceEntryFromDb.Name, resourceEntryFromDb.ResourceGroup, adminEmails);
+                if (foundOwner!= null)
+                {
+                    resourceEntryFromDb.Owner = foundOwner;
+                }
+            }
+
+            //Check if resource has expired
             if (resourceEntryFromDb.ExpirationDate < m_analysisResult.AnalysisStartTime.Date)
             {
                 resourceEntryFromDb.Status = ResourceStatus.Expired;
@@ -245,9 +256,9 @@ namespace CogsMinimizer.Shared
             return emails;
         }
 
-        private static string FindOwner(string resourceName, List<string> emails)
+        private static string FindOwner(string resourceName, string groupName, List<string> emails)
         {
-            var owner = emails.FirstOrDefault(x => resourceName.Contains(GetAlias(x)));
+            var owner = emails.FirstOrDefault(x => (resourceName+groupName).Contains(GetAlias(x)));
             return owner;
         }
         #endregion
