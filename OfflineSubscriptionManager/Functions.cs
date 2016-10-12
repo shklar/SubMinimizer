@@ -172,8 +172,16 @@ namespace OfflineSubscriptionManager
             
             Mail mail = new Mail(from, subject, to, content);
             var bccList = new List<Email>();
-            bccList.Add(new Email("maximsh@microsoft.com"));
-            bccList.Add(new Email("eviten@microsoft.com"));
+            var dev1Email = new Email("maximsh@microsoft.com");
+            if (!to.Address.Equals(dev1Email.Address))
+            {
+                bccList.Add(dev1Email);
+            }
+            var dev2Email = new Email("eviten@microsoft.com");
+            if (!to.Address.Equals(dev2Email.Address))
+            {
+                bccList.Add(dev2Email);
+            }
 
             mail.Personalization[0].Bccs = bccList;
 
