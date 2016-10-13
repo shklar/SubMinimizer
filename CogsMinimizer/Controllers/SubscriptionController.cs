@@ -140,7 +140,33 @@ namespace CogsMinimizer.Controllers
             return View("Analyze", model);
         }
 
-  
+        /// <summary>
+        /// Extends all the expired resources in the subscription
+        /// </summary>
+        /// <param name="subscriptionId"></param>
+        /// <returns></returns>
+        public ActionResult ExtendExpired(string subscriptionId)
+        {
+            using (var db = new DataAccess())
+            {
+                var subResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId)).ToList();
+                var expiredResources = subResources.Where(HasExpired);
+
+                foreach (var resource in expiredResources)
+                {
+                    resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                    resource.ExpirationDate = GetNewExpirationDate();
+                    resource.Status = ResourceStatus.Valid;
+                }
+
+                db.SaveChanges();
+            }
+
+            var model = GetResourcesViewModel(subscriptionId);
+            return View("Analyze", model);
+        }
+
+
 
         private DataAccess db = new DataAccess();
 

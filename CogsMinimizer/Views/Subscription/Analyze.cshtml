@@ -8,13 +8,13 @@
 <h4>Subscription name: @Model.SubscriptionData.DisplayName</h4>
 <h4>Subscription id: @Model.SubscriptionData.Id</h4>
 
-@Html.ActionLink("Delete Expired", "DeleteExpired",
+@Html.ActionLink("Extend Expired", "ExtendExpired",
                            new { SubscriptionId = Model.SubscriptionData.Id},
-                           new { @class = "btn btn-danger" })
+                           new { @class = "btn btn-info" })
 <br/>
 <br/>
 
-<table class="table">
+<table class="table table-hover table-striped">
     <tr>
         <th>
             @Html.DisplayNameFor(model => model.Resources.First().Name)
@@ -72,9 +72,11 @@
                     new {subscriptionId = item.SubscriptionId, resourceId = item.Id},
                     new {@class = "btn btn-info btn-xs"})
 
+                <!--
                 @Html.ActionLink("Delete", "Delete",
-                           new { SubscriptionId = item.SubscriptionId, resourceId = item.Id},
-                           new { @class = "btn btn-danger btn-xs" })
+                    new {SubscriptionId = item.SubscriptionId, resourceId = item.Id},
+                    new {@class = "btn btn-danger btn-xs"})
+                -->
             </td>
         </tr>
     }
