@@ -109,6 +109,7 @@
     <Compile Include="AzureAuthUtils.cs" />
     <Compile Include="AzureResourceManagerUtil.cs" />
     <Compile Include="DataAccess.cs" />
+    <Compile Include="HTMLUtilities.cs" />
     <Compile Include="Migrations\201608101409191_InitialCreate.cs" />
     <Compile Include="Migrations\201608101409191_InitialCreate.Designer.cs">
       <DependentUpon>201608101409191_InitialCreate.cs</DependentUpon>

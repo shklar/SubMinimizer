@@ -77,7 +77,7 @@ namespace OfflineSubscriptionManager
 
          
             string analyzeControllerLink = "http://subminimizer.azurewebsites.net/Subscription/Analyze/";
-            string headerLink = CreateHTMLLink($"Subminimizer report for subscription: {sub.DisplayName}",
+            string headerLink = HTMLUtilities.CreateHTMLLink($"Subminimizer report for subscription: {sub.DisplayName}",
                 $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");
 
             message += $"<H2>{headerLink}</H2>";
@@ -157,11 +157,7 @@ namespace OfflineSubscriptionManager
             return result;
         }
 
-        private static string CreateHTMLLink(string message, string url)
-        {
-            string htmlLink = $"<a href=\"{url}\">{message}</a>";
-            return htmlLink;
-        }
+      
 
         static async Task SendEmail(string subject, string contentMessage, Email to)
         {
@@ -194,7 +190,5 @@ namespace OfflineSubscriptionManager
         {
             return dateTime.ToString("dd MMMM yyyy");
         }
-
-        
     }
 }

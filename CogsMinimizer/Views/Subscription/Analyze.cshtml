@@ -1,4 +1,5 @@
-﻿@model CogsMinimizer.Models.SubscriptionAnalyzeViewModel
+﻿@using CogsMinimizer.Shared
+@model CogsMinimizer.Models.SubscriptionAnalyzeViewModel
 
 @{
     ViewBag.Title = "Analyze Subscription";
@@ -47,7 +48,7 @@
         string rowClass = item.Expired ? "alert alert - warning" : null;
         <tr class="@rowClass">
             <td>
-                @Html.DisplayFor(modelItem => item.Name)
+                @Html.Raw(HTMLUtilities.CreateAzureResourceAnchor(item.Name, item.AzureResourceIdentifier))            
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Type)
