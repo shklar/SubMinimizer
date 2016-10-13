@@ -33,6 +33,8 @@ namespace CogsMinimizer.Shared
 
         private AuthorizationManagementClient m_authorizationManagementClient;
 
+        private List<ClassicAdministrator> m_subscriptionAdmins; 
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -116,7 +118,7 @@ namespace CogsMinimizer.Shared
             {
                 try
                 {
-                    //AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier);
+                  //  AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier);
                     m_Db.Resources.Remove(resource);
                     m_analysisResult.DeletedResources.Add(resource);
                 }
@@ -134,8 +136,8 @@ namespace CogsMinimizer.Shared
         /// </summary>
         private void AnalyzeSubscriptionResources()
         {
-            var subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(m_authorizationManagementClient);
-            var emails = GetEmails(subscriptionAdmins);
+            m_subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(m_authorizationManagementClient).ToList();
+            var emails = GetEmails(m_subscriptionAdmins);
             var adminEmails = emails.ToList();
 
             var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(m_resourceManagementClient);
@@ -221,7 +223,7 @@ namespace CogsMinimizer.Shared
         private void UpdateKnownResource(Resource resourceEntryFromDb, List<string> adminEmails)
         {
             //Try to update the owner if it is unknown
-            if (resourceEntryFromDb.Owner == null)
+            if (String.IsNullOrWhiteSpace(resourceEntryFromDb.Owner))
             {
                 var foundOwner = FindOwner(resourceEntryFromDb.Name, resourceEntryFromDb.ResourceGroup, adminEmails);
                 if (foundOwner!= null)

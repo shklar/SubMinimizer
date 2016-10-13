@@ -131,6 +131,7 @@ namespace OfflineSubscriptionManager
 
             result += "<tr>";
             result += "<th class=\"tableheadercolor\">Name</th>";
+            result += "<th class=\"tableheadercolor\">Type</th>";
             result += "<th class=\"tableheadercolor\">Group</th>";
             result += "<th class=\"tableheadercolor\">Owner</th>";
             result += "<th class=\"tableheadercolor\">Expiration Date</th>";
@@ -143,6 +144,7 @@ namespace OfflineSubscriptionManager
 
                 result += $"<td><a href=\"https://ms.portal.azure.com/#resource{resource.AzureResourceIdentifier}\">{resource.Name}</a></td>";
                 //result += $"<td>{CreateHTMLLink(resource.Name, "https://ms.portal.azure.com/#resource\{resource.AzureResourceIdentifier}\\")}</td>";
+                result += $"<td>{resource.Type}</td>";
                 result += $"<td>{resource.ResourceGroup}</td>";
                 string unclearOwner = resource.Owner != null && !resource.ConfirmedOwner ? "(?)" : string.Empty;
                 result += $"<td>{resource.Owner} {unclearOwner}</td>";

@@ -122,6 +122,7 @@
     <Compile Include="Subscription.cs" />
     <Compile Include="SubscriptionAnalyzer.cs" />
     <Compile Include="SubscriptionAnalysisResult.cs" />
+    <Compile Include="SubscriptionManagementLevel.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

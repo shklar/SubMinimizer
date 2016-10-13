@@ -476,17 +476,7 @@ namespace CogsMinimizer.Shared
 
         public static void DeleteAzureResource(ResourceManagementClient resourceClient, string azureresourceid)
         {
-            try
-            {
-
                 resourceClient.Resources.DeleteById(azureresourceid, "2014-04-01");
-            }
-            catch (Exception e)
-            {
-                var message = e.ToString();
-            }
-            return;
-
         }
     }
 }
