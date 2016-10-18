@@ -118,7 +118,7 @@ namespace CogsMinimizer.Shared
             {
                 try
                 {
-                  //  AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier);
+                    AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier);
                     m_Db.Resources.Remove(resource);
                     m_analysisResult.DeletedResources.Add(resource);
                 }
