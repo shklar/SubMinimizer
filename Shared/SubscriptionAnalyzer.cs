@@ -33,6 +33,8 @@ namespace CogsMinimizer.Shared
 
         private AuthorizationManagementClient m_authorizationManagementClient;
 
+        private List<ClassicAdministrator> m_subscriptionAdmins; 
+
         /// <summary>
         /// Constructor
         /// </summary>
@@ -116,7 +118,7 @@ namespace CogsMinimizer.Shared
             {
                 try
                 {
-                    //AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier);
+                  //  AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier);
                     m_Db.Resources.Remove(resource);
                     m_analysisResult.DeletedResources.Add(resource);
                 }
@@ -134,8 +136,8 @@ namespace CogsMinimizer.Shared
         /// </summary>
         private void AnalyzeSubscriptionResources()
         {
-            var subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(m_authorizationManagementClient);
-            var emails = GetEmails(subscriptionAdmins);
+            m_subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(m_authorizationManagementClient).ToList();
+            var emails = GetEmails(m_subscriptionAdmins);
             var adminEmails = emails.ToList();
 
             var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(m_resourceManagementClient);
@@ -160,7 +162,7 @@ namespace CogsMinimizer.Shared
                     //Got this resource in the DB already
                     else
                     {
-                        UpdateKnownResource(resourceEntryFromDb);
+                        UpdateKnownResource(resourceEntryFromDb, adminEmails);
                     }              
                 }
             }
@@ -188,7 +190,7 @@ namespace CogsMinimizer.Shared
         /// <param name="groupName"></param>
         private void StoreNewFoundResource(GenericResource genericResource, List<string> adminEmails, string groupName)
         {
-            var owner = FindOwner(genericResource.Name, adminEmails);
+            var owner = FindOwner(genericResource.Name, groupName, adminEmails);
 
             var resource = new Resource
                            {
@@ -217,9 +219,20 @@ namespace CogsMinimizer.Shared
         /// Updates the state of a previously encountered resource
         /// </summary>
         /// <param name="resourceEntryFromDb"></param>
-        private void UpdateKnownResource(Resource resourceEntryFromDb)
+        /// <param name="adminEmails"></param>
+        private void UpdateKnownResource(Resource resourceEntryFromDb, List<string> adminEmails)
         {
-            //Resource has expired
+            //Try to update the owner if it is unknown
+            if (String.IsNullOrWhiteSpace(resourceEntryFromDb.Owner))
+            {
+                var foundOwner = FindOwner(resourceEntryFromDb.Name, resourceEntryFromDb.ResourceGroup, adminEmails);
+                if (foundOwner!= null)
+                {
+                    resourceEntryFromDb.Owner = foundOwner;
+                }
+            }
+
+            //Check if resource has expired
             if (resourceEntryFromDb.ExpirationDate < m_analysisResult.AnalysisStartTime.Date)
             {
                 resourceEntryFromDb.Status = ResourceStatus.Expired;
@@ -245,9 +258,9 @@ namespace CogsMinimizer.Shared
             return emails;
         }
 
-        private static string FindOwner(string resourceName, List<string> emails)
+        private static string FindOwner(string resourceName, string groupName, List<string> emails)
         {
-            var owner = emails.FirstOrDefault(x => resourceName.Contains(GetAlias(x)));
+            var owner = emails.FirstOrDefault(x => (resourceName+groupName).Contains(GetAlias(x)));
             return owner;
         }
         #endregion

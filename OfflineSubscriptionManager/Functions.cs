@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data.Entity.Core.Mapping;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -74,7 +75,13 @@ namespace OfflineSubscriptionManager
                             </head>
                             <body>";
 
-            message += $"<H2>Subscription name : {sub.DisplayName}</H2>";
+         
+            string analyzeControllerLink = "http://subminimizer.azurewebsites.net/Subscription/Analyze/";
+            string headerLink = HTMLUtilities.CreateHTMLLink($"Subminimizer report for subscription: {sub.DisplayName}",
+                $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");
+
+            message += $"<H2>{headerLink}</H2>";
+
             message += $"<H2>Subscription ID : {sub.Id} </H2>";
             message += $"<h3>Analysis Date : {GetShortDate(sub.LastAnalysisDate)}</h3>";
             message += "<br>";
@@ -124,6 +131,7 @@ namespace OfflineSubscriptionManager
 
             result += "<tr>";
             result += "<th class=\"tableheadercolor\">Name</th>";
+            result += "<th class=\"tableheadercolor\">Type</th>";
             result += "<th class=\"tableheadercolor\">Group</th>";
             result += "<th class=\"tableheadercolor\">Owner</th>";
             result += "<th class=\"tableheadercolor\">Expiration Date</th>";
@@ -135,6 +143,8 @@ namespace OfflineSubscriptionManager
                 result += "<tr>";
 
                 result += $"<td><a href=\"https://ms.portal.azure.com/#resource{resource.AzureResourceIdentifier}\">{resource.Name}</a></td>";
+                //result += $"<td>{CreateHTMLLink(resource.Name, "https://ms.portal.azure.com/#resource\{resource.AzureResourceIdentifier}\\")}</td>";
+                result += $"<td>{resource.Type}</td>";
                 result += $"<td>{resource.ResourceGroup}</td>";
                 string unclearOwner = resource.Owner != null && !resource.ConfirmedOwner ? "(?)" : string.Empty;
                 result += $"<td>{resource.Owner} {unclearOwner}</td>";
@@ -147,6 +157,7 @@ namespace OfflineSubscriptionManager
             return result;
         }
 
+      
 
         static async Task SendEmail(string subject, string contentMessage, Email to)
         {
@@ -158,8 +169,21 @@ namespace OfflineSubscriptionManager
             Content content = new Content("text/html", contentMessage);
             
             Mail mail = new Mail(from, subject, to, content);
+            var bccList = new List<Email>();
+            var dev1Email = new Email("maximsh@microsoft.com");
+            if (!to.Address.Equals(dev1Email.Address))
+            {
+                bccList.Add(dev1Email);
+            }
+            var dev2Email = new Email("eviten@microsoft.com");
+            if (!to.Address.Equals(dev2Email.Address))
+            {
+                bccList.Add(dev2Email);
+            }
 
-            dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
+            mail.Personalization[0].Bccs = bccList;
+
+           dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
         }
 
         private static string GetShortDate(DateTime dateTime)

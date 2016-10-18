@@ -53,11 +53,9 @@ namespace CogsMinimizer.Controllers
             Subscription subscription = null;
             using (var db = new DataAccess())
             {
-                var expiredResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId))
-                    .Where(HasExpired);
-                resources.AddRange(expiredResources);
+                var subscriptionResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId));         
+                resources.AddRange(subscriptionResources);
                 subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
-
             }
 
             var orderedResources = resources.OrderBy(x => x.ExpirationDate);
@@ -80,7 +78,12 @@ namespace CogsMinimizer.Controllers
 
 
 
-
+        /// <summary>
+        /// Marks a single resource for delete
+        /// </summary>
+        /// <param name="subscriptionId"></param>
+        /// <param name="resourceId"></param>
+        /// <returns></returns>
         public ActionResult Delete(string subscriptionId, string resourceId)
         {
             using (var db = new DataAccess())
@@ -137,7 +140,33 @@ namespace CogsMinimizer.Controllers
             return View("Analyze", model);
         }
 
-  
+        /// <summary>
+        /// Extends all the expired resources in the subscription
+        /// </summary>
+        /// <param name="subscriptionId"></param>
+        /// <returns></returns>
+        public ActionResult ExtendExpired(string subscriptionId)
+        {
+            using (var db = new DataAccess())
+            {
+                var subResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId)).ToList();
+                var expiredResources = subResources.Where(HasExpired);
+
+                foreach (var resource in expiredResources)
+                {
+                    resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                    resource.ExpirationDate = GetNewExpirationDate();
+                    resource.Status = ResourceStatus.Valid;
+                }
+
+                db.SaveChanges();
+            }
+
+            var model = GetResourcesViewModel(subscriptionId);
+            return View("Analyze", model);
+        }
+
+
 
         private DataAccess db = new DataAccess();
 

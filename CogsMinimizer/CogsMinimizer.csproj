@@ -25,7 +25,7 @@
     <UseGlobalApplicationHostFile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-    <ApplicationInsightsResourceId>/subscriptions/c66bb529-4887-43e1-964f-a4a4c13d7dc4/resourcegroups/Default-ApplicationInsights-CentralUS/providers/microsoft.insights/components/CogsMinimizer</ApplicationInsightsResourceId>
+    <ApplicationInsightsResourceId>/subscriptions/b4b7d4c1-8c25-4da3-bf1c-e50f647a8130/resourcegroups/maxim/providers/microsoft.insights/components/SubMinimizerAI</ApplicationInsightsResourceId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

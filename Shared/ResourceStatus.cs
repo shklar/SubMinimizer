@@ -13,6 +13,7 @@ namespace CogsMinimizer.Shared
     {
         Valid,
         Expired,
-        MarkedForDeletion
+        MarkedForDeletion,
+        Reserved
     }
 }

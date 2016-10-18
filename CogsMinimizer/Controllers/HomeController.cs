@@ -34,7 +34,7 @@ namespace CogsMinimizer.Controllers
 
                     if (subscriptions != null)
                     {
-                        var devSubscriptions = subscriptions.Where(s => s.DisplayName.Contains("ATA") || s.DisplayName.Contains("ATD"));
+                        var devSubscriptions = subscriptions.Where(s => s.DisplayName.Contains("Stage0"));
                      
                         foreach (var subscription in devSubscriptions)
                         {

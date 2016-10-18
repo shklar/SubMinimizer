@@ -26,5 +26,9 @@ namespace CogsMinimizer.Shared
         public int ExpirationIntervalInDays  { get; set; }
 
         public DateTime LastAnalysisDate { get; set; }
+
+        public SubscriptionManagementLevel ManagementLevel { get; set; }
     }
+
+  
 }
