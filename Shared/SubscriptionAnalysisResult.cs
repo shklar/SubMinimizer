@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations.Model;
+using System.Reflection;
 
 namespace CogsMinimizer.Shared
 {
@@ -22,6 +23,7 @@ namespace CogsMinimizer.Shared
             FailedDeleteResources = new List<Resource>();
             NotFoundResources = new List<Resource>();
             NewResources = new List<Resource>();
+            ValidResources = new List<Resource>();
         }
 
         /// <summary>
@@ -63,6 +65,11 @@ namespace CogsMinimizer.Shared
         /// A list of resources found for the first time
         /// </summary>
         public List<Resource> NewResources { get; set; }
+
+        /// <summary>
+        /// A list of valid resources found for the first time
+        /// </summary>
+        public List<Resource> ValidResources { get; set; }
 
         /// <summary>
         /// The time at which the analysis started

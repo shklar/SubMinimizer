@@ -20,23 +20,30 @@ namespace OfflineSubscriptionManager
     {
         // This function will be triggered based on the schedule you have set for this WebJob
         [NoAutomaticTrigger]
-        public static void ManualTrigger(TextWriter log)
+        public static void ManualTrigger(TextWriter logger)
         {
-            ProcessSubscriptions();
+            ITracer tracer = TracerFactory.CreateTracer(logger);
+            tracer.TraceInformation("OfflineSubscriptionManager web job started!");
+            tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["TelemetryInstrumentationKey"]}");
+
+            ProcessSubscriptions(tracer);
+            tracer.Flush();
         }
 
         /// <summary>
         /// The main method triggered periodically. Analyzes each one of the registered subscriptions 
         /// and reports to the customer
         /// </summary>
-        private static void ProcessSubscriptions()
+        private static void ProcessSubscriptions(ITracer tracer)
         {
             using (var db = new DataAccess())
             {
+                tracer.TraceInformation("DB access created");
+
                 foreach (var sub in db.Subscriptions.ToList())
                 {
                     //Analyze the subscription
-                    SubscriptionAnalyzer analyzer = new SubscriptionAnalyzer(db, sub, true);
+                    SubscriptionAnalyzer analyzer = new SubscriptionAnalyzer(db, sub, true, tracer);
                     SubscriptionAnalysisResult analysisResult = analyzer.AnalyzeSubscription();
                     sub.LastAnalysisDate = analysisResult.AnalysisStartTime.Date;
                     
@@ -44,13 +51,13 @@ namespace OfflineSubscriptionManager
                     db.SaveChanges();
 
                     //Report the outcome of the analysis
-                    ReportSubscriptionAnalysisResult(analysisResult);
+                    ReportSubscriptionAnalysisResult(analysisResult, tracer);
                 }
             }
             // SendEmail(message).Wait();
         }
 
-        private static void ReportSubscriptionAnalysisResult(SubscriptionAnalysisResult analysisResult)
+        private static void ReportSubscriptionAnalysisResult(SubscriptionAnalysisResult analysisResult, ITracer tracer)
         {
             //Email to = new Email("maximsh@microsoft.com");
             Subscription sub = analysisResult.AnalyzedSubscription;
@@ -86,6 +93,19 @@ namespace OfflineSubscriptionManager
             message += $"<h3>Analysis Date : {GetShortDate(sub.LastAnalysisDate)}</h3>";
             message += "<br>";
 
+            if (analysisResult.DeletedResources.Count != 0)
+            {
+                message += $"<h3>Deleted {analysisResult.DeletedResources.Count} resource(s):</h3>";
+                message += GetHTMLTableForResources(analysisResult.DeletedResources);
+            }
+
+
+            if (analysisResult.FailedDeleteResources.Count != 0)
+            {
+                message += $"<h3>Failed deleting {analysisResult.FailedDeleteResources.Count} resource(s):</h3>";
+                message += GetHTMLTableForResources(analysisResult.FailedDeleteResources);
+            }
+
             if (analysisResult.ExpiredResources.Count == 0)
             {
                 message += "<h3>No expired resources found</h3>";
@@ -94,18 +114,6 @@ namespace OfflineSubscriptionManager
             {
                 message += $"<h3>Found {analysisResult.ExpiredResources.Count} expired resource(s):</h3>";
                 message += GetHTMLTableForResources(analysisResult.ExpiredResources);
-            }
-
-            if (analysisResult.DeletedResources.Count != 0)
-            {
-                message += $"<h3>Deleted {analysisResult.DeletedResources.Count} resource(s):</h3>";
-                message += GetHTMLTableForResources(analysisResult.DeletedResources);
-            }
-
-            if (analysisResult.FailedDeleteResources.Count != 0)
-            {
-                message += $"<h3>Failed deleting {analysisResult.FailedDeleteResources.Count} resource(s):</h3>";
-                message += GetHTMLTableForResources(analysisResult.FailedDeleteResources);
             }
 
             if (analysisResult.NotFoundResources.Count != 0)
@@ -120,9 +128,15 @@ namespace OfflineSubscriptionManager
                 message += GetHTMLTableForResources(analysisResult.NewResources);
             }
 
+            if (analysisResult.ValidResources.Count != 0)
+            {
+                message += $"<h3>Found {analysisResult.ValidResources.Count} valid resource(s) :</h3>";
+                message += GetHTMLTableForResources(analysisResult.ValidResources);
+            }
+
             message += "</body></html>";
 
-            SendEmail(subject , message, to).Wait();
+            SendEmail(subject , message, to, tracer).Wait();
         }
 
         private static string GetHTMLTableForResources(IEnumerable<Resource> resources)
@@ -159,7 +173,7 @@ namespace OfflineSubscriptionManager
 
       
 
-        static async Task SendEmail(string subject, string contentMessage, Email to)
+        static async Task SendEmail(string subject, string contentMessage, Email to, ITracer tracer)
         {
             string apiKey = ConfigurationManager.AppSettings["API_KEY"];
             dynamic sg = new SendGridAPIClient(apiKey);
@@ -182,8 +196,10 @@ namespace OfflineSubscriptionManager
             }
 
             mail.Personalization[0].Bccs = bccList;
+            tracer.TraceInformation($"Sending email To: {to.Address} Subject: {subject} Bcc: {string.Join(";", bccList.Select(x=>x.Address))}");
 
-           dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
+            dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
+            tracer.TraceInformation($"Email was sent for {subject}");
         }
 
         private static string GetShortDate(DateTime dateTime)

@@ -38,6 +38,10 @@
       <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Microsoft.ApplicationInsights, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.2.2.0-beta2\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.Azure.Management.Authorization">
       <HintPath>..\packages\Microsoft.Azure.Management.Authorization.2.4.2-preview\lib\net45\Microsoft.Azure.Management.Authorization.dll</HintPath>
     </Reference>
@@ -109,6 +113,7 @@
     <Compile Include="AzureAuthUtils.cs" />
     <Compile Include="AzureResourceManagerUtil.cs" />
     <Compile Include="DataAccess.cs" />
+    <Compile Include="Diagnostics.cs" />
     <Compile Include="HTMLUtilities.cs" />
     <Compile Include="Migrations\201608101409191_InitialCreate.cs" />
     <Compile Include="Migrations\201608101409191_InitialCreate.Designer.cs">
@@ -124,10 +129,17 @@
     <Compile Include="SubscriptionAnalyzer.cs" />
     <Compile Include="SubscriptionAnalysisResult.cs" />
     <Compile Include="SubscriptionManagementLevel.cs" />
+    <Compile Include="Tracing\AggregatedTracer.cs" />
+    <Compile Include="Tracing\AITracer.cs" />
+    <Compile Include="Tracing\ITracer.cs" />
+    <Compile Include="Tracing\TracerFactory.cs" />
+    <Compile Include="Tracing\WebJobTracer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201608101409191_InitialCreate.resx">

@@ -474,9 +474,28 @@ namespace CogsMinimizer.Shared
 
         #endregion
 
-        public static void DeleteAzureResource(ResourceManagementClient resourceClient, string azureresourceid)
+        public static void DeleteAzureResource(ResourceManagementClient resourceClient, string azureresourceid, ITracer tracer)
         {
-                resourceClient.Resources.DeleteById(azureresourceid, "2014-04-01");
+            string [] apiVersion = { "2015-01-01", "2014-04-01", "2015-08-01" , "2016-05-01", "2016-01-01", "2016-04-01", "2016-09-01" };
+
+            for (int i = 0; i < apiVersion.Length; i++)
+            {
+                try
+                {
+                    tracer.TraceVerbose($"Trying to delete the resource {azureresourceid} with API version: {apiVersion[i]}");
+                    resourceClient.Resources.DeleteById(azureresourceid, apiVersion[i]);
+                }
+                catch (Exception e)
+                {
+                    tracer.TraceError($"Failed to delete the resource {azureresourceid} with API version: {apiVersion[i]}");
+                    if (i==apiVersion.Length-1)
+                    {
+                        throw e;
+                    }
+                }
+            }
         }
+
+     
     }
 }
