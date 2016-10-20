@@ -281,6 +281,7 @@
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\HomeIndexViewModel.cs" />
     <Compile Include="Models\IdentityModels.cs" />
+    <Compile Include="Models\EditSettingsViewModel.cs" />
     <Compile Include="Models\SubscriptionAnalyzeViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Startup.cs" />
@@ -350,6 +351,7 @@
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Service References\Application Insights\ConnectedService.json" />
     <Content Include="Views\Subscription\Analyze.cshtml" />
+    <Content Include="Views\Subscription\EditSettings.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

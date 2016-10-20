@@ -25,9 +25,10 @@ namespace CogsMinimizer.Controllers
                 model.UserSubscriptions = new Dictionary<string, Subscription>();
                 model.UserCanManageAccessForSubscriptions = new List<string>();
                 model.DisconnectedUserOrganizations = new List<string>();
+                model.UserId = AzureAuthUtils.GetSignedInUserUniqueName();
 
-                var orgnaizations = AzureResourceManagerUtil.GetUserOrganizations();
-                foreach (Organization org in orgnaizations)
+                var organizations = AzureResourceManagerUtil.GetUserOrganizations();
+                foreach (Organization org in organizations)
                 {
                     model.UserOrganizations.Add(org.Id, org);
                     var subscriptions = AzureResourceManagerUtil.GetUserSubscriptions(org.Id);

@@ -16,7 +16,7 @@ namespace CogsMinimizer.Shared
         /// Subminimizer will only report about expired resources, but will never delete them.
         /// In this management level Subminimizer requires only right permission to the subscription.
         /// </summary>
-        ReoprtOnly = 0,
+        ReportOnly = 0,
 
         /// <summary>
         /// Subminimizer will report and allow manually marking a resource for offline deletion.

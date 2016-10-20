@@ -134,6 +134,7 @@
     <Compile Include="Tracing\ITracer.cs" />
     <Compile Include="Tracing\TracerFactory.cs" />
     <Compile Include="Tracing\WebJobTracer.cs" />
+    <Compile Include="SubscriptionSetting.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

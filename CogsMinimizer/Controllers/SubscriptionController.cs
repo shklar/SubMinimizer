@@ -18,6 +18,76 @@ namespace CogsMinimizer.Controllers
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
 
         // GET: Subscription
+                public ActionResult EditSettings([Bind(Include = "Id, OrganizationId, DisplayName, ServicePrincipalObjectId")] string webUserId, Subscription subscription)
+        {
+            DataAccess dataAccess = new DataAccess();
+
+            // Search existing record in database about already saved for given user ID
+            SubscriptionSetting existingSettings = dataAccess.SubscriptionSettings.Where<SubscriptionSetting>(s => s.WebUserUniqueId == webUserId && s.SubscriptionId == subscription.Id).FirstOrDefault();
+
+            SubscriptionSetting settingsToEdit= null;
+            if (existingSettings != null)
+            {
+                settingsToEdit = existingSettings;
+            }
+            else
+            {
+                settingsToEdit = new SubscriptionSetting();
+            }
+
+            EditSettingsViewModel model = new EditSettingsViewModel();
+            model.UserID = webUserId;
+            model.SubscriptionData = subscription;
+
+            model.DefaulExpiration = settingsToEdit.DefaulExpiration;
+            model.DefaulExpirationUnclaimed = settingsToEdit.DefaulExpirationUnclaimed;
+            model.SendEmailToCoadmins =
+                    settingsToEdit.SendEmailToCoadmins ? "Yes" : "No";
+            model.ManagementLevel = settingsToEdit.ManagementLevel;
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public ActionResult SaveSettings(EditSettingsViewModel model)
+        {
+
+            DataAccess dataAccess = new DataAccess();
+            SubscriptionSetting existingSettings =
+                dataAccess.SubscriptionSettings.Where<SubscriptionSetting>(s =>
+                s.WebUserUniqueId == model.UserID && s.SubscriptionId == model.SubscriptionData.Id).FirstOrDefault();
+
+            // Search existing record in database about already saved for given user ID
+
+            SubscriptionSetting settingsToSave = null;
+            if (existingSettings != null)
+            {
+                settingsToSave = existingSettings;
+            }
+            else
+            {
+                settingsToSave = new SubscriptionSetting();
+                settingsToSave.SubscriptionId = model.SubscriptionData.Id;
+                settingsToSave.WebUserUniqueId = model.UserID;
+                dataAccess.SubscriptionSettings.Add(settingsToSave);
+            }
+
+            settingsToSave.DefaulExpiration = model.DefaulExpiration;
+            settingsToSave.DefaulExpirationUnclaimed = model.DefaulExpirationUnclaimed;
+            settingsToSave.SendEmailToCoadmins = model.SendEmailToCoadmins == "Yes";
+            settingsToSave.ManagementLevel = model.ManagementLevel;
+
+            dataAccess.SaveChanges();
+
+            return RedirectToAction("Index", "Home");
+        }
+
+
+        public ActionResult CancelEditSettings([Bind(Include = "Id, OrganizationId, DisplayName, ServicePrincipalObjectId")] Subscription subscription)
+        {
+
+           return RedirectToAction("Index", "Home");
+        }
         
         public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
         {       
