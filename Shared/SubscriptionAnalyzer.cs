@@ -33,7 +33,9 @@ namespace CogsMinimizer.Shared
 
         private AuthorizationManagementClient m_authorizationManagementClient;
 
-        private List<ClassicAdministrator> m_subscriptionAdmins; 
+        private List<ClassicAdministrator> m_subscriptionAdmins;
+
+        private ITracer _tracer;
 
         /// <summary>
         /// Constructor
@@ -42,11 +44,12 @@ namespace CogsMinimizer.Shared
         /// <param name="sub"></param>
         /// <param name="isOfflineMode">Indicates whether the analysis is run offline or with user interaction
         /// </param>
-        public SubscriptionAnalyzer(DataAccess dbAccess, Subscription sub, bool isOfflineMode)
+        public SubscriptionAnalyzer(DataAccess dbAccess, Subscription sub, bool isOfflineMode, ITracer tracer)
         {
             m_Db = dbAccess;
             m_analyzedSubscription = sub;
             m_isOfflineMode = isOfflineMode;
+            _tracer = tracer;
 
             m_analysisResult = new SubscriptionAnalysisResult(sub);
         }
@@ -60,6 +63,8 @@ namespace CogsMinimizer.Shared
             //Record the start time of the analysis process
             DateTime startTime = DateTime.UtcNow;
             m_analysisResult.AnalysisStartTime = startTime;
+
+            _tracer.TraceInformation($"Subscription Analysis started for {m_analyzedSubscription.DisplayName}");
 
             if (m_isOfflineMode)
             {
@@ -101,6 +106,8 @@ namespace CogsMinimizer.Shared
 
             //Record the end time of the analysis
             m_analysisResult.AnalysisEndTime = DateTime.UtcNow;
+
+            _tracer.Flush();
             return m_analysisResult;
         }
 
@@ -113,17 +120,25 @@ namespace CogsMinimizer.Shared
                 m_Db.Resources.Where(x => x.SubscriptionId.Equals(m_analyzedSubscription.Id) &&
                 x.Status == ResourceStatus.MarkedForDeletion).ToList();
 
+            _tracer.TraceInformation($"Found {resourcesMarkedForDeletion.Count} resources for delete");
+
             //Try to delete the resources that are marked for delete
             foreach (var resource in resourcesMarkedForDeletion)
             {
                 try
                 {
-                  //  AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier);
+                    _tracer.TraceVerbose($"Trying to delete the resource {resource.Name} of Type {resource.Type}");
+
+                    AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier, _tracer);
                     m_Db.Resources.Remove(resource);
                     m_analysisResult.DeletedResources.Add(resource);
+                    _tracer.TraceVerbose($"Successfully deleted the resource {resource.Name} of Type {resource.Type}");
+
                 }
                 catch (Exception e)
                 {
+                    _tracer.TraceError($"Failed to delete the resource {resource.Name} of Type {resource.Type}. Exception details: {e.Message}");
+                    
                     m_analysisResult.FailedDeleteResources.Add(resource);                  
                 }
             }
@@ -235,8 +250,20 @@ namespace CogsMinimizer.Shared
             //Check if resource has expired
             if (resourceEntryFromDb.ExpirationDate < m_analysisResult.AnalysisStartTime.Date)
             {
-                resourceEntryFromDb.Status = ResourceStatus.Expired;
+                //The resource status can't go from "marked for delete" to "Expired". Only from "Valid" to "Expired"
+                if (resourceEntryFromDb.Status == ResourceStatus.Valid)
+                {
+                    resourceEntryFromDb.Status = ResourceStatus.Expired;
+                }
+
+                //Add to the list of expired resources even if it is marked for delete
                 m_analysisResult.ExpiredResources.Add(resourceEntryFromDb);
+            }
+
+            //This is a plain valid resource
+            else if (resourceEntryFromDb.Status == ResourceStatus.Valid)
+            {
+                m_analysisResult.ValidResources.Add(resourceEntryFromDb);
             }
 
             //update the visit time
