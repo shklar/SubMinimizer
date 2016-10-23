@@ -23,11 +23,24 @@ namespace CogsMinimizer.Shared
         [NotMapped]
         public bool AzureAccessNeedsToBeRepaired { get; set; }
 
-        public int ExpirationIntervalInDays  { get; set; }
-
         public DateTime LastAnalysisDate { get; set; }
 
+
+        public int ExpirationIntervalInDays { get; set; }
+
+        public int ExpirationUnclaimedIntervalInDays { get; set; }
+
         public SubscriptionManagementLevel ManagementLevel { get; set; }
+
+        public bool SendEmailToCoadmins { get; set; }
+
+        public Subscription()
+        {
+            this.ExpirationIntervalInDays = 10;
+            this.ExpirationUnclaimedIntervalInDays = 10;
+            this.ManagementLevel = SubscriptionManagementLevel.ReportOnly;
+            this.SendEmailToCoadmins = true;
+        }
     }
 
   

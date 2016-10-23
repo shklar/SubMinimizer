@@ -60,14 +60,12 @@
 
                                 <small>&nbsp;&nbsp;</small>
 
-                                @Html.ActionLink("Settings", "EditSettings", "Subscription",
+                                @Html.ActionLink("Settings", "GetSettings", "Subscription",
                                new
                                {
                                    Id = @subscription.Id,
-                                   webUserId = @Model.UserId,
                                    OrganizationId = @subscription.OrganizationId,
                                    DisplayName = @subscription.DisplayName,
-                                   ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
                                },
                                new { @class = "btn btn-warning btn-xs" })
 

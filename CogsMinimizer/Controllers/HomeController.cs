@@ -25,7 +25,6 @@ namespace CogsMinimizer.Controllers
                 model.UserSubscriptions = new Dictionary<string, Subscription>();
                 model.UserCanManageAccessForSubscriptions = new List<string>();
                 model.DisconnectedUserOrganizations = new List<string>();
-                model.UserId = AzureAuthUtils.GetSignedInUserUniqueName();
 
                 var organizations = AzureResourceManagerUtil.GetUserOrganizations();
                 foreach (Organization org in organizations)
@@ -46,6 +45,10 @@ namespace CogsMinimizer.Controllers
                                 subscription.IsConnected = true;
                                 subscription.ConnectedOn = s.ConnectedOn;
                                 subscription.ConnectedBy = s.ConnectedBy;
+                                subscription.ExpirationIntervalInDays = s.ExpirationIntervalInDays;
+                                subscription.ExpirationUnclaimedIntervalInDays = s.ExpirationUnclaimedIntervalInDays;
+                                subscription.ManagementLevel = s.ManagementLevel;
+                                subscription.SendEmailToCoadmins = s.SendEmailToCoadmins;
                                 subscription.AzureAccessNeedsToBeRepaired = !AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, org.Id);
                             }
                             else
@@ -71,8 +74,6 @@ namespace CogsMinimizer.Controllers
 
         public ActionResult About()
         {
-            ViewBag.Message = "Your application description page.";
-
             return View();
         }
 

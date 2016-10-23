@@ -8,7 +8,6 @@ namespace CogsMinimizer.Models
     /// </summary>
     public class HomeIndexViewModel
     {
-        public string UserId { get; set; }
         public Dictionary<string, Organization> UserOrganizations { get; set; }
         public Dictionary<string, Subscription> UserSubscriptions { get; set; }
         public List<string> UserCanManageAccessForSubscriptions { get; set; }

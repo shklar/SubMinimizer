@@ -100,7 +100,14 @@ namespace CogsMinimizer.Shared
             else
             {
                 m_analysisResult.IsSubscriptionAccessible = true;
-                DeleteMarkedResources();
+
+                // Check if automatic resource deletion allowed
+                if (m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete)
+                {
+                    // If automatic resources deletion allowed delete marked for deletion resources
+                    DeleteMarkedResources();
+                }
+
                 AnalyzeSubscriptionResources();
             }
 
@@ -217,7 +224,8 @@ namespace CogsMinimizer.Shared
                                FirstFoundDate = m_analysisResult.AnalysisStartTime.Date,
                                ExpirationDate =
                                    m_analysisResult.AnalysisStartTime.Date.Add(
-                                       TimeSpan.FromDays(Subscription.DEFAULT_EXPIRATION_INTERVAL_IN_DAYS)),
+                                       TimeSpan.FromDays(
+                                           owner != null ? m_analyzedSubscription.ExpirationIntervalInDays : m_analyzedSubscription.ExpirationUnclaimedIntervalInDays)),
                                LastVisitedDate = m_analysisResult.AnalysisStartTime.Date,
                                Owner = owner,
                                ConfirmedOwner = false,

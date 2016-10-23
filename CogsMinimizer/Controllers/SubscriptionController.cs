@@ -18,72 +18,50 @@ namespace CogsMinimizer.Controllers
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
 
         // GET: Subscription
-                public ActionResult EditSettings([Bind(Include = "Id, OrganizationId, DisplayName, ServicePrincipalObjectId")] string webUserId, Subscription subscription)
+        public ActionResult GetSettings([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
         {
-            DataAccess dataAccess = new DataAccess();
-
-            // Search existing record in database about already saved for given user ID
-            SubscriptionSetting existingSettings = dataAccess.SubscriptionSettings.Where<SubscriptionSetting>(s => s.WebUserUniqueId == webUserId && s.SubscriptionId == subscription.Id).FirstOrDefault();
-
-            SubscriptionSetting settingsToEdit= null;
-            if (existingSettings != null)
+            // By weird reason not all fields we need are set in subscription instance we get.
+            // Even specified in index view they are absent here.
+            // Let's find subscription in database
+            using (DataAccess dataAccess = new DataAccess())
             {
-                settingsToEdit = existingSettings;
+                Subscription existingSubscription =
+                    dataAccess.Subscriptions.Where<Subscription>(s => s.Id == subscription.Id).FirstOrDefault();
+                if (existingSubscription == null)
+                {
+                    throw new ArgumentException(string.Format("No subscription found with ID {0}", subscription.Id));
+                }
+
+                return View(existingSubscription);
             }
-            else
-            {
-                settingsToEdit = new SubscriptionSetting();
-            }
-
-            EditSettingsViewModel model = new EditSettingsViewModel();
-            model.UserID = webUserId;
-            model.SubscriptionData = subscription;
-
-            model.DefaulExpiration = settingsToEdit.DefaulExpiration;
-            model.DefaulExpirationUnclaimed = settingsToEdit.DefaulExpirationUnclaimed;
-            model.SendEmailToCoadmins =
-                    settingsToEdit.SendEmailToCoadmins ? "Yes" : "No";
-            model.ManagementLevel = settingsToEdit.ManagementLevel;
-
-            return View(model);
         }
 
         [HttpPost]
-        public ActionResult SaveSettings(EditSettingsViewModel model)
+        public ActionResult SaveSettings(Subscription subscription)
         {
 
-            DataAccess dataAccess = new DataAccess();
-            SubscriptionSetting existingSettings =
-                dataAccess.SubscriptionSettings.Where<SubscriptionSetting>(s =>
-                s.WebUserUniqueId == model.UserID && s.SubscriptionId == model.SubscriptionData.Id).FirstOrDefault();
-
-            // Search existing record in database about already saved for given user ID
-
-            SubscriptionSetting settingsToSave = null;
-            if (existingSettings != null)
+            using (DataAccess dataAccess = new DataAccess())
             {
-                settingsToSave = existingSettings;
+                Subscription existingSubscription =
+                    dataAccess.Subscriptions.Where<Subscription>(s => s.Id == subscription.Id).FirstOrDefault();
+                if (existingSubscription == null)
+                {
+                    throw new ArgumentException(string.Format("No subscription found with ID {0}", subscription.Id));
+                }
+
+                existingSubscription.ExpirationIntervalInDays = subscription.ExpirationIntervalInDays;
+                existingSubscription.ExpirationUnclaimedIntervalInDays = subscription.ExpirationUnclaimedIntervalInDays;
+                existingSubscription.ManagementLevel = subscription.ManagementLevel;
+                existingSubscription.SendEmailToCoadmins = subscription.SendEmailToCoadmins;
+
+                dataAccess.SaveChanges();
+
+                return RedirectToAction("Index", "Home");
             }
-            else
-            {
-                settingsToSave = new SubscriptionSetting();
-                settingsToSave.SubscriptionId = model.SubscriptionData.Id;
-                settingsToSave.WebUserUniqueId = model.UserID;
-                dataAccess.SubscriptionSettings.Add(settingsToSave);
-            }
-
-            settingsToSave.DefaulExpiration = model.DefaulExpiration;
-            settingsToSave.DefaulExpirationUnclaimed = model.DefaulExpirationUnclaimed;
-            settingsToSave.SendEmailToCoadmins = model.SendEmailToCoadmins == "Yes";
-            settingsToSave.ManagementLevel = model.ManagementLevel;
-
-            dataAccess.SaveChanges();
-
-            return RedirectToAction("Index", "Home");
         }
 
 
-        public ActionResult CancelEditSettings([Bind(Include = "Id, OrganizationId, DisplayName, ServicePrincipalObjectId")] Subscription subscription)
+        public ActionResult CancelGetSettings([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
         {
 
            return RedirectToAction("Index", "Home");
@@ -101,13 +79,19 @@ namespace CogsMinimizer.Controllers
             using (var db = new DataAccess())
             {
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(subscriptionId) && x.Id.Equals(resourceId));
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
 
-                if (resource != null)
+                if (resource != null && subscription != null)
                 {
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
-                    resource.ExpirationDate = GetNewExpirationDate();
+                    resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
                 }
+                else
+                {
+                    throw new ArgumentException(string.Format("Can't find resource with ID '{0}' at subscription with ID '{1}'", resourceId, subscriptionId));
+                }
+
                 db.Resources.AddOrUpdate(resource);
                 db.SaveChanges();
             }
@@ -180,9 +164,10 @@ namespace CogsMinimizer.Controllers
             return resource.ExpirationDate.Date < DateTime.UtcNow.Date;
         }
 
-        private static DateTime GetNewExpirationDate()
+        private static DateTime GetNewExpirationDate(Subscription  subscription, Resource resource)
         {
-           return DateTime.UtcNow.AddDays(EXPIRATION_INTERVAL_IN_DAYS);
+            
+           return DateTime.UtcNow.AddDays(resource.Owner != null ? subscription.ExpirationIntervalInDays : subscription.ExpirationUnclaimedIntervalInDays);
         }
 
         /// <summary>
@@ -224,8 +209,9 @@ namespace CogsMinimizer.Controllers
 
                 foreach (var resource in expiredResources)
                 {
+                    var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
-                    resource.ExpirationDate = GetNewExpirationDate();
+                    resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
                 }
 
