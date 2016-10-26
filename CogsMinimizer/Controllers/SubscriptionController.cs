@@ -18,41 +18,37 @@ namespace CogsMinimizer.Controllers
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
 
         // GET: Subscription
-        public ActionResult GetSettings([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
+        public ActionResult GetSettings([Bind(Include = "Id, OrganizationId, DisplayName")] string ServicePrincipalObjectId, Subscription subscription)
         {
-            // By weird reason not all fields we need are set in subscription instance we get.
-            // Even specified in index view they are absent here.
-            // Let's find subscription in database
             using (DataAccess dataAccess = new DataAccess())
             {
+                // add subscription not found handling
                 Subscription existingSubscription =
-                    dataAccess.Subscriptions.Where<Subscription>(s => s.Id == subscription.Id).FirstOrDefault();
-                if (existingSubscription == null)
-                {
-                    throw new ArgumentException(string.Format("No subscription found with ID {0}", subscription.Id));
-                }
+                    dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
 
+                ViewData["ServicePrincipalObjectId"] = ServicePrincipalObjectId;
                 return View(existingSubscription);
             }
         }
 
         [HttpPost]
-        public ActionResult SaveSettings(Subscription subscription)
+        public ActionResult SaveSettings(string ServicePrincipalObjectId, Subscription subscription)
         {
 
             using (DataAccess dataAccess = new DataAccess())
             {
+                // add subscription not found handling
                 Subscription existingSubscription =
-                    dataAccess.Subscriptions.Where<Subscription>(s => s.Id == subscription.Id).FirstOrDefault();
-                if (existingSubscription == null)
-                {
-                    throw new ArgumentException(string.Format("No subscription found with ID {0}", subscription.Id));
-                }
+                    dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
+
+                AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
+                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(ServicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
 
                 existingSubscription.ExpirationIntervalInDays = subscription.ExpirationIntervalInDays;
                 existingSubscription.ExpirationUnclaimedIntervalInDays = subscription.ExpirationUnclaimedIntervalInDays;
                 existingSubscription.ManagementLevel = subscription.ManagementLevel;
                 existingSubscription.SendEmailToCoadmins = subscription.SendEmailToCoadmins;
+                dataAccess.Subscriptions.AddOrUpdate<Subscription>(existingSubscription);
 
                 dataAccess.SaveChanges();
 
@@ -61,7 +57,7 @@ namespace CogsMinimizer.Controllers
         }
 
 
-        public ActionResult CancelGetSettings([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
+        public ActionResult CancelGetSettings()
         {
 
            return RedirectToAction("Index", "Home");
@@ -81,15 +77,12 @@ namespace CogsMinimizer.Controllers
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(subscriptionId) && x.Id.Equals(resourceId));
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
 
+                // add subscription not found handling
                 if (resource != null && subscription != null)
-                {
+                { 
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
                     resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
-                }
-                else
-                {
-                    throw new ArgumentException(string.Format("Can't find resource with ID '{0}' at subscription with ID '{1}'", resourceId, subscriptionId));
                 }
 
                 db.Resources.AddOrUpdate(resource);
@@ -144,6 +137,7 @@ namespace CogsMinimizer.Controllers
             {
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(subscriptionId) && x.Id.Equals(resourceId));
 
+                // add resource not found handling
                 if (resource != null)
                 {
                     resource.Status = ResourceStatus.MarkedForDeletion;
@@ -167,7 +161,7 @@ namespace CogsMinimizer.Controllers
         private static DateTime GetNewExpirationDate(Subscription  subscription, Resource resource)
         {
             
-           return DateTime.UtcNow.AddDays(resource.Owner != null ? subscription.ExpirationIntervalInDays : subscription.ExpirationUnclaimedIntervalInDays);
+           return DateTime.UtcNow.AddDays(resource.ConfirmedOwner ? subscription.ExpirationIntervalInDays : subscription.ExpirationUnclaimedIntervalInDays);
         }
 
         /// <summary>
@@ -209,6 +203,7 @@ namespace CogsMinimizer.Controllers
 
                 foreach (var resource in expiredResources)
                 {
+                    // add subscription not found handling
                     var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
                     resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
@@ -230,7 +225,11 @@ namespace CogsMinimizer.Controllers
         {
             if (ModelState.IsValid)
             {
-                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
+                // add subscription not found handling. at connect subscription must be at database
+                var existingSubscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscription.Id));
+                AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
+
+                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
                 if (AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, subscription.OrganizationId))
                 {
                     subscription.ConnectedBy = (System.Security.Claims.ClaimsPrincipal.Current).FindFirst(ClaimTypes.Name).Value;
@@ -246,12 +245,14 @@ namespace CogsMinimizer.Controllers
 
             return RedirectToAction("Index", "Home");
         }
+
         public ActionResult Disconnect([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
         {
             if (ModelState.IsValid)
             {
                 AzureResourceManagerUtil.RevokeRoleFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
-
+                
+                // add subscription not found handling
                 Subscription s = db.Subscriptions.Find(subscription.Id);
                 if (s != null)
                 {
@@ -278,7 +279,12 @@ namespace CogsMinimizer.Controllers
             if (ModelState.IsValid)
             {
                 AzureResourceManagerUtil.RevokeRoleFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
-                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
+
+                // add subscription not found handling
+                var existingSubscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscription.Id));
+                AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
+
+                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
             }
 
             return RedirectToAction("Index", "Home");

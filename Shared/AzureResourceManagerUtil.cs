@@ -202,7 +202,7 @@ namespace CogsMinimizer.Shared
             return ret;
         }
 
-       
+
 
         public static bool ServicePrincipalHasReadAccessToSubscription(string subscriptionId, string organizationId)
         {
@@ -271,8 +271,20 @@ namespace CogsMinimizer.Shared
             return ret;
         }
 
+        public static AzureResourceManagementRole GetNeededAzureResourceManagementRole(SubscriptionManagementLevel level)
+        {
+            if (level == SubscriptionManagementLevel.ReportOnly)
+            {
+                return AzureResourceManagementRole.Reader;
+            }
+            else
+            {
+                return AzureResourceManagementRole.Contributor;
+            }
+        }
+
         public static void GrantRoleToServicePrincipalOnSubscription(string objectId, string subscriptionId,
-            string organizationId)
+            string organizationId, AzureResourceManagementRole role)
         {
 
             try
@@ -282,7 +294,7 @@ namespace CogsMinimizer.Shared
                 // Create role assignment for application on the subscription
                 string roleAssignmentId = Guid.NewGuid().ToString();
                 string roleDefinitionId =
-                    GetRoleId(ConfigurationManager.AppSettings["ida:RequiredARMRoleOnSubscription"], subscriptionId,
+                    GetRoleId(role, subscriptionId,
                         organizationId);
 
                 string requestUrl =
@@ -302,7 +314,7 @@ namespace CogsMinimizer.Shared
                 request.Content = content;
                 HttpResponseMessage response = client.SendAsync(request).Result;
             }
-            catch
+            catch (Exception e)
             {
             }
         }
@@ -355,9 +367,10 @@ namespace CogsMinimizer.Shared
             }
         }
 
-        public static string GetRoleId(string roleName, string subscriptionId, string organizationId)
+        public static string GetRoleId(AzureResourceManagementRole role, string subscriptionId, string organizationId)
         {
             string roleId = null;
+            string roleName = role.ToString();
 
             try
             {

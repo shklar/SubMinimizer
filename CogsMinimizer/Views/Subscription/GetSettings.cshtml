@@ -1,6 +1,7 @@
 ﻿@model CogsMinimizer.Shared.Subscription
 @{
     ViewBag.Title = "Settings";
+    
 }
   
 @{ 
@@ -11,38 +12,30 @@
             Text = "Report only",
             Value = "0"
         });
-
+<!--
     managementLevelList.Add(
 new SelectListItem
 {
-    Text = "Manually delete",
+    Text = "Manual delete",
     Value = "1"
 });
+-->
 
     managementLevelList.Add(
 new SelectListItem
 {
-    Text = "Automatically delete",
+    Text = "Automatic delete",
     Value = "2"
-});
-
-    List<SelectListItem>  sendMailToCoAdminsList = new List<SelectListItem>();
-    sendMailToCoAdminsList.Add(
-        new SelectListItem
-        {
-            Text = "Yes",
-            Value = "true"
-        });
-
-    sendMailToCoAdminsList.Add(
-new SelectListItem
-{
-    Text = "No",
-    Value = "false"
 });
 }
 
-@using (@Html.BeginForm("SaveSettings", "Subscription", FormMethod.Post))
+@using (@Html.BeginForm("SaveSettings", "Subscription",
+    new
+    {
+        ServicePrincipalObjectId = ViewData["ServicePrincipalObjectId"]
+    },
+
+    FormMethod.Post))
 {
     <h1>@ViewBag.Title</h1>
  
@@ -71,7 +64,7 @@ new SelectListItem
                 <h4>Expiration date (days)</h4>
             </td>
             <td>
-                @Html.TextBoxFor(m => m.ExpirationIntervalInDays, new { type = "number"})
+                @Html.TextBoxFor(m => m.ExpirationIntervalInDays)
             </td>
         </tr>
         <tr>
@@ -79,7 +72,7 @@ new SelectListItem
                 <h4>Expiration date for <br /> unclaimed resources (days)</h4>
             </td>
             <td>
-                @Html.TextBoxFor(m => m.ExpirationUnclaimedIntervalInDays, new { type = "number" })
+                @Html.TextBoxFor(m => m.ExpirationUnclaimedIntervalInDays, null, new { @class = "spinnerTxt"})
             </td>
         </tr>
        <tr>
@@ -95,7 +88,7 @@ new SelectListItem
                 <h4>Send mail to coadmins</h4>
             </td>
             <td>
-                @Html.DropDownListFor(m => m.SendEmailToCoadmins, sendMailToCoAdminsList)
+                @Html.CheckBoxFor(m => m.SendEmailToCoadmins)
             </td>
         </tr>
   </table>
@@ -112,3 +105,4 @@ new SelectListItem
     </tr>
 </table>
 }
+

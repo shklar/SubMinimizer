@@ -132,6 +132,7 @@
     <Compile Include="Subscription.cs" />
     <Compile Include="SubscriptionAnalyzer.cs" />
     <Compile Include="SubscriptionAnalysisResult.cs" />
+    <Compile Include="AzureResourceManagementRole.cs" />
     <Compile Include="SubscriptionManagementLevel.cs" />
     <Compile Include="Tracing\AggregatedTracer.cs" />
     <Compile Include="Tracing\AITracer.cs" />

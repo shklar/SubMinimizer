@@ -102,11 +102,12 @@ namespace CogsMinimizer.Shared
                 m_analysisResult.IsSubscriptionAccessible = true;
 
                 // Check if automatic resource deletion allowed
-                if (m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete)
-                {
-                    // If automatic resources deletion allowed delete marked for deletion resources
-                    DeleteMarkedResources();
-                }
+                if (m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete ||
+                    m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.ManualDelete)
+                    {
+                        // If automatic resources deletion allowed delete marked for deletion resources
+                        DeleteMarkedResources();
+                    }
 
                 AnalyzeSubscriptionResources();
             }
