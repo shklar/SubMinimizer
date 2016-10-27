@@ -119,6 +119,10 @@
     <Compile Include="Migrations\201608101409191_InitialCreate.Designer.cs">
       <DependentUpon>201608101409191_InitialCreate.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201610202358522_AddSubscriptionColumns.cs" />
+    <Compile Include="Migrations\201610202358522_AddSubscriptionColumns.Designer.cs">
+      <DependentUpon>201610202358522_AddSubscriptionColumns.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Organization.cs" />
     <Compile Include="PerUserTokenCache.cs" />
@@ -128,6 +132,7 @@
     <Compile Include="Subscription.cs" />
     <Compile Include="SubscriptionAnalyzer.cs" />
     <Compile Include="SubscriptionAnalysisResult.cs" />
+    <Compile Include="AzureResourceManagementRole.cs" />
     <Compile Include="SubscriptionManagementLevel.cs" />
     <Compile Include="Tracing\AggregatedTracer.cs" />
     <Compile Include="Tracing\AITracer.cs" />
@@ -144,6 +149,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201608101409191_InitialCreate.resx">
       <DependentUpon>201608101409191_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610202358522_AddSubscriptionColumns.resx">
+      <DependentUpon>201610202358522_AddSubscriptionColumns.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

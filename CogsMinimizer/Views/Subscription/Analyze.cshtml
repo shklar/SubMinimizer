@@ -10,8 +10,9 @@
 <h4>Subscription id: @Model.SubscriptionData.Id</h4>
 
 @Html.ActionLink("Extend Expired", "ExtendExpired",
-                           new { SubscriptionId = Model.SubscriptionData.Id},
-                           new { @class = "btn btn-info" })
+                               new { SubscriptionId = Model.SubscriptionData.Id },
+                               new { @class = "btn btn-info" })
+
 <br/>
 <br/>
 
@@ -72,12 +73,14 @@
                 @Html.ActionLink("Extend", "Extend",
                     new {subscriptionId = item.SubscriptionId, resourceId = item.Id},
                     new {@class = "btn btn-info btn-xs"})
-
-                <!--
+<!--
+@if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
+{
                 @Html.ActionLink("Delete", "Delete",
-                    new {SubscriptionId = item.SubscriptionId, resourceId = item.Id},
-                    new {@class = "btn btn-danger btn-xs"})
-                -->
+             new { SubscriptionId = item.SubscriptionId, resourceId = item.Id },
+             new { @class = "btn btn-danger btn-xs" })
+}
+-->
             </td>
         </tr>
     }

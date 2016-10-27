@@ -1,0 +1,108 @@
+﻿@model CogsMinimizer.Shared.Subscription
+@{
+    ViewBag.Title = "Settings";
+    
+}
+  
+@{ 
+    List<SelectListItem> managementLevelList = new List<SelectListItem>();
+    managementLevelList.Add(
+        new SelectListItem
+        {
+            Text = "Report only",
+            Value = "0"
+        });
+<!--
+    managementLevelList.Add(
+new SelectListItem
+{
+    Text = "Manual delete",
+    Value = "1"
+});
+-->
+
+    managementLevelList.Add(
+new SelectListItem
+{
+    Text = "Automatic delete",
+    Value = "2"
+});
+}
+
+@using (@Html.BeginForm("SaveSettings", "Subscription",
+    new
+    {
+        ServicePrincipalObjectId = ViewData["ServicePrincipalObjectId"]
+    },
+
+    FormMethod.Post))
+{
+    <h1>@ViewBag.Title</h1>
+ 
+    <!-- make 2 text boxes for some subscription data value and user ID. otherwise neither subscription data nor user ID  aren't given to submitting controller method -->
+    <h4>@Html.TextBoxFor(m => m.DisplayName, new { contenteditable = "false", style = "display : none" })</h4>
+    <h4>@Html.TextBoxFor(m => m.Id, new { contenteditable = "false", style = "display : none" })</h4>
+    <table class="table table-striped table-condensed table-hover">
+        <tr>
+            <td>
+                <h4>Subscription Name</h4>
+            </td>
+            <td>
+                <h4>@Model.DisplayName</h4>
+        </td>
+    </tr>
+        <tr>
+            <td>
+                <h4>Subscription ID</h4>
+            </td>
+            <td>
+                <h4>@Model.Id</h4>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <h4>Expiration date (days)</h4>
+            </td>
+            <td>
+                @Html.TextBoxFor(m => m.ExpirationIntervalInDays)
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <h4>Expiration date for <br /> unclaimed resources (days)</h4>
+            </td>
+            <td>
+                @Html.TextBoxFor(m => m.ExpirationUnclaimedIntervalInDays, null, new { @class = "spinnerTxt"})
+            </td>
+        </tr>
+       <tr>
+            <td>
+                <h4>Management level</h4>
+            </td>
+            <td>
+                @Html.DropDownListFor(m => m.ManagementLevel, managementLevelList)
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <h4>Send mail to coadmins</h4>
+            </td>
+            <td>
+                @Html.CheckBoxFor(m => m.SendEmailToCoadmins)
+            </td>
+        </tr>
+  </table>
+<table>
+    <tr>
+        <td>
+            <button class="btn btn-success btn-xs" type="submit">Save</button>
+            <small>&nbsp;&nbsp;</small>
+        </td>
+        <td>
+            @Html.ActionLink("Cancel", "CancelGetSettings", "Subscription", 
+        null, new { @class = "btn btn-warning btn-xs"})
+        </td>
+    </tr>
+</table>
+}
+
