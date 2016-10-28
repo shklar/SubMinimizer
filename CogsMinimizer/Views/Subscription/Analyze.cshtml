@@ -5,6 +5,11 @@
     ViewBag.Title = "Analyze Subscription";
 }
 
+<link href="~/Content/bootstrap.css" rel="stylesheet" />
+<link href="~/Content/bootstrap-sortable.css" rel="stylesheet" />
+<script src="~/Scripts/bootstrap.js"></script>
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script src="~/Scripts/bootstrap-sortable.js"></script>
 <h2>Subscription Resources</h2>
 <h4>Subscription name: @Model.SubscriptionData.DisplayName</h4>
 <h4>Subscription id: @Model.SubscriptionData.Id</h4>
@@ -16,33 +21,35 @@
 <br/>
 <br/>
 
-<table class="table table-hover table-striped">
+<table class="table table-hover table-bordered table-striped table-condensed sortable" id="resourcesTable">
+    <thead>
     <tr>
-        <th>
+            <th id="nameColumn" data-defaultsign="AZ">
             @Html.DisplayNameFor(model => model.Resources.First().Name)
         </th>
-        <th>
+            <th data-defaultsign="AZ">
             @Html.DisplayNameFor(model => model.Resources.First().Type)
         </th>
-        <th>
+            <th data-defaultsign="AZ">
             @Html.DisplayNameFor(model => model.Resources.First().ResourceGroup)
         </th>
-        <th>
+            <th data-defaultsign="AZ">
             @Html.DisplayNameFor(model => model.Resources.First().Owner)
         </th>
-        <th>
+            <th data-defaultsign="month">
             @Html.DisplayNameFor(model => model.Resources.First().FirstFoundDate)
         </th>
-        <th>
+            <th data-defaultsign="month">
             @Html.DisplayNameFor(model => model.Resources.First().ExpirationDate)
         </th>
-        <th>
+            <th data-defaultsign="AZ">
             @Html.DisplayNameFor(model => model.Resources.First().Status)
         </th>
-        <th>
+            <th data-defaultsort="disabled">
             Actions
         </th>
     </tr>
+    </thead>
 
     @foreach (var item in Model.Resources)
     {
@@ -63,10 +70,10 @@
             <td>
                 @Html.DisplayFor(modelItem => item.FirstFoundDate)
             </td>
-            <td>
+      <td>
                 @Html.DisplayFor(modelItem => item.ExpirationDate)
             </td>
-            <td>
+            <td >
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
