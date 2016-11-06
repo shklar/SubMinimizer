@@ -70,12 +70,14 @@ namespace CogsMinimizer.Controllers
         }
 
         //Extends the duration of a resource so that it does not get reported or deleted as expired
-        public ActionResult Extend(string subscriptionId, string resourceId)
+        [HttpPost]
+        public ActionResult ExtendExpiredResource(string ResourceId, string SubscriptionId)
         {
+            JsonResult result = new JsonResult();
             using (var db = new DataAccess())
             {
-                var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(subscriptionId) && x.Id.Equals(resourceId));
-                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
+                var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
 
                 // add subscription not found handling
                 if (resource != null && subscription != null)
@@ -83,14 +85,14 @@ namespace CogsMinimizer.Controllers
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
                     resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
+                    result.Data = new { ResourceID = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString() };
                 }
 
                 db.Resources.AddOrUpdate(resource);
                 db.SaveChanges();
             }
 
-            var model = GetResourcesViewModel(subscriptionId);
-            return View("Analyze",model);
+            return result;
         }
 
         private SubscriptionAnalyzeViewModel GetResourcesViewModel(string subscriptionId)

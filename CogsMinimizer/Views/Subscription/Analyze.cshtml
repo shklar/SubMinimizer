@@ -7,13 +7,34 @@
 
 <link href="~/Content/bootstrap.css" rel="stylesheet" />
 <link href="~/Content/bootstrap-sortable.css" rel="stylesheet" />
-<script src="~/Scripts/bootstrap.js"></script>
 <script src="~/Scripts/jquery-1.10.2.js"></script>
+<script src="~/Scripts/bootstrap.js"></script>
 <script src="~/Scripts/bootstrap-sortable.js"></script>
 <h2>Subscription Resources</h2>
 <h4>Subscription name: @Model.SubscriptionData.DisplayName</h4>
 <h4>Subscription id: @Model.SubscriptionData.Id</h4>
 
+<script>
+    function OnExtend(extendBtn, resID, subscrID)
+    {
+        var $selectedRow = $(extendBtn).parents("tr");
+        $.ajax({
+            url: "/Subscription/ExtendExpiredResource",
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify({
+                ResourceId :  resID,
+                SubscriptionId : subscrID
+            }),
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                // Let's update expiration date
+                // Model at server is updated at controller method and will be used for table complete updating at refresh table
+                $selectedRow.find('td').eq(5).html(data.ExpirationDate);
+            }
+            });
+    }
+</script>
 @Html.ActionLink("Extend Expired", "ExtendExpired",
                                new { SubscriptionId = Model.SubscriptionData.Id },
                                new { @class = "btn btn-info" })
@@ -30,7 +51,7 @@
             <th data-defaultsign="AZ">
             @Html.DisplayNameFor(model => model.Resources.First().Type)
         </th>
-            <th data-defaultsign="AZ">
+           <th data-defaultsign="AZ">
             @Html.DisplayNameFor(model => model.Resources.First().ResourceGroup)
         </th>
             <th data-defaultsign="AZ">
@@ -77,9 +98,7 @@
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
-                @Html.ActionLink("Extend", "Extend",
-                    new {subscriptionId = item.SubscriptionId, resourceId = item.Id},
-                    new {@class = "btn btn-info btn-xs"})
+                <button class="btn-info" onclick="OnExtend(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
 <!--
 @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
 {
