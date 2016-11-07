@@ -14,12 +14,40 @@
 <h4>Subscription name: @Model.SubscriptionData.DisplayName</h4>
 <h4>Subscription id: @Model.SubscriptionData.Id</h4>
 
+
+<style>
+.btn
+{
+    display : table-cell
+}
+</style>
+
 <script>
+
+    function OnReserve(reserveBtn, resID, subscrID) {
+        var $selectedRow = $(reserveBtn).parents("tr");
+        $.ajax({
+            url: "/Subscription/ReserveResource",
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify({
+                ResourceId: resID,
+                SubscriptionId: subscrID
+            }),
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                // Let's update expiration date
+                // Model at server is updated at controller method and will be used for table complete updating at refresh table
+                $selectedRow.find('td').eq(5).html(data.ExpirationDate);
+            }
+        });
+    }
+
     function OnExtend(extendBtn, resID, subscrID)
     {
         var $selectedRow = $(extendBtn).parents("tr");
         $.ajax({
-            url: "/Subscription/ExtendExpiredResource",
+            url: "/Subscription/ExtendResource",
             type: "POST",
             dataType: "json",
             data: JSON.stringify({
@@ -98,7 +126,9 @@
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
-                <button class="btn-info" onclick="OnExtend(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
+                <button class="btn-info btn" onclick="OnExtend(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
+                <br />
+                <button class="btn-success btn" onclick="OnReserve(this, '@item.Id', '@item.SubscriptionId')">Reserve</button>
 <!--
 @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
 {

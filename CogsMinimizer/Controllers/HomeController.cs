@@ -45,6 +45,7 @@ namespace CogsMinimizer.Controllers
                                 subscription.IsConnected = true;
                                 subscription.ConnectedOn = s.ConnectedOn;
                                 subscription.ConnectedBy = s.ConnectedBy;
+                                subscription.ReserveIntervalInDays = s.ReserveIntervalInDays;
                                 subscription.ExpirationIntervalInDays = s.ExpirationIntervalInDays;
                                 subscription.ExpirationUnclaimedIntervalInDays = s.ExpirationUnclaimedIntervalInDays;
                                 subscription.ManagementLevel = s.ManagementLevel;
