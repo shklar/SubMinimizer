@@ -44,6 +44,7 @@ namespace CogsMinimizer.Controllers
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
                 AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(ServicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
 
+                existingSubscription.ReserveIntervalInDays = subscription.ReserveIntervalInDays;
                 existingSubscription.ExpirationIntervalInDays = subscription.ExpirationIntervalInDays;
                 existingSubscription.ExpirationUnclaimedIntervalInDays = subscription.ExpirationUnclaimedIntervalInDays;
                 existingSubscription.ManagementLevel = subscription.ManagementLevel;
@@ -69,9 +70,9 @@ namespace CogsMinimizer.Controllers
             return View(model);
         }
 
-        //Extends the duration of a resource so that it does not get reported or deleted as expired
+        // Reserves the duration of a resource so that it does not get reported or deleted as expired
         [HttpPost]
-        public ActionResult ExtendExpiredResource(string ResourceId, string SubscriptionId)
+        public ActionResult ReserveResource(string ResourceId, string SubscriptionId)
         {
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
@@ -83,9 +84,36 @@ namespace CogsMinimizer.Controllers
                 if (resource != null && subscription != null)
                 { 
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
-                    resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+                    resource.ExpirationDate = GetNewReserveDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
                     result.Data = new { ResourceID = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString() };
+                }
+
+                db.Resources.AddOrUpdate(resource);
+                db.SaveChanges();
+            }
+
+            return result;
+        }
+
+
+        //Extends the duration of a resource so that it does not get reported or deleted as expired
+        [HttpPost]
+        public ActionResult ExtendResource(string ResourceId, string SubscriptionId)
+        {
+            JsonResult result = new JsonResult();
+            using (var db = new DataAccess())
+            {
+                var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
+
+                // add subscription not found handling
+                if (resource != null && subscription != null)
+                {
+                    resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                    resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+                    resource.Status = ResourceStatus.Valid;
+                    result.Data = new { ResourceID = resource.Id, SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString() };
                 }
 
                 db.Resources.AddOrUpdate(resource);
@@ -152,12 +180,15 @@ namespace CogsMinimizer.Controllers
             return View("Analyze", model);
         }
 
-   
-
-
         private bool HasExpired(Resource resource)
         {
             return resource.ExpirationDate.Date < DateTime.UtcNow.Date;
+        }
+
+        private static DateTime GetNewReserveDate(Subscription subscription, Resource resource)
+        {
+
+            return DateTime.UtcNow.AddDays(subscription.ReserveIntervalInDays);
         }
 
         private static DateTime GetNewExpirationDate(Subscription  subscription, Resource resource)

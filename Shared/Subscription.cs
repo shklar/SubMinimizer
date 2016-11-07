@@ -20,11 +20,13 @@ namespace CogsMinimizer.Shared
         public DateTime ConnectedOn { get; set; }
      
         public string ConnectedBy { get; set; }
+
         [NotMapped]
         public bool AzureAccessNeedsToBeRepaired { get; set; }
 
         public DateTime LastAnalysisDate { get; set; }
 
+        public int  ReserveIntervalInDays { get; set; }
 
         public int ExpirationIntervalInDays { get; set; }
 
@@ -36,6 +38,7 @@ namespace CogsMinimizer.Shared
 
         public Subscription()
         {
+            this.ReserveIntervalInDays = 30;
             this.ExpirationIntervalInDays = 10;
             this.ExpirationUnclaimedIntervalInDays = 10;
             this.ManagementLevel = SubscriptionManagementLevel.ReportOnly;
