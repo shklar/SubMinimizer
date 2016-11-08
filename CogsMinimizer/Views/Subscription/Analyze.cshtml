@@ -36,9 +36,12 @@
             }),
             contentType: "application/json; charset=utf-8",
             success: function (data) {
-                // Let's update expiration date
+                // Let's update expiration date, validity status, resource owner
                 // Model at server is updated at controller method and will be used for table complete updating at refresh table
+                $selectedRow.find('td').eq(3).html(data.Owner);
                 $selectedRow.find('td').eq(5).html(data.ExpirationDate);
+                $selectedRow.find('td').eq(6).html("Valid");
+                $(reserveBtn).prop('disabled', true)
             }
         });
     }
@@ -56,9 +59,12 @@
             }),
             contentType: "application/json; charset=utf-8",
             success: function (data) {
-                // Let's update expiration date
+                // Let's update expiration date, validity status, resource owner
                 // Model at server is updated at controller method and will be used for table complete updating at refresh table
+                $selectedRow.find('td').eq(3).html(data.Owner);
                 $selectedRow.find('td').eq(5).html(data.ExpirationDate);
+                $selectedRow.find('td').eq(6).html("Valid");
+                $(extendBtn).prop('disabled', true)
             }
             });
     }

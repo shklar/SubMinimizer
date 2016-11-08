@@ -38,8 +38,8 @@ namespace CogsMinimizer.Shared
 
         public Subscription()
         {
-            this.ReserveIntervalInDays = 30;
-            this.ExpirationIntervalInDays = 10;
+            this.ReserveIntervalInDays = 180;
+            this.ExpirationIntervalInDays = 30;
             this.ExpirationUnclaimedIntervalInDays = 10;
             this.ManagementLevel = SubscriptionManagementLevel.ReportOnly;
             this.SendEmailToCoadmins = true;
