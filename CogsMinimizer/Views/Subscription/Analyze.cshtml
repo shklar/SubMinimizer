@@ -35,7 +35,7 @@
                 SubscriptionId: subscrID
             }),
             contentType: "application/json; charset=utf-8",
-            success: function (data) {
+            success: function(data) {
                 // Let's update expiration date, validity status, resource owner
                 // Model at server is updated at controller method and will be used for table complete updating at refresh table
                 $selectedRow.find('td').eq(3).html(data.Owner);
@@ -46,19 +46,18 @@
         });
     }
 
-    function OnExtend(extendBtn, resID, subscrID)
-    {
+    function OnExtend(extendBtn, resID, subscrID) {
         var $selectedRow = $(extendBtn).parents("tr");
         $.ajax({
             url: "/Subscription/ExtendResource",
             type: "POST",
             dataType: "json",
             data: JSON.stringify({
-                ResourceId :  resID,
-                SubscriptionId : subscrID
+                ResourceId: resID,
+                SubscriptionId: subscrID
             }),
             contentType: "application/json; charset=utf-8",
-            success: function (data) {
+            success: function(data) {
                 // Let's update expiration date, validity status, resource owner
                 // Model at server is updated at controller method and will be used for table complete updating at refresh table
                 $selectedRow.find('td').eq(3).html(data.Owner);
@@ -66,12 +65,15 @@
                 $selectedRow.find('td').eq(6).html("Valid");
                 $(extendBtn).prop('disabled', true)
             }
-            });
+        });
     }
 </script>
+
+<!--
 @Html.ActionLink("Extend Expired", "ExtendExpired",
-                               new { SubscriptionId = Model.SubscriptionData.Id },
-                               new { @class = "btn btn-info" })
+    new {SubscriptionId = Model.SubscriptionData.Id},
+    new {@class = "btn btn-info"})
+-->
 
 <br/>
 <br/>
@@ -132,9 +134,9 @@
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
-                <button class="btn-info btn" onclick="OnExtend(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
+                <button class="btn-info btn-xs" onclick="OnExtend(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
                 <br />
-                <button class="btn-success btn" onclick="OnReserve(this, '@item.Id', '@item.SubscriptionId')">Reserve</button>
+                <button class="btn-success btn-xs" onclick="OnReserve(this, '@item.Id', '@item.SubscriptionId')">Reserve</button>
 <!--
 @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
 {
