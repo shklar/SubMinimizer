@@ -20,7 +20,6 @@
 {
     display : table-cell
 }
-
 </style>
 
 @section Scripts
@@ -34,8 +33,7 @@
         });
     });
 
-    function RedrawResourceTable()
-    {
+    function RedrawResourceTable() {
         if ($('#allResourcesRadio').is(":checked"))
         {
             FilterResources($('#allResourcesRadio'));
@@ -50,8 +48,7 @@
         }
     }
 
-    function FilterResources(radioBtn)
-    {
+    function FilterResources(radioBtn) {
         if ($(radioBtn).attr('id') == 'allResourcesRadio')
         {
             $('#resourcesTable').find('tr').each(function () { $(this).show(); });
@@ -132,19 +129,18 @@
         });
     }
 
-    function OnExtendResource(extendBtn, resID, subscrID)
-    {
+    function OnExtendResource(extendBtn, resID, subscrID) {
         var $selectedRow = $(extendBtn).parents("tr");
         $.ajax({
             url: "/Subscription/ExtendResource",
             type: "POST",
             dataType: "json",
             data: JSON.stringify({
-                ResourceId :  resID,
-                SubscriptionId : subscrID
+                ResourceId:  resID,
+                SubscriptionId: subscrID
             }),
             contentType: "application/json; charset=utf-8",
-            success: function (data) {
+            success: function(data) {
                 // Let's update expiration date, validity status, resource owner
                 // Model at server is updated at controller method and will be used for table complete updating at refresh table
 
@@ -170,9 +166,11 @@
 <table>
     <tr>
         <td rowspan="3" style="padding-right : 5px">
+<!--
             @Html.ActionLink("Extend Expired", "ExtendExpired",
                                new { SubscriptionId = Model.SubscriptionData.Id },
                                new { @class = "btn btn-info" })
+-->
         </td>
         <td style="padding-left : 5px">
             @Html.RadioButton("resource filter", "All resources", true, new { id = "allResourcesRadio" }) All resources
@@ -255,9 +253,9 @@
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
-                <button class="btn-info btn" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
+                <button class="btn-info btn-xs" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
                 <br />
-                <button class="btn-success btn" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')">Reserve</button>
+                <button class="btn-success btn-xs" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')">Reserve</button>
 <!--
 @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
 {
