@@ -20,11 +20,87 @@
 {
     display : table-cell
 }
+
 </style>
 
+@section Scripts
+{
 <script>
 
-    function OnReserve(reserveBtn, resID, subscrID) {
+    $(document).ready(function () {
+
+        $('input:radio').change(function () {
+            FilterResources(this);
+        });
+    });
+
+    function RedrawResourceTable()
+    {
+        if ($('#allResourcesRadio').is(":checked"))
+        {
+            FilterResources($('#allResourcesRadio'));
+        }
+        else if ($('#yourResourcesRadio').is(":checked"))
+        {
+            FilterResources($('#yourResourcesRadio'));
+        }
+        else if ($('#unclaimedResourcesRadio').is(":checked"))
+        {
+            FilterResources($('#unclaimedResourcesRadio'));
+        }
+    }
+
+    function FilterResources(radioBtn)
+    {
+        if ($(radioBtn).attr('id') == 'allResourcesRadio')
+        {
+            $('#resourcesTable').find('tr').each(function () { $(this).show(); });
+        }
+        else if ($(radioBtn).attr('id') == 'yourResourcesRadio')
+        {
+            var currentUser = $.trim(@Html.Raw(Json.Encode(ViewData["UserId"])));
+            $('#resourcesTable').find('tr').each(function ()
+            {
+                // skip table header
+                if ($(this).find('th').length != 0) {
+                    return;
+                }
+
+                var resourceOwner = $.trim($(this).find('td').eq(4).html());
+                if (resourceOwner == currentUser)
+                {
+                    $(this).show();
+                }
+                else
+                {
+                    $(this).hide();
+                }
+            });
+        }
+        else if ($(radioBtn).attr('id') == 'unclaimedResourcesRadio')
+        {
+            $('#resourcesTable tr').each(function ()
+            {
+                // skip table header
+                if ($(this).find('th').length != 0)
+                {
+                    return;
+                }
+
+                var confirmedUser = $(this).find('td #item_ConfirmedOwner').is(':checked');
+                if (confirmedUser )
+                {
+                    $(this).hide();
+                }
+                else
+                {
+                    $(this).show();
+                }
+            });
+        }
+}
+
+    function OnReserveResource(reserveBtn, resID, subscrID) {
         var $selectedRow = $(reserveBtn).parents("tr");
         $.ajax({
             url: "/Subscription/ReserveResource",
@@ -38,15 +114,25 @@
             success: function (data) {
                 // Let's update expiration date, validity status, resource owner
                 // Model at server is updated at controller method and will be used for table complete updating at refresh table
-                $selectedRow.find('td').eq(3).html(data.Owner);
-                $selectedRow.find('td').eq(5).html(data.ExpirationDate);
-                $selectedRow.find('td').eq(6).html("Valid");
-                $(reserveBtn).prop('disabled', true)
+
+                if (data.ConfirmedOwner) {
+                    $selectedRow.find('#item_ConfirmedOwner').prop('checked', 'checked');
+                }
+                else
+                {
+                    $selectedRow.find('#item_ConfirmedOwner').prop('checked', '');
+                }
+
+                $selectedRow.find('td').eq(4).html(data.Owner);
+                $selectedRow.find('td').eq(6).html(data.ExpirationDate);
+                $selectedRow.find('td').eq(7).html(data.Status);
+                $(reserveBtn).prop('disabled', true);
+                RedrawResourceTable();
             }
         });
     }
 
-    function OnExtend(extendBtn, resID, subscrID)
+    function OnExtendResource(extendBtn, resID, subscrID)
     {
         var $selectedRow = $(extendBtn).parents("tr");
         $.ajax({
@@ -61,17 +147,48 @@
             success: function (data) {
                 // Let's update expiration date, validity status, resource owner
                 // Model at server is updated at controller method and will be used for table complete updating at refresh table
-                $selectedRow.find('td').eq(3).html(data.Owner);
-                $selectedRow.find('td').eq(5).html(data.ExpirationDate);
-                $selectedRow.find('td').eq(6).html("Valid");
-                $(extendBtn).prop('disabled', true)
+
+                if (data.ConfirmedOwner) {
+                    $selectedRow.find('#item_ConfirmedOwner').prop('checked', 'checked');
+                }
+                else {
+                    $selectedRow.find('#item_ConfirmedOwner').prop('checked', '');
+                }
+
+                $selectedRow.find('td').eq(4).html(data.Owner);
+                $selectedRow.find('td').eq(6).html(data.ExpirationDate);
+                $selectedRow.find('td').eq(7).html(data.Status);
+                $(extendBtn).prop('disabled', true);
+                RedrawResourceTable();
             }
             });
     }
 </script>
-@Html.ActionLink("Extend Expired", "ExtendExpired",
+}
+
+
+<table>
+    <tr>
+        <td rowspan="3" style="padding-right : 5px">
+            @Html.ActionLink("Extend Expired", "ExtendExpired",
                                new { SubscriptionId = Model.SubscriptionData.Id },
                                new { @class = "btn btn-info" })
+        </td>
+        <td style="padding-left : 5px">
+            @Html.RadioButton("resource filter", "All resources", true, new { id = "allResourcesRadio" }) All resources
+        </td>
+        </tr>
+    <tr>
+            <td style="padding-left : 5px">
+            @Html.RadioButton("resource filter", "Your resources", false, new { id = "yourResourcesRadio" }) Your resources
+        </td>
+        </tr>
+        <tr>
+        <td style="padding-left : 5px">
+            @Html.RadioButton("resource filter", "Unclaimed resources", false, new { id = "unclaimedResourcesRadio" })  Unclaimed resources
+        </td>
+       </tr>
+</table>
 
 <br/>
 <br/>
@@ -79,6 +196,9 @@
 <table class="table table-hover table-bordered table-striped table-condensed sortable" id="resourcesTable">
     <thead>
     <tr>
+        <th style="display:none" id="confirmedOwnerColumn" data-defaultsign="AZ">
+            @Html.DisplayNameFor(model => model.Resources.First().ConfirmedOwner)
+        </th>
             <th id="nameColumn" data-defaultsign="AZ">
             @Html.DisplayNameFor(model => model.Resources.First().Name)
         </th>
@@ -110,6 +230,9 @@
     {
         string rowClass = item.Expired ? "alert alert - warning" : null;
         <tr class="@rowClass">
+            <td style="display:none">
+                @Html.CheckBoxFor(modelItem => item.ConfirmedOwner)
+            </td>
             <td>
                 @Html.Raw(HTMLUtilities.CreateAzureResourceAnchor(item.Name, item.AzureResourceIdentifier))            
             </td>
@@ -132,9 +255,9 @@
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
-                <button class="btn-info btn" onclick="OnExtend(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
+                <button class="btn-info btn" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
                 <br />
-                <button class="btn-success btn" onclick="OnReserve(this, '@item.Id', '@item.SubscriptionId')">Reserve</button>
+                <button class="btn-success btn" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')">Reserve</button>
 <!--
 @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
 {

@@ -67,6 +67,7 @@ namespace CogsMinimizer.Controllers
         public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
         {       
             var model = GetResourcesViewModel(subscription.Id);
+            ViewData["UserId"] = AzureAuthUtils.GetSignedInUserUniqueName();
             return View(model);
         }
 
@@ -84,9 +85,10 @@ namespace CogsMinimizer.Controllers
                 if (resource != null && subscription != null)
                 { 
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                    resource.ConfirmedOwner = true;
                     resource.ExpirationDate = GetNewReserveDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
-                    result.Data = new { Owner = resource.Owner, ResourceID = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString() };
+                    result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceID = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
                 }
 
                 db.Resources.AddOrUpdate(resource);
@@ -111,9 +113,10 @@ namespace CogsMinimizer.Controllers
                 if (resource != null && subscription != null)
                 {
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                    resource.ConfirmedOwner = true;
                     resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
-                    result.Data = new { Owner = resource.Owner, ResourceID = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString() };
+                    result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceID = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
                 }
 
                 db.Resources.AddOrUpdate(resource);
