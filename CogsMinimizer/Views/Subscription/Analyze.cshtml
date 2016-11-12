@@ -16,9 +16,12 @@
 
 
 <style>
-.btn
-{
-    display : table-cell
+    .btn {
+        display: table-cell;
+    }
+
+    .table {
+        table-layout: fixed;
 }
 </style>
 
@@ -191,7 +194,7 @@
 <br/>
 <br/>
 
-<table class="table table-hover table-bordered table-striped table-condensed sortable" id="resourcesTable">
+        <table width="100%" class="table table-hover table-bordered table-striped table-condensed sortable" id="resourcesTable">
     <thead>
     <tr>
         <th style="display:none" id="confirmedOwnerColumn" data-defaultsign="AZ">
@@ -231,25 +234,25 @@
             <td style="display:none">
                 @Html.CheckBoxFor(modelItem => item.ConfirmedOwner)
             </td>
-            <td>
+                    <td title="@item.AzureResourceIdentifier" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                 @Html.Raw(HTMLUtilities.CreateAzureResourceAnchor(item.Name, item.AzureResourceIdentifier))            
             </td>
-            <td>
+                    <td title="@item.Type" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                 @Html.DisplayFor(modelItem => item.Type)
             </td>
-            <td>
+                    <td title="@item.ResourceGroup" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                 @Html.DisplayFor(modelItem => item.ResourceGroup)
             </td>
-            <td>
+                    <td title="@item.Owner">
                 @Html.DisplayFor(modelItem => item.Owner)
             </td>
-            <td>
+                    <td title="@item.FirstFoundDate">
                 @Html.DisplayFor(modelItem => item.FirstFoundDate)
             </td>
-      <td>
+                    <td title="@item.ExpirationDate">
                 @Html.DisplayFor(modelItem => item.ExpirationDate)
             </td>
-            <td >
+                    <td title="@item.Status">
                 @Html.DisplayFor(modelItem => item.Status)
             </td>
             <td>
