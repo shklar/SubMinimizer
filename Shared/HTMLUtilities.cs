@@ -17,7 +17,7 @@ namespace CogsMinimizer.Shared
         public static string CreateAzureResourceAnchor(string message, string azureResourceId)
         {
             string url = $"https://ms.portal.azure.com/#resource{azureResourceId}";
-            string htmlLink = $"<a href=\"{url}\">{message}</a>";
+            string htmlLink = CreateHTMLLink(message, url);
             return htmlLink;
         }
 
