@@ -84,6 +84,7 @@ namespace CogsMinimizer.Controllers
                 if (resource != null && subscription != null)
                 { 
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                    resource.ConfirmedOwner = true;
                     resource.ExpirationDate = GetNewReserveDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
                     result.Data = new { Owner = resource.Owner, ResourceID = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString() };
@@ -111,6 +112,7 @@ namespace CogsMinimizer.Controllers
                 if (resource != null && subscription != null)
                 {
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                    resource.ConfirmedOwner = true;
                     resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
                     result.Data = new { Owner = resource.Owner, ResourceID = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString() };

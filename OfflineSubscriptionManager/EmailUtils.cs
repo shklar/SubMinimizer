@@ -109,7 +109,7 @@ namespace OfflineSubscriptionManager
                 //result += $"<td>{CreateHTMLLink(resource.Name, "https://ms.portal.azure.com/#resource\{resource.AzureResourceIdentifier}\\")}</td>";
                 result += $"<td>{resource.Type}</td>";
                 result += $"<td>{resource.ResourceGroup}</td>";
-                string unclearOwner = resource.Owner != null && !resource.ConfirmedOwner ? "(?)" : string.Empty;
+                string unclearOwner = !string.IsNullOrWhiteSpace(resource.Owner) && ! resource.ConfirmedOwner ? "(?)" : string.Empty;
                 result += $"<td>{resource.Owner} {unclearOwner}</td>";
                 result += $"<td>{GetShortDate(resource.ExpirationDate)}</td>";
 
