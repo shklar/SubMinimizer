@@ -25,7 +25,6 @@ namespace OfflineSubscriptionManager
             ITracer tracer = TracerFactory.CreateTracer(logger);
             tracer.TraceInformation("OfflineSubscriptionManager web job started!");
             tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["TelemetryInstrumentationKey"]}");
-
             ProcessSubscriptions(tracer);
             tracer.Flush();
         }
@@ -54,157 +53,42 @@ namespace OfflineSubscriptionManager
                     ReportSubscriptionAnalysisResult(analysisResult, tracer);
                 }
             }
-            // SendEmail(message).Wait();
         }
 
         private static void ReportSubscriptionAnalysisResult(SubscriptionAnalysisResult analysisResult, ITracer tracer)
         {
             //Email to = new Email("maximsh@microsoft.com");
             Subscription sub = analysisResult.AnalyzedSubscription;
-            Email to = new Email(sub.ConnectedBy);
             string subject = $"SubMinimizer: Subscription Analysis report for {sub.DisplayName}";
 
-            string message = @"<!DOCTYPE html>
-                            <html lang=""en"">
-                            <head>    
-                                <meta content=""text/html; charset=utf-8"" http-equiv=""Content-Type"">
-                                <title>
-                                    Upcoming topics
-                                </title>
-                                <style type=""text/css"">
-                                    HTML{background-color: #ffffff;}
-                                    .courses-table{font-size: 16px; padding: 3px; border-collapse: collapse; border-spacing: 0;}
-                                    .courses-table .description{color: #505050;}
-                                    .courses-table td{border: 1px solid #D1D1D1; background-color: #F3F3F3; padding: 0 10px;}
-                                    .courses-table th{border: 1px solid #424242; color: #FFFFFF;text-align: left; padding: 0 10px;}
-                                    .tableheadercolor{background-color: #111111;}
-                                </style>
-                            </head>
-                            <body>";
+            var message = EmailUtils.CreateEmailMessage(analysisResult, sub);
 
-         
-            string analyzeControllerLink = "http://subminimizer.azurewebsites.net/Subscription/Analyze/";
-            string headerLink = HTMLUtilities.CreateHTMLLink($"Subminimizer report for subscription: {sub.DisplayName}",
-                $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");
+            var to = new List<Email>();
+            var cc = new List<Email>();
+            var bcc = new List<Email>();
 
-            message += $"<H2>{headerLink}</H2>";
+            //Add To recepients - the subscription admin and anyone with an expired resource 
+            to.Add(new Email(sub.ConnectedBy));
 
-            message += $"<H2>Subscription ID : {sub.Id} </H2>";
-            message += $"<h3>Analysis Date : {GetShortDate(sub.LastAnalysisDate)}</h3>";
-            message += "<br>";
+            to.AddRange(analysisResult.ExpiredResources.Where(x=> ! string.IsNullOrWhiteSpace(x.Owner)).Select(x=> new Email(x.Owner)));
 
-            if (analysisResult.DeletedResources.Count != 0)
+            //Add CC recepients - the subscription coadmins if so selected by the admin in the settings
+            if (sub.SendEmailToCoadmins)
             {
-                message += $"<h3>Deleted {analysisResult.DeletedResources.Count} resource(s):</h3>";
-                message += GetHTMLTableForResources(analysisResult.DeletedResources);
+                cc.AddRange(analysisResult.Admins.Select(x=>new Email(x.Properties.EmailAddress, x.Name)));         
             }
 
+            //Add BCC recepients - dev team, as configured in the app config
+            bcc.AddRange(ConfigurationManager.AppSettings["DevTeam"].Split(';').Select(x=> new Email(x)));
 
-            if (analysisResult.FailedDeleteResources.Count != 0)
-            {
-                message += $"<h3>Failed deleting {analysisResult.FailedDeleteResources.Count} resource(s):</h3>";
-                message += GetHTMLTableForResources(analysisResult.FailedDeleteResources);
-            }
+            var email = new SubMinimizerEmail(subject, message, to, cc, bcc );
 
-            if (analysisResult.ExpiredResources.Count == 0)
-            {
-                message += "<h3>No expired resources found</h3>";
-            }
-            else
-            {
-                message += $"<h3>Found {analysisResult.ExpiredResources.Count} expired resource(s):</h3>";
-                message += GetHTMLTableForResources(analysisResult.ExpiredResources);
-            }
-
-            if (analysisResult.NotFoundResources.Count != 0)
-            {
-                message += $"<h3>Couldn't find {analysisResult.NotFoundResources.Count} resource(s):</h3>";
-                message += GetHTMLTableForResources(analysisResult.NotFoundResources);
-            }
-
-            if (analysisResult.NewResources.Count != 0)
-            {
-                message += $"<h3>Found {analysisResult.NewResources.Count} new resource(s) :</h3>";
-                message += GetHTMLTableForResources(analysisResult.NewResources);
-            }
-
-            if (analysisResult.ValidResources.Count != 0)
-            {
-                message += $"<h3>Found {analysisResult.ValidResources.Count} valid resource(s) :</h3>";
-                message += GetHTMLTableForResources(analysisResult.ValidResources);
-            }
-
-            message += "</body></html>";
-
-            SendEmail(subject , message, to, tracer).Wait();
+            EmailUtils.SendEmail(email, tracer).Wait();
         }
 
-        private static string GetHTMLTableForResources(IEnumerable<Resource> resources)
-        {
-            string result = "<Table class=\"courses-table\">";
+     
 
-            result += "<tr>";
-            result += "<th class=\"tableheadercolor\">Name</th>";
-            result += "<th class=\"tableheadercolor\">Type</th>";
-            result += "<th class=\"tableheadercolor\">Group</th>";
-            result += "<th class=\"tableheadercolor\">Owner</th>";
-            result += "<th class=\"tableheadercolor\">Expiration Date</th>";
 
-            result += "</tr>";
-
-            foreach (var resource in resources)
-            {
-                result += "<tr>";
-
-                result += $"<td><a href=\"https://ms.portal.azure.com/#resource{resource.AzureResourceIdentifier}\">{resource.Name}</a></td>";
-                //result += $"<td>{CreateHTMLLink(resource.Name, "https://ms.portal.azure.com/#resource\{resource.AzureResourceIdentifier}\\")}</td>";
-                result += $"<td>{resource.Type}</td>";
-                result += $"<td>{resource.ResourceGroup}</td>";
-                string unclearOwner = resource.Owner != null && !resource.ConfirmedOwner ? "(?)" : string.Empty;
-                result += $"<td>{resource.Owner} {unclearOwner}</td>";
-                result += $"<td>{GetShortDate(resource.ExpirationDate)}</td>";
-
-                result += "</tr>";
-            }
-            result += "</Table>";
-
-            return result;
-        }
-
-      
-
-        static async Task SendEmail(string subject, string contentMessage, Email to, ITracer tracer)
-        {
-            string apiKey = ConfigurationManager.AppSettings["API_KEY"];
-            dynamic sg = new SendGridAPIClient(apiKey);
-
-            Email from = new Email("noreply@subminimizer.com");
-            
-            Content content = new Content("text/html", contentMessage);
-            
-            Mail mail = new Mail(from, subject, to, content);
-            var bccList = new List<Email>();
-            var dev1Email = new Email("maximsh@microsoft.com");
-            if (!to.Address.Equals(dev1Email.Address))
-            {
-                bccList.Add(dev1Email);
-            }
-            var dev2Email = new Email("eviten@microsoft.com");
-            if (!to.Address.Equals(dev2Email.Address))
-            {
-                bccList.Add(dev2Email);
-            }
-
-            mail.Personalization[0].Bccs = bccList;
-            tracer.TraceInformation($"Sending email To: {to.Address} Subject: {subject} Bcc: {string.Join(";", bccList.Select(x=>x.Address))}");
-
-            dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
-            tracer.TraceInformation($"Email was sent for {subject}");
-        }
-
-        private static string GetShortDate(DateTime dateTime)
-        {
-            return dateTime.ToString("dd MMMM yyyy");
-        }
+    
     }
 }

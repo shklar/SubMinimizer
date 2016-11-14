@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity.Migrations.Model;
 using System.Reflection;
+using Microsoft.Azure.Management.Authorization.Models;
 
 namespace CogsMinimizer.Shared
 {
@@ -81,6 +82,9 @@ namespace CogsMinimizer.Shared
         /// </summary>
         public DateTime AnalysisEndTime { get; set; }
 
-
+        /// <summary>
+        /// The list of coadmins of the subscription
+        /// </summary>
+        public List<ClassicAdministrator> Admins { get; set; }
     }
 }

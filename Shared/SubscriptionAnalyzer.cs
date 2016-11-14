@@ -160,6 +160,8 @@ namespace CogsMinimizer.Shared
         private void AnalyzeSubscriptionResources()
         {
             m_subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(m_authorizationManagementClient).ToList();
+            m_analysisResult.Admins = m_subscriptionAdmins;
+
             var emails = GetEmails(m_subscriptionAdmins);
             var adminEmails = emails.ToList();
 
