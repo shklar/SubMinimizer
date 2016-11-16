@@ -86,12 +86,12 @@ namespace CogsMinimizer.Shared
             }
 
             //Verify that the application indeed has access to the subscription
-            bool isApplicationAutohrizedToForSubscription =
+            bool isApplicationAutohrizedToReadSubscription =
                 AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(m_analyzedSubscription.Id,
                 m_analyzedSubscription.OrganizationId);
 
             //Couldn't access the subcription
-            if (!isApplicationAutohrizedToForSubscription)
+            if (!isApplicationAutohrizedToReadSubscription)
             {
                 m_analysisResult.IsSubscriptionAccessible = false;
             }
@@ -104,10 +104,18 @@ namespace CogsMinimizer.Shared
                 // Check if automatic resource deletion allowed
                 if (m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete ||
                     m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.ManualDelete)
-                    {
-                        // If automatic resources deletion allowed delete marked for deletion resources
-                        DeleteMarkedResources();
-                    }
+                {
+                    _tracer.TraceVerbose(
+                        $"Subscription marked for deletion : name: {m_analyzedSubscription.DisplayName} management level: {m_analyzedSubscription.ManagementLevel}");
+
+                    // If automatic resources deletion allowed delete marked for deletion resources
+                    DeleteMarkedResources();
+                }
+                else
+                {
+                    _tracer.TraceVerbose(
+                          $"Subscription marked for report only: {m_analyzedSubscription.DisplayName}");
+                }
 
                 AnalyzeSubscriptionResources();
             }
@@ -181,12 +189,15 @@ namespace CogsMinimizer.Shared
                     //First time resource encountered
                     if (resourceEntryFromDb == null)
                     {
+                        _tracer.TraceVerbose($"Found unknown resource: {genericResource.Name}");
+
                         StoreNewFoundResource(genericResource, adminEmails, group.Name);
                     }
 
                     //Got this resource in the DB already
                     else
                     {
+                        _tracer.TraceVerbose($"Found known resource: {genericResource.Name}");
                         UpdateKnownResource(resourceEntryFromDb, adminEmails);
                     }              
                 }
@@ -237,6 +248,8 @@ namespace CogsMinimizer.Shared
                                Status = ResourceStatus.Valid
                            };
 
+            _tracer.TraceVerbose($"Found New resource: {resource.Name}");
+
             m_Db.Resources.Add(resource);
             m_analysisResult.NewResources.Add(resource);
         }
@@ -248,6 +261,8 @@ namespace CogsMinimizer.Shared
         /// <param name="adminEmails"></param>
         private void UpdateKnownResource(Resource resourceEntryFromDb, List<string> adminEmails)
         {
+            _tracer.TraceVerbose($"Trying to determine resource owner for {resourceEntryFromDb.Name}");
+
             //Try to update the owner if it is unknown
             if (String.IsNullOrWhiteSpace(resourceEntryFromDb.Owner))
             {
@@ -255,16 +270,31 @@ namespace CogsMinimizer.Shared
                 if (foundOwner!= null)
                 {
                     resourceEntryFromDb.Owner = foundOwner;
+                    _tracer.TraceVerbose($"Found owner for {resourceEntryFromDb.Name} Owner: {resourceEntryFromDb.Owner}");
+                }
+                else
+                {
+                    _tracer.TraceVerbose($"Couldn't determine resource owner for {resourceEntryFromDb.Name}");
                 }
             }
 
             //Check if resource has expired
             if (resourceEntryFromDb.ExpirationDate < m_analysisResult.AnalysisStartTime.Date)
             {
+                _tracer.TraceVerbose($"Found expired resource: {resourceEntryFromDb.Name} expiration date {resourceEntryFromDb.ExpirationDate}");
+
                 //The resource status can't go from "marked for delete" to "Expired". Only from "Valid" to "Expired"
                 if (resourceEntryFromDb.Status == ResourceStatus.Valid)
                 {
                     resourceEntryFromDb.Status = ResourceStatus.Expired;
+                    _tracer.TraceVerbose($"Assigning expired resource: {resourceEntryFromDb.Name} with status {resourceEntryFromDb.Status}");
+                }
+
+                if (m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete &&
+                     resourceEntryFromDb.Status == ResourceStatus.Expired)
+                {
+                    resourceEntryFromDb.Status = ResourceStatus.MarkedForDeletion;
+                    _tracer.TraceVerbose($"Subscription defined for automatic delete. Assigning expired resource: {resourceEntryFromDb.Name} with status {resourceEntryFromDb.Status}");
                 }
 
                 //Add to the list of expired resources even if it is marked for delete
@@ -275,6 +305,7 @@ namespace CogsMinimizer.Shared
             else if (resourceEntryFromDb.Status == ResourceStatus.Valid)
             {
                 m_analysisResult.ValidResources.Add(resourceEntryFromDb);
+                _tracer.TraceVerbose($"Found valid resource: {resourceEntryFromDb.Name}");
             }
 
             //update the visit time
