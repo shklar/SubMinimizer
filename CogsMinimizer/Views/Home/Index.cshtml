@@ -30,7 +30,7 @@
                     <h4>Availability</h4>
                 </td>
             </tr>
-            @foreach (KeyValuePair<string, CogsMinimizer.Shared.Subscription> entry in Model.UserSubscriptions)
+            @foreach (KeyValuePair<string, CogsMinimizer.Shared.Subscription> entry in Model.UserSubscriptions.OrderByDescending(x=>x.Value.IsConnected).ThenBy(x=>x.Value.DisplayName))
             {
                 var subscription = entry.Value as CogsMinimizer.Shared.Subscription;
                 <tr>

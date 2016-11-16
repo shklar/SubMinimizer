@@ -279,7 +279,8 @@ namespace CogsMinimizer.Shared
             }
 
             //Check if resource has expired
-            if (resourceEntryFromDb.ExpirationDate < m_analysisResult.AnalysisStartTime.Date)
+            var resourceExpirationAge = (resourceEntryFromDb.ExpirationDate - m_analysisResult.AnalysisStartTime.Date).TotalDays;
+            if (resourceExpirationAge < 0)
             {
                 _tracer.TraceVerbose($"Found expired resource: {resourceEntryFromDb.Name} expiration date {resourceEntryFromDb.ExpirationDate}");
 
@@ -290,9 +291,9 @@ namespace CogsMinimizer.Shared
                     _tracer.TraceVerbose($"Assigning expired resource: {resourceEntryFromDb.Name} with status {resourceEntryFromDb.Status}");
                 }
 
-                if (m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete &&
-                     resourceEntryFromDb.Status == ResourceStatus.Expired)
-                {
+                if ((m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete &&
+                     resourceEntryFromDb.Status == ResourceStatus.Expired) & resourceExpirationAge <= -7)
+                {                
                     resourceEntryFromDb.Status = ResourceStatus.MarkedForDeletion;
                     _tracer.TraceVerbose($"Subscription defined for automatic delete. Assigning expired resource: {resourceEntryFromDb.Name} with status {resourceEntryFromDb.Status}");
                 }
