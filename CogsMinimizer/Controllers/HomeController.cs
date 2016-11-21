@@ -20,6 +20,8 @@ namespace CogsMinimizer.Controllers
 
             if (ClaimsPrincipal.Current.Identity.IsAuthenticated)
             {
+                var userName = ClaimsPrincipal.Current.Identity.Name;
+                System.Diagnostics.Trace.TraceInformation($"Home/Index opened by {userName}");
                 model = new HomeIndexViewModel();
                 model.UserOrganizations = new Dictionary<string, Organization>();
                 model.UserSubscriptions = new Dictionary<string, Subscription>();
@@ -27,19 +29,24 @@ namespace CogsMinimizer.Controllers
                 model.DisconnectedUserOrganizations = new List<string>();
 
                 var organizations = AzureResourceManagerUtil.GetUserOrganizations();
+              
                 foreach (Organization org in organizations)
                 {
                     model.UserOrganizations.Add(org.Id, org);
                     var subscriptions = AzureResourceManagerUtil.GetUserSubscriptions(org.Id);
 
+                    System.Diagnostics.Trace.TraceInformation($"Found {subscriptions.Count} subscriptions for {userName} ");
+
                     if (subscriptions != null)
                     {
-                        var devSubscriptions = subscriptions.Where(s => s.DisplayName.Contains("Stage0"));
-                     
+                        //var devSubscriptions = subscriptions.Where(s => s.DisplayName.Contains("Stage0"));
+                        var devSubscriptions = subscriptions;
+                        var dbSubscriptions = db.Subscriptions.ToList();
+
                         foreach (var subscription in devSubscriptions)
                         {
 
-                            Subscription s = db.Subscriptions.Find(subscription.Id);
+                            Subscription s = dbSubscriptions.FirstOrDefault(x=> x.Id.Equals(subscription.Id));
                             if (s != null)
                             {
                                 subscription.IsConnected = true;
@@ -50,7 +57,9 @@ namespace CogsMinimizer.Controllers
                                 subscription.ExpirationUnclaimedIntervalInDays = s.ExpirationUnclaimedIntervalInDays;
                                 subscription.ManagementLevel = s.ManagementLevel;
                                 subscription.SendEmailToCoadmins = s.SendEmailToCoadmins;
-                                subscription.AzureAccessNeedsToBeRepaired = !AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, org.Id);
+                                //subscription.AzureAccessNeedsToBeRepaired = !AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, org.Id);
+                                subscription.AzureAccessNeedsToBeRepaired = false;
+
                             }
                             else
                             {
@@ -58,8 +67,8 @@ namespace CogsMinimizer.Controllers
                             }
 
                             model.UserSubscriptions.Add(subscription.Id, subscription);
-                            if (AzureResourceManagerUtil.UserCanManageAccessForSubscription(subscription.Id, org.Id))
-                                model.UserCanManageAccessForSubscriptions.Add(subscription.Id);
+                            model.UserCanManageAccessForSubscriptions.Add(subscription.Id);
+                            //if (AzureResourceManagerUtil.UserCanManageAccessForSubscription(subscription.Id, org.Id)) model.UserCanManageAccessForSubscriptions.Add(subscription.Id);
                           
                         }
                     }

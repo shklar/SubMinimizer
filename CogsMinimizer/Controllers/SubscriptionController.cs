@@ -262,10 +262,10 @@ namespace CogsMinimizer.Controllers
         {
             if (ModelState.IsValid)
             {
-                // add subscription not found handling. at connect subscription must be at database
-                var existingSubscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscription.Id));
-                AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
+                //A new subscription is created with ReportOnly mode by defaul
+                AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(SubscriptionManagementLevel.ReportOnly);
 
+                // Grant the subscription the needed role
                 AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
                 if (AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, subscription.OrganizationId))
                 {
