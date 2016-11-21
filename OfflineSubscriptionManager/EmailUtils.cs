@@ -63,6 +63,13 @@ namespace OfflineSubscriptionManager
             else
             {
                 message += $"<h3>Found {analysisResult.ExpiredResources.Count} expired resource(s):</h3>";
+                if (sub.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete ||
+                    sub.ManagementLevel == SubscriptionManagementLevel.ManualDelete)
+                {
+                    message +=
+                        "<h3><font color=\"#ff0000\"><b>WARNING - All expired resources will be deleted shortly!</b></font></h3>";
+                }
+
                 message += GetHTMLTableForResources(analysisResult.ExpiredResources);
             }
 
