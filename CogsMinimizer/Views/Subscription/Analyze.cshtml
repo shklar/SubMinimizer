@@ -229,7 +229,19 @@
 @Html.ActionLink("Extend Expired", "ExtendExpired",
     new {SubscriptionId = Model.SubscriptionData.Id},
     new {@class = "btn btn-info"})
+    <br/>
 -->
+            @Html.ActionLink("Settings", "GetSettings",
+                               new
+                               {
+                                   Id = Model.SubscriptionData.Id,
+                                   OrganizationId = Model.SubscriptionData.OrganizationId,
+                                   DisplayName = Model.SubscriptionData.DisplayName,
+                                   ServicePrincipalObjectId = ViewData["ServicePrincipalObjectId"]
+                               },
+                               new { @class = "btn btn-warning btn-xs" })
+
+
         </td>
         <td style="padding-left : 5px">
             @Html.RadioButton("resource filter", "All resources", true, new { id = "allResourcesRadio" }) All resources
@@ -263,7 +275,7 @@
                     @Html.DisplayNameFor(model => model.Resources.First().Owner)
                 </th>
                 <th id="confirmedOwnerColumn" data-defaultsign="bool" onclick="SortResources(this)">
-                    @Html.DisplayNameFor(model => model.Resources.First().ConfirmedOwner)
+                    Claimed
                 </th>
                 <th data-defaultsign="month"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().FirstFoundDate)

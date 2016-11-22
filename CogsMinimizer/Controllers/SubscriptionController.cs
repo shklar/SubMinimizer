@@ -67,9 +67,10 @@ namespace CogsMinimizer.Controllers
            return RedirectToAction("Index", "Home");
         }
         
-        public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
+        public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string ServicePrincipalObjectId)
         {       
             var model = GetResourcesViewModel(subscription.Id);
+            ViewData["ServicePrincipalObjectId"] = ServicePrincipalObjectId;
             ViewData["UserId"] = AzureAuthUtils.GetSignedInUserUniqueName();
             return View(model);
         }
