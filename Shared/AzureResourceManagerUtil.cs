@@ -319,8 +319,13 @@ namespace CogsMinimizer.Shared
             }
         }
 
-        public static void RevokeRoleFromServicePrincipalOnSubscription(string objectId, string subscriptionId,
-            string organizationId)
+        /// <summary>
+        /// Revokes all the roles of the application for this subscription
+        /// </summary>
+        /// <param name="objectId"></param>
+        /// <param name="subscriptionId"></param>
+        /// <param name="organizationId"></param>
+        public static void RevokeAllRolesFromServicePrincipalOnSubscription(string objectId, string subscriptionId, string organizationId)
         {
 
             try

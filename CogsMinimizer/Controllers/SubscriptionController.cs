@@ -41,7 +41,10 @@ namespace CogsMinimizer.Controllers
                 Subscription existingSubscription =
                     dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
 
+                AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(ServicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
+
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
+
                 AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(ServicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
 
                 existingSubscription.ReserveIntervalInDays = subscription.ReserveIntervalInDays;
@@ -286,7 +289,7 @@ namespace CogsMinimizer.Controllers
         {
             if (ModelState.IsValid)
             {
-                AzureResourceManagerUtil.RevokeRoleFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
+                AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
                 
                 // add subscription not found handling
                 Subscription s = db.Subscriptions.Find(subscription.Id);
@@ -314,7 +317,7 @@ namespace CogsMinimizer.Controllers
         {
             if (ModelState.IsValid)
             {
-                AzureResourceManagerUtil.RevokeRoleFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
+                AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
 
                 // add subscription not found handling
                 var existingSubscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscription.Id));
