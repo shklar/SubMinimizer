@@ -34,7 +34,63 @@
         $('input:radio').change(function () {
             FilterResources(this);
         });
+
     });
+
+    function GetBool(colNum, value) {
+        var input = $(value.elm).find("td").eq(colNum).find("input")[0];
+        if (input.checked) {
+            return 1;
+        }
+        else
+        {
+            return 0;
+        }
+    }
+
+    function GetDate(colNum, value)
+    {
+        var dateAsString = $(value.elm).find("td").eq(colNum).html(); 
+        var dateParts = dateAsString.split('/');
+        var date = new Date(dateParts[2], dateParts[0], dateParts[1]);
+        return date;
+    }
+        
+    function SortResources(th) {
+        var order = "asc";
+        if ($(th).hasClass("down")) {
+            order = "desc";
+        }
+
+        var colNum = $(th).index();
+        var selector = "td:nth-child(" + (colNum + 1) + ")";
+
+        var sortKind = "Text";
+        if ($(th).attr("data-defaultsign") == "month") {
+            sortKind = "Date";
+        }
+        else if ($(th).attr("data-defaultsign") == "bool") {
+            sortKind = "bool";
+        }
+
+        if (sortKind == "Date") {
+            tinysort($('#resourcesTable tbody tr'), {
+                order: order, selector: selector, sortFunction: function (a, b) {
+                    return GetDate(colNum, a) - GetDate(colNum, b);
+                }
+            });
+        }
+        else if (sortKind == "bool") {
+            tinysort($('#resourcesTable tbody tr'), {
+                order: order, selector: selector, sortFunction: function (a, b) {
+                    return GetBool(colNum, a) - GetBool(colNum, b);
+                }
+            });
+        }
+        else {
+            tinysort($('#resourcesTable tbody tr'), { order: order, selector: selector });
+        }
+    }
 
     function RedrawResourceTable() {
         if ($('#allResourcesRadio').is(":checked"))
@@ -66,7 +122,7 @@
                     return;
                 }
 
-                var resourceOwner = $.trim($(this).find('td').eq(4).html());
+                var resourceOwner = $.trim($(this).find('td').eq(3).html());
                 if (resourceOwner == currentUser)
                 {
                     $(this).show();
@@ -123,7 +179,7 @@
                     $selectedRow.find('#item_ConfirmedOwner').prop('checked', '');
                 }
 
-                $selectedRow.find('td').eq(4).html(data.Owner);
+                $selectedRow.find('td').eq(3).html(data.Owner);
                 $selectedRow.find('td').eq(6).html(data.ExpirationDate);
                 $selectedRow.find('td').eq(7).html(data.Status);
                 $(reserveBtn).prop('disabled', true);
@@ -154,7 +210,7 @@
                     $selectedRow.find('#item_ConfirmedOwner').prop('checked', '');
                 }
 
-                $selectedRow.find('td').eq(4).html(data.Owner);
+                $selectedRow.find('td').eq(3).html(data.Owner);
                 $selectedRow.find('td').eq(6).html(data.ExpirationDate);
                 $selectedRow.find('td').eq(7).html(data.Status);
                 $(extendBtn).prop('disabled', true);
@@ -185,89 +241,86 @@
         </td>
         </tr>
         <tr>
-        <td style="padding-left : 5px">
+     <td style="padding-left : 5px">
             @Html.RadioButton("resource filter", "Unclaimed resources", false, new { id = "unclaimedResourcesRadio" })  Unclaimed resources
         </td>
        </tr>
 </table>
 
-<br/>
-<br/>
-
-        <table width="100%" class="table table-hover table-bordered table-striped table-condensed sortable" id="resourcesTable">
-    <thead>
-    <tr>
-        <th id="confirmedOwnerColumn" data-defaultsign="AZ">
-            @Html.DisplayNameFor(model => model.Resources.First().ConfirmedOwner)
-        </th>
-            <th id="nameColumn" data-defaultsign="AZ">
-            @Html.DisplayNameFor(model => model.Resources.First().Name)
-        </th>
-            <th data-defaultsign="AZ">
-            @Html.DisplayNameFor(model => model.Resources.First().Type)
-        </th>
-           <th data-defaultsign="AZ">
-            @Html.DisplayNameFor(model => model.Resources.First().ResourceGroup)
-        </th>
-            <th data-defaultsign="AZ">
-            @Html.DisplayNameFor(model => model.Resources.First().Owner)
-        </th>
-            <th data-defaultsign="month">
-            @Html.DisplayNameFor(model => model.Resources.First().FirstFoundDate)
-        </th>
-            <th data-defaultsign="month">
-            @Html.DisplayNameFor(model => model.Resources.First().ExpirationDate)
-        </th>
-            <th data-defaultsign="AZ">
-            @Html.DisplayNameFor(model => model.Resources.First().Status)
-        </th>
-            <th data-defaultsort="disabled">
-            Actions
-        </th>
-    </tr>
-    </thead>
-
-    @foreach (var item in Model.Resources)
-    {
-        string rowClass = item.Expired ? "alert alert - warning" : null;
-        <tr class="@rowClass">
-            <td>
-                @Html.CheckBoxFor(modelItem => item.ConfirmedOwner, new { disabled = "disabled" })
-            </td>
+    <table width="100%" class="table table-hover table-bordered table-striped table-condensed sortable " id="resourcesTable">
+        <thead>
+            <tr>
+                <th id="nameColumn" data-defaultsign="AZ"  onclick="SortResources(this)">
+                    @Html.DisplayNameFor(model => model.Resources.First().Name)
+                </th>
+                <th data-defaultsign="AZ"  onclick="SortResources(this)">
+                    @Html.DisplayNameFor(model => model.Resources.First().Type)
+                </th>
+                <th data-defaultsign="AZ"  onclick="SortResources(this)">
+                    @Html.DisplayNameFor(model => model.Resources.First().ResourceGroup)
+                </th>
+                <th data-defaultsign="AZ"  onclick="SortResources(this)">
+                    @Html.DisplayNameFor(model => model.Resources.First().Owner)
+                </th>
+                <th id="confirmedOwnerColumn" data-defaultsign="bool" onclick="SortResources(this)">
+                    @Html.DisplayNameFor(model => model.Resources.First().ConfirmedOwner)
+                </th>
+                <th data-defaultsign="month"  onclick="SortResources(this)">
+                    @Html.DisplayNameFor(model => model.Resources.First().FirstFoundDate)
+                </th>
+                <th data-defaultsign="month"  onclick="SortResources(this)">
+                    @Html.DisplayNameFor(model => model.Resources.First().ExpirationDate)
+                </th>
+                <th data-defaultsign="AZ" onclick="SortResources(this)">
+                    @Html.DisplayNameFor(model => model.Resources.First().Status)
+                </th>
+                <th data-defaultsort="disabled">
+                    Actions
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.Resources)
+            {
+                string rowClass = item.Expired ? "alert alert - warning" : null;
+                <tr class="@rowClass">
                     <td title="@item.AzureResourceIdentifier" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                @Html.Raw(HTMLUtilities.CreateAzureResourceAnchor(item.Name, item.AzureResourceIdentifier))            
-            </td>
+                        @Html.Raw(HTMLUtilities.CreateAzureResourceAnchor(item.Name, item.AzureResourceIdentifier))
+                    </td>
                     <td title="@item.Type" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                @Html.DisplayFor(modelItem => item.Type)
-            </td>
+                        @Html.DisplayFor(modelItem => item.Type)
+                    </td>
                     <td title="@item.ResourceGroup" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                @Html.DisplayFor(modelItem => item.ResourceGroup)
-            </td>
-                    <td title="@item.Owner"  style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                @Html.DisplayFor(modelItem => item.Owner)
-            </td>
-                    <td title="@item.FirstFoundDate"  style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                @Html.DisplayFor(modelItem => item.FirstFoundDate)
-            </td>
-                    <td title="@item.ExpirationDate"  style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                @Html.DisplayFor(modelItem => item.ExpirationDate)
-            </td>
-                    <td title="@item.Status"  style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                <button class="btn-info btn-xs" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
-                <button class="btn-success btn-xs" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')">Reserve</button>
-<!--
-@if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
-{
-                @Html.ActionLink("Delete", "Delete",
-             new { SubscriptionId = item.SubscriptionId, resourceId = item.Id },
-             new { @class = "btn btn-danger btn-xs" })
-}
--->
-            </td>
-        </tr>
-    }
-
-</table>
+                        @Html.DisplayFor(modelItem => item.ResourceGroup)
+                    </td>
+                    <td title="@item.Owner" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                        @Html.DisplayFor(modelItem => item.Owner)
+                    </td>
+                    <td>
+                        @Html.CheckBoxFor(modelItem => item.ConfirmedOwner, new { disabled = "disabled" })
+                    </td>
+                    <td title="@item.FirstFoundDate" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                        @Html.DisplayFor(modelItem => item.FirstFoundDate)
+                    </td>
+                    <td title="@item.ExpirationDate" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                        @Html.DisplayFor(modelItem => item.ExpirationDate)
+                    </td>
+                    <td title="@item.Status" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                        @Html.DisplayFor(modelItem => item.Status)
+                    </td>
+                    <td>
+                        <button class="btn-info btn-xs" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')">Extend</button>
+                        <button class="btn-success btn-xs" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')">Reserve</button>
+                        <!--
+                        @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
+                        {
+                                        @Html.ActionLink("Delete", "Delete",
+                                     new { SubscriptionId = item.SubscriptionId, resourceId = item.Id },
+                                     new { @class = "btn btn-danger btn-xs" })
+                        }
+                        -->
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>

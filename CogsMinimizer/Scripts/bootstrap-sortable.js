@@ -179,7 +179,8 @@
     }
 
     function defaultSortEngine(rows, sortingParams) {
-        tinysort(rows, sortingParams);
+// don't sort. we will do this ourselves
+//        tinysort(rows, sortingParams);
     }
 
     // Sorting mechanism separated

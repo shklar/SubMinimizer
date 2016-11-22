@@ -88,7 +88,7 @@ namespace CogsMinimizer.Controllers
                     resource.ConfirmedOwner = true;
                     resource.ExpirationDate = GetNewReserveDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
-                    result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceID = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
+                    result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
                 }
 
                 db.Resources.AddOrUpdate(resource);
@@ -114,9 +114,10 @@ namespace CogsMinimizer.Controllers
                 {
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
                     resource.ConfirmedOwner = true;
+
                     resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
-                    result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceID = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
+                    result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
                 }
 
                 db.Resources.AddOrUpdate(resource);
