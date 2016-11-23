@@ -26,7 +26,6 @@ namespace CogsMinimizer.Controllers
                 Subscription existingSubscription =
                     dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
 
-                ViewData["ServicePrincipalObjectId"] = ServicePrincipalObjectId;
                 return View(existingSubscription);
             }
         }
@@ -45,7 +44,25 @@ namespace CogsMinimizer.Controllers
 
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
 
-                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(ServicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
+                string servicePrincipalObjectId = ServicePrincipalObjectId;
+                if (String.IsNullOrEmpty(servicePrincipalObjectId))                {
+                    var organizations = AzureResourceManagerUtil.GetUserOrganizations();
+                    foreach (var org in organizations)
+                    {
+                        var subscriptions = AzureResourceManagerUtil.GetUserSubscriptions(org.Id);
+                        foreach (var sub in subscriptions)
+                        {
+                            if (sub.Id.Equals(subscription.Id))
+                            {
+                                servicePrincipalObjectId = org.objectIdOfCloudSenseServicePrincipal;
+                                break;
+                            }
+                        }
+                    }
+                }
+                //  handle service principal ID not found
+
+                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
 
                 existingSubscription.ReserveIntervalInDays = subscription.ReserveIntervalInDays;
                 existingSubscription.ExpirationIntervalInDays = subscription.ExpirationIntervalInDays;
@@ -67,10 +84,9 @@ namespace CogsMinimizer.Controllers
            return RedirectToAction("Index", "Home");
         }
         
-        public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string ServicePrincipalObjectId)
+        public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
         {       
             var model = GetResourcesViewModel(subscription.Id);
-            ViewData["ServicePrincipalObjectId"] = ServicePrincipalObjectId;
             ViewData["UserId"] = AzureAuthUtils.GetSignedInUserUniqueName();
             return View(model);
         }
