@@ -3,6 +3,13 @@
     ViewBag.Title = "Home Page";
 }
 
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script>
+    // In addition to calling controller action buttons click will cause setting cursor to wait while being over body and buttons
+    $(document).ready(function () {
+        $('.wait-crs').on('click', function () { $('body').css('cursor', 'wait'); $('.btn').css('cursor', 'wait'); })
+    });
+</script>
 <div class="jumbotron">
     <h1>SubMinimizer</h1>
     <p class="lead">Helps you detect and delete the idle resources in you Azure subscriptions and save money</p>
@@ -79,7 +86,7 @@
                                    OrganizationId = @subscription.OrganizationId,
                                    ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
                                },
-                                    new { @class = "btn btn-danger btn-xs" })
+                                    new { @class = "btn btn-danger btn-xs wait-crs" })
 
                                 <br />
                                 <small>Connected By: @subscription.ConnectedBy </small>
@@ -114,7 +121,7 @@
                                    DisplayName = @subscription.DisplayName,
                                    ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
                                },
-                               new { @class = "btn btn-info btn-xs" })
+                               new { @class = "btn btn-info btn-xs wait-crs" })
                             }
                         }
                         @if (!Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))
