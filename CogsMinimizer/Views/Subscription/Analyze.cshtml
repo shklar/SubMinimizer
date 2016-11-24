@@ -224,7 +224,7 @@
 
 <table>
     <tr>
-        <td rowspan="3" style="padding-right : 5px">
+        <td style="padding-left : 5px">
 <!--
 @Html.ActionLink("Extend Expired", "ExtendExpired",
     new {SubscriptionId = Model.SubscriptionData.Id},
@@ -239,10 +239,12 @@
                                    DisplayName = Model.SubscriptionData.DisplayName,
                                    ServicePrincipalObjectId = ""
                                },
-                               new { @class = "btn btn-warning btn-xs" })
+                               new { @class = "btn btn-warning" })
 
 
         </td>
+        </tr>
+    <tr>
         <td style="padding-left : 5px">
             @Html.RadioButton("resource filter", "All resources", true, new { id = "allResourcesRadio" }) All resources
         </td>
