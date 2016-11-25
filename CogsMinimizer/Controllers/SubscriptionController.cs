@@ -40,6 +40,12 @@ namespace CogsMinimizer.Controllers
                 Subscription existingSubscription =
                     dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
 
+                string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
+                if (currentUser != existingSubscription.ConnectedBy)
+                {
+                    throw new ArgumentException("You are not authorized to edit the subscription settings.Please contact the subscription owner");
+                }
+
                 AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(ServicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
 
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
@@ -129,7 +135,6 @@ namespace CogsMinimizer.Controllers
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
 
-                // add subscription not found handling
                 if (resource != null && subscription != null)
                 {
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
@@ -185,7 +190,7 @@ namespace CogsMinimizer.Controllers
         /// <param name="subscriptionId"></param>
         /// <param name="resourceId"></param>
         /// <returns></returns>
-        public ActionResult Delete(string subscriptionId, string resourceId)
+        private ActionResult Delete(string subscriptionId, string resourceId)
         {
             using (var db = new DataAccess())
             {
@@ -226,7 +231,7 @@ namespace CogsMinimizer.Controllers
         /// </summary>
         /// <param name="subscriptionId"></param>
         /// <returns></returns>
-        public ActionResult DeleteExpired(string subscriptionId)
+        private ActionResult DeleteExpired(string subscriptionId)
         {
             using (var db = new DataAccess())
             {
@@ -251,17 +256,18 @@ namespace CogsMinimizer.Controllers
         /// </summary>
         /// <param name="subscriptionId"></param>
         /// <returns></returns>
-        public ActionResult ExtendExpired(string subscriptionId)
+        private ActionResult ExtendExpired(string subscriptionId)
         {
             using (var db = new DataAccess())
             {
+                // add subscription not found handling
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
+
                 var subResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId)).ToList();
                 var expiredResources = subResources.Where(HasExpired);
 
                 foreach (var resource in expiredResources)
                 {
-                    // add subscription not found handling
-                    var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
                     resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
@@ -306,13 +312,19 @@ namespace CogsMinimizer.Controllers
         public ActionResult Disconnect([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
         {
             if (ModelState.IsValid)
-            {
-                AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
-                
+            {                             
                 // add subscription not found handling
                 Subscription s = db.Subscriptions.Find(subscription.Id);
                 if (s != null)
                 {
+                    string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
+                    if (currentUser != s.ConnectedBy)
+                    {
+                        throw new ArgumentException("You are not authorized to disconnect this subscription.Please contact the subscription owner");
+                    }
+
+                    AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
+
                     db.Subscriptions.Remove(s);
 
                     //Delete from the DB all resources in this subscription 

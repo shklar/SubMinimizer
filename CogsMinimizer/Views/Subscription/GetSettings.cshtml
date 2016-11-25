@@ -102,14 +102,24 @@ new SelectListItem
   </table>
 <table>
     <tr>
+        @if (Model.ConnectedBy == User.Identity.Name)
+        {
+            <td>
+                <button class="btn btn-success btn-xs" type="submit">Save</button>
+                <small>&nbsp;&nbsp;</small>
+            </td>
+            <td>
+                @Html.ActionLink("Cancel", "CancelGetSettings", "Subscription", 
+            null, new { @class = "btn btn-warning btn-xs"})
+            </td>
+        }
+        else
+        {
         <td>
-            <button class="btn btn-success btn-xs" type="submit">Save</button>
-            <small>&nbsp;&nbsp;</small>
+            @Html.ActionLink("Close", "CancelGetSettings", "Subscription",
+            null, new { @class = "btn btn-warning btn-xs" })
         </td>
-        <td>
-            @Html.ActionLink("Cancel", "CancelGetSettings", "Subscription", 
-        null, new { @class = "btn btn-warning btn-xs"})
-        </td>
+}
     </tr>
 </table>
 }
