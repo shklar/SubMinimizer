@@ -329,9 +329,9 @@
                     </td>
                     <td>
                         <button class="btn-info btn-xs" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"
-                                data-toggle = "tooltip", title = "Prolong resource usage at number days specified in subscription settings.">Extend</button>
+                                data-toggle = "tooltip", title = "Extend expiration date by a short period of time. See subscription settings.">Extend</button>
                         <button class="btn-success btn-xs" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
-                                data-toggle = "tooltip", title = "Prolong resource usage at number days specified in subscription settings.">Reserve</button>
+                                data-toggle = "tooltip", title = "Extend expiration date by a long period of time. See subscription settings.">Reserve</button>
                         <!--
                         @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
                         {

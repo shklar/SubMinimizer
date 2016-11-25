@@ -43,7 +43,7 @@ namespace CogsMinimizer.Controllers
                 string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
                 if (currentUser != existingSubscription.ConnectedBy)
                 {
-                    throw new ArgumentException(string.Format("You can not edit settings for subscription that was connected by {0}", existingSubscription.ConnectedBy));
+                    throw new ArgumentException("You are not authorized to edit the subscription settings.Please contact the subscription owner");
                 }
 
                 AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(ServicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
@@ -107,12 +107,6 @@ namespace CogsMinimizer.Controllers
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
 
-                string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
-                if (currentUser != subscription.ConnectedBy)
-                {
-                    throw new ArgumentException(string.Format("You can not reserve resources for subscription that was connected by {0}", subscription.ConnectedBy));
-                }
-
                 // add subscription not found handling
                 if (resource != null && subscription != null)
                 { 
@@ -140,13 +134,6 @@ namespace CogsMinimizer.Controllers
             {
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
-
-                // add subscription not found handling
-                string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
-                if (currentUser != subscription.ConnectedBy)
-                {
-                    throw new ArgumentException(string.Format("You can not extend resources for subscription that was connected by {0}", subscription.ConnectedBy));
-                }
 
                 if (resource != null && subscription != null)
                 {
@@ -203,7 +190,7 @@ namespace CogsMinimizer.Controllers
         /// <param name="subscriptionId"></param>
         /// <param name="resourceId"></param>
         /// <returns></returns>
-        public ActionResult Delete(string subscriptionId, string resourceId)
+        private ActionResult Delete(string subscriptionId, string resourceId)
         {
             using (var db = new DataAccess())
             {
@@ -244,7 +231,7 @@ namespace CogsMinimizer.Controllers
         /// </summary>
         /// <param name="subscriptionId"></param>
         /// <returns></returns>
-        public ActionResult DeleteExpired(string subscriptionId)
+        private ActionResult DeleteExpired(string subscriptionId)
         {
             using (var db = new DataAccess())
             {
@@ -269,17 +256,12 @@ namespace CogsMinimizer.Controllers
         /// </summary>
         /// <param name="subscriptionId"></param>
         /// <returns></returns>
-        public ActionResult ExtendExpired(string subscriptionId)
+        private ActionResult ExtendExpired(string subscriptionId)
         {
             using (var db = new DataAccess())
             {
                 // add subscription not found handling
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
-                string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
-                if (currentUser != subscription.ConnectedBy)
-                {
-                    throw new ArgumentException(string.Format("You can not extend resources for subscription that was connected by {0}", subscription.ConnectedBy));
-                }
 
                 var subResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId)).ToList();
                 var expiredResources = subResources.Where(HasExpired);
@@ -330,9 +312,7 @@ namespace CogsMinimizer.Controllers
         public ActionResult Disconnect([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
         {
             if (ModelState.IsValid)
-            {             
-                AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
-                
+            {                             
                 // add subscription not found handling
                 Subscription s = db.Subscriptions.Find(subscription.Id);
                 if (s != null)
@@ -340,8 +320,10 @@ namespace CogsMinimizer.Controllers
                     string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
                     if (currentUser != s.ConnectedBy)
                     {
-                        throw new ArgumentException(string.Format("You can not disconnect subscription that was connected by {0}", s.ConnectedBy));
+                        throw new ArgumentException("You are not authorized to disconnect this subscription.Please contact the subscription owner");
                     }
+
+                    AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
 
                     db.Subscriptions.Remove(s);
 
