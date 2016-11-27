@@ -10,7 +10,7 @@ using CogsMinimizer.Shared;
 
 namespace CogsMinimizer.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : SubMinimizerController
     {
         private DataAccess db = new DataAccess();
 
@@ -80,6 +80,12 @@ namespace CogsMinimizer.Controllers
 
     
             return View(model);
+        }
+
+        public ActionResult Error(string Exception)
+        {
+            ViewData["Exception"] = Exception;
+            return View();
         }
 
         public ActionResult About()
