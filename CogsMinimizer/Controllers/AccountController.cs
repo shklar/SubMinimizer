@@ -7,7 +7,7 @@ using System.Web.Mvc;
 
 namespace CogsMinimizer.Controllers
 {
-    public class AccountController : Controller
+    public class AccountController : SubMinimizerController
     {
         // sign in triggered from the Sign In View
         // configured to return to the home page upon successful authentication
