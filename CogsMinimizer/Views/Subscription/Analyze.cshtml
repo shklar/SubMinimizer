@@ -364,8 +364,11 @@
                                 data-toggle = "tooltip", title = "Extend expiration date by a short period of time. See subscription settings.">Extend</button>
                         <button class="btn-success btn-xs" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
                                 data-toggle = "tooltip", title = "Extend expiration date by a long period of time. See subscription settings.">Reserve</button>
-                        <button class="btn-default btn-xs" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
-                                data-toggle = "tooltip", title = "Reset expiration date making resource unclaimed.">Reset</button>
+                        @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
+                        {
+                            <button class="btn-default btn-xs" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
+                                    data-toggle = "tooltip", title = "Reset expiration date making resource unclaimed.">Reset</button>
+                        }
                         <!--
                         @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
                         {

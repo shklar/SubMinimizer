@@ -43,7 +43,7 @@ namespace CogsMinimizer.Shared
             this.ReserveIntervalInDays = 180;
             this.ExpirationIntervalInDays = 30;
             this.ExpirationUnclaimedIntervalInDays = 10;
-            this.DeleteIntervalInDays = 10;
+            this.DeleteIntervalInDays = 7;
             this.ManagementLevel = SubscriptionManagementLevel.ReportOnly;
             this.SendEmailToCoadmins = true;
         }

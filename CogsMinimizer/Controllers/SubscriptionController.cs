@@ -26,7 +26,7 @@ namespace CogsMinimizer.Controllers
                     dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
                 if (existingSubscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscription.Id));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
 
                 return View(existingSubscription);
@@ -43,7 +43,7 @@ namespace CogsMinimizer.Controllers
                     dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
                 if (existingSubscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscription.Id));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
 
                 string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
@@ -76,7 +76,7 @@ namespace CogsMinimizer.Controllers
 
                 if (String.IsNullOrEmpty(servicePrincipalObjectId))
                 {
-                    throw new ArgumentException(string.Format("Service principal with ID '{0}' isn't found.", servicePrincipalObjectId));
+                    throw new ArgumentException(string.Format("Service principal with ID '{0}' wasn't found.", servicePrincipalObjectId));
                 }
 
                 AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
@@ -121,12 +121,12 @@ namespace CogsMinimizer.Controllers
 
                 if (subscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", SubscriptionId));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
                 }
 
                 if (resource == null)
                 {
-                    throw new ArgumentException(string.Format("Resource with ID '{0}' isn't found.", ResourceId));
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", ResourceId));
                 }
 
                 resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
@@ -155,12 +155,12 @@ namespace CogsMinimizer.Controllers
 
                 if (subscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", SubscriptionId));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
                 }
 
                 if (resource == null)
                 {
-                    throw new ArgumentException(string.Format("Resource with ID '{0}' isn't found.", ResourceId));
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", ResourceId));
                 }
 
                 resource.ConfirmedOwner = false;
@@ -188,12 +188,12 @@ namespace CogsMinimizer.Controllers
 
                 if (subscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", SubscriptionId));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
                 }
 
                 if (resource == null)
                 {
-                    throw new ArgumentException(string.Format("Resource with ID '{0}' isn't found.", ResourceId));
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", ResourceId));
                 }
 
                 resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
@@ -218,11 +218,7 @@ namespace CogsMinimizer.Controllers
             using (var db = new DataAccess())
             {
                 subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
-                if (subscription == null)
-                {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscriptionId));
-                }
-
+          
                 var subscriptionResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId));         
                 resources.AddRange(subscriptionResources);
             }
@@ -267,7 +263,7 @@ namespace CogsMinimizer.Controllers
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format("Resource with ID '{0}' isn't found.", resourceId));
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", resourceId));
                 }
 
             }
@@ -330,7 +326,7 @@ namespace CogsMinimizer.Controllers
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
                 if (subscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscriptionId));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscriptionId));
                 }
 
                 var subResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId)).ToList();
@@ -414,7 +410,7 @@ namespace CogsMinimizer.Controllers
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscription.Id));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
 
 
@@ -431,7 +427,7 @@ namespace CogsMinimizer.Controllers
                 var existingSubscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscription.Id));
                 if (existingSubscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscription.Id));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
 
