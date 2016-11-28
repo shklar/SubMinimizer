@@ -84,6 +84,7 @@ namespace CogsMinimizer.Controllers
                 existingSubscription.ReserveIntervalInDays = subscription.ReserveIntervalInDays;
                 existingSubscription.ExpirationIntervalInDays = subscription.ExpirationIntervalInDays;
                 existingSubscription.ExpirationUnclaimedIntervalInDays = subscription.ExpirationUnclaimedIntervalInDays;
+                existingSubscription.DeleteIntervalInDays = subscription.DeleteIntervalInDays;
                 existingSubscription.ManagementLevel = subscription.ManagementLevel;
                 existingSubscription.SendEmailToCoadmins = subscription.SendEmailToCoadmins;
                 dataAccess.Subscriptions.AddOrUpdate<Subscription>(existingSubscription);
@@ -142,6 +143,39 @@ namespace CogsMinimizer.Controllers
         }
 
 
+        //Reset the duration of a resource ( removes it's confirmed owner and sets its expiration date to today + unclaimed resources expiration date)
+        [HttpPost]
+        public ActionResult ResetResource(string ResourceId, string SubscriptionId)
+        {
+            JsonResult result = new JsonResult();
+            using (var db = new DataAccess())
+            {
+                var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
+
+                if (subscription == null)
+                {
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", SubscriptionId));
+                }
+
+                if (resource == null)
+                {
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' isn't found.", ResourceId));
+                }
+
+                resource.ConfirmedOwner = false;
+
+                resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+                resource.Status = ResourceStatus.Valid;
+                result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id, SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
+
+                db.Resources.AddOrUpdate(resource);
+                db.SaveChanges();
+            }
+
+            return result;
+        }
+
         //Extends the duration of a resource so that it does not get reported or deleted as expired
         [HttpPost]
         public ActionResult ExtendResource(string ResourceId, string SubscriptionId)
@@ -152,15 +186,22 @@ namespace CogsMinimizer.Controllers
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
 
-                if (resource != null && subscription != null)
+                if (subscription == null)
                 {
-                    resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
-                    resource.ConfirmedOwner = true;
-
-                    resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
-                    resource.Status = ResourceStatus.Valid;
-                    result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", SubscriptionId));
                 }
+
+                if (resource == null)
+                {
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' isn't found.", ResourceId));
+                }
+
+                resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                resource.ConfirmedOwner = true;
+
+                resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+                resource.Status = ResourceStatus.Valid;
+                result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
 
                 db.Resources.AddOrUpdate(resource);
                 db.SaveChanges();
@@ -176,9 +217,14 @@ namespace CogsMinimizer.Controllers
             Subscription subscription = null;
             using (var db = new DataAccess())
             {
+                subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
+                if (subscription == null)
+                {
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscriptionId));
+                }
+
                 var subscriptionResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId));         
                 resources.AddRange(subscriptionResources);
-                subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
             }
 
             var orderedResources = resources.OrderBy(x => x.ExpirationDate);
@@ -312,7 +358,7 @@ namespace CogsMinimizer.Controllers
         {
             if (ModelState.IsValid)
             {
-                //A new subscription is created with ReportOnly mode by defaul
+                //A new subscription is created with ReportOnly mode by default
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(SubscriptionManagementLevel.ReportOnly);
 
                 // Grant the subscription the needed role

@@ -292,7 +292,7 @@ namespace CogsMinimizer.Shared
                 }
 
                 if ((m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete &&
-                     resourceEntryFromDb.Status == ResourceStatus.Expired) & resourceExpirationAge <= -7)
+                     resourceEntryFromDb.Status == ResourceStatus.Expired) && resourceExpirationAge <= -m_analyzedSubscription.DeleteIntervalInDays)
                 {                
                     resourceEntryFromDb.Status = ResourceStatus.MarkedForDeletion;
                     _tracer.TraceVerbose($"Subscription defined for automatic delete. Assigning expired resource: {resourceEntryFromDb.Name} with status {resourceEntryFromDb.Status}");

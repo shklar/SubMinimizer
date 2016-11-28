@@ -32,6 +32,8 @@ namespace CogsMinimizer.Shared
 
         public int ExpirationUnclaimedIntervalInDays { get; set; }
 
+        public int DeleteIntervalInDays { get; set; }
+
         public SubscriptionManagementLevel ManagementLevel { get; set; }
 
         public bool SendEmailToCoadmins { get; set; }
@@ -41,6 +43,7 @@ namespace CogsMinimizer.Shared
             this.ReserveIntervalInDays = 180;
             this.ExpirationIntervalInDays = 30;
             this.ExpirationUnclaimedIntervalInDays = 10;
+            this.DeleteIntervalInDays = 10;
             this.ManagementLevel = SubscriptionManagementLevel.ReportOnly;
             this.SendEmailToCoadmins = true;
         }

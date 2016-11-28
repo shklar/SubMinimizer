@@ -18,6 +18,7 @@
 <style>
     .btn-round {
         border-radius: 12px;
+        border: none;
     }
 
     .btn {
@@ -161,6 +162,37 @@
         }
 }
 
+    function OnResetResource(resetBtn, resID, subscrID) {
+        var $selectedRow = $(resetBtn).parents("tr");
+        $.ajax({
+            url: "/Subscription/ResetResource",
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify({
+                ResourceId: resID,
+                SubscriptionId: subscrID
+            }),
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                // Let's update expiration date, validity status, resource owner
+                // Model at server is updated at controller method and will be used for table complete updating at refresh table
+
+                if (data.ConfirmedOwner) {
+                    $selectedRow.find('#item_ConfirmedOwner').prop('checked', 'checked');
+                }
+                else {
+                    $selectedRow.find('#item_ConfirmedOwner').prop('checked', '');
+                }
+
+                $selectedRow.find('td').eq(3).html(data.Owner);
+                $selectedRow.find('td').eq(6).html(data.ExpirationDate);
+                $selectedRow.find('td').eq(7).html(data.Status);
+                $(resetBtn).prop('disabled', true);
+                RedrawResourceTable();
+            }
+        });
+    }
+
     function OnReserveResource(reserveBtn, resID, subscrID) {
         var $selectedRow = $(reserveBtn).parents("tr");
         $.ajax({
@@ -226,7 +258,7 @@
 </script>
 }
 
-
+<br />
 <table>
     <tr>
         <td style="padding-left : 5px">
@@ -244,8 +276,8 @@
                             DisplayName = Model.SubscriptionData.DisplayName,
                             ServicePrincipalObjectId = ""
                         },
-                        new { @class = "btn btn-warning btn-round" });
-
+                        new { @class = "btn btn-warning btn-round" })
+            <br />
 
         </td>
         </tr>
@@ -265,7 +297,7 @@
         </td>
        </tr>
 </table>
-
+<br/>
     <table class="table table-hover table-bordered table-striped table-condensed sortable " id="resourcesTable">
         <thead>
             <tr>
@@ -332,6 +364,8 @@
                                 data-toggle = "tooltip", title = "Extend expiration date by a short period of time. See subscription settings.">Extend</button>
                         <button class="btn-success btn-xs" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
                                 data-toggle = "tooltip", title = "Extend expiration date by a long period of time. See subscription settings.">Reserve</button>
+                        <button class="btn-default btn-xs" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
+                                data-toggle = "tooltip", title = "Reset expiration date making resource unclaimed.">Reset</button>
                         <!--
                         @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
                         {
