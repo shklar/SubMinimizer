@@ -83,6 +83,14 @@ new SelectListItem
                 @Html.TextBoxFor(m => m.ExpirationUnclaimedIntervalInDays, null, new { @class = "spinnerTxt"})
             </td>
         </tr>
+        <tr>
+            <td>
+                <h4>Delete expired resource after (days)</h4>
+            </td>
+            <td>
+                @Html.TextBoxFor(m => m.DeleteIntervalInDays)
+            </td>
+        </tr>
        <tr>
             <td>
                 <h4>Management level</h4>

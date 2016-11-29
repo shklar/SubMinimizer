@@ -26,7 +26,7 @@ namespace CogsMinimizer.Controllers
                     dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
                 if (existingSubscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscription.Id));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
 
                 return View(existingSubscription);
@@ -43,7 +43,7 @@ namespace CogsMinimizer.Controllers
                     dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
                 if (existingSubscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscription.Id));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
 
                 string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
@@ -76,7 +76,7 @@ namespace CogsMinimizer.Controllers
 
                 if (String.IsNullOrEmpty(servicePrincipalObjectId))
                 {
-                    throw new ArgumentException(string.Format("Service principal with ID '{0}' isn't found.", servicePrincipalObjectId));
+                    throw new ArgumentException(string.Format("Service principal with ID '{0}' wasn't found.", servicePrincipalObjectId));
                 }
 
                 AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
@@ -84,6 +84,7 @@ namespace CogsMinimizer.Controllers
                 existingSubscription.ReserveIntervalInDays = subscription.ReserveIntervalInDays;
                 existingSubscription.ExpirationIntervalInDays = subscription.ExpirationIntervalInDays;
                 existingSubscription.ExpirationUnclaimedIntervalInDays = subscription.ExpirationUnclaimedIntervalInDays;
+                existingSubscription.DeleteIntervalInDays = subscription.DeleteIntervalInDays;
                 existingSubscription.ManagementLevel = subscription.ManagementLevel;
                 existingSubscription.SendEmailToCoadmins = subscription.SendEmailToCoadmins;
                 dataAccess.Subscriptions.AddOrUpdate<Subscription>(existingSubscription);
@@ -120,12 +121,12 @@ namespace CogsMinimizer.Controllers
 
                 if (subscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", SubscriptionId));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
                 }
 
                 if (resource == null)
                 {
-                    throw new ArgumentException(string.Format("Resource with ID '{0}' isn't found.", ResourceId));
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", ResourceId));
                 }
 
                 resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
@@ -142,6 +143,45 @@ namespace CogsMinimizer.Controllers
         }
 
 
+        //Reset the duration of a resource ( removes it's confirmed owner and sets its expiration date to today + unclaimed resources expiration date)
+        [HttpPost]
+        public ActionResult ResetResource(string ResourceId, string SubscriptionId)
+        {
+            JsonResult result = new JsonResult();
+            using (var db = new DataAccess())
+            {
+                var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
+
+                if (subscription == null)
+                {
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
+                }
+
+                if (resource == null)
+                {
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", ResourceId));
+                }
+
+                string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
+                if (currentUser != subscription.ConnectedBy)
+                {
+                    throw new ArgumentException("You are not authorized to  reset resources at this subscription.Please contact the subscription owner");
+                }
+
+                resource.ConfirmedOwner = false;
+
+                resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+                resource.Status = ResourceStatus.Valid;
+                result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id, SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
+
+                db.Resources.AddOrUpdate(resource);
+                db.SaveChanges();
+            }
+
+            return result;
+        }
+
         //Extends the duration of a resource so that it does not get reported or deleted as expired
         [HttpPost]
         public ActionResult ExtendResource(string ResourceId, string SubscriptionId)
@@ -152,15 +192,22 @@ namespace CogsMinimizer.Controllers
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
 
-                if (resource != null && subscription != null)
+                if (subscription == null)
                 {
-                    resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
-                    resource.ConfirmedOwner = true;
-
-                    resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
-                    resource.Status = ResourceStatus.Valid;
-                    result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
                 }
+
+                if (resource == null)
+                {
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", ResourceId));
+                }
+
+                resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                resource.ConfirmedOwner = true;
+
+                resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+                resource.Status = ResourceStatus.Valid;
+                result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
 
                 db.Resources.AddOrUpdate(resource);
                 db.SaveChanges();
@@ -176,9 +223,10 @@ namespace CogsMinimizer.Controllers
             Subscription subscription = null;
             using (var db = new DataAccess())
             {
+                subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
+          
                 var subscriptionResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId));         
                 resources.AddRange(subscriptionResources);
-                subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
             }
 
             var orderedResources = resources.OrderBy(x => x.ExpirationDate);
@@ -221,7 +269,7 @@ namespace CogsMinimizer.Controllers
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format("Resource with ID '{0}' isn't found.", resourceId));
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", resourceId));
                 }
 
             }
@@ -284,7 +332,7 @@ namespace CogsMinimizer.Controllers
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
                 if (subscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscriptionId));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscriptionId));
                 }
 
                 var subResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId)).ToList();
@@ -312,7 +360,7 @@ namespace CogsMinimizer.Controllers
         {
             if (ModelState.IsValid)
             {
-                //A new subscription is created with ReportOnly mode by defaul
+                //A new subscription is created with ReportOnly mode by default
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(SubscriptionManagementLevel.ReportOnly);
 
                 // Grant the subscription the needed role
@@ -368,7 +416,7 @@ namespace CogsMinimizer.Controllers
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscription.Id));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
 
 
@@ -385,7 +433,7 @@ namespace CogsMinimizer.Controllers
                 var existingSubscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscription.Id));
                 if (existingSubscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' isn't found.", subscription.Id));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
 
