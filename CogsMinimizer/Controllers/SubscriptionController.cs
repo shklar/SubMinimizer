@@ -163,6 +163,12 @@ namespace CogsMinimizer.Controllers
                     throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", ResourceId));
                 }
 
+                string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
+                if (currentUser != subscription.ConnectedBy)
+                {
+                    throw new ArgumentException("You are not authorized to  reset resources at this subscription.Please contact the subscription owner");
+                }
+
                 resource.ConfirmedOwner = false;
 
                 resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
