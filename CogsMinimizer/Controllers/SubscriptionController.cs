@@ -87,6 +87,7 @@ namespace CogsMinimizer.Controllers
                 existingSubscription.DeleteIntervalInDays = subscription.DeleteIntervalInDays;
                 existingSubscription.ManagementLevel = subscription.ManagementLevel;
                 existingSubscription.SendEmailToCoadmins = subscription.SendEmailToCoadmins;
+                existingSubscription.SendEmailOnlyValidResources = subscription.SendEmailOnlyValidResources;
                 dataAccess.Subscriptions.AddOrUpdate<Subscription>(existingSubscription);
 
                 dataAccess.SaveChanges();

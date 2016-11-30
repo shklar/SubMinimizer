@@ -100,6 +100,17 @@ new SelectListItem
             </td>
         </tr>
         <tr>
+            <td><h1>Report options</h1></td>
+        </tr>
+        <tr>
+            <td>
+                <h4>Send mail if all resources valid</h4>
+            </td>
+            <td>
+                @Html.CheckBoxFor(m => m.SendEmailOnlyValidResources)
+            </td>
+        </tr>
+        <tr>
             <td>
                 <h4>Send mail to coadmins</h4>
             </td>

@@ -20,6 +20,7 @@ namespace CogsMinimizer.Shared
         {
             this.AnalyzedSubscription = sub;
             ExpiredResources = new List<Resource>();
+            NearExpiredResources = new List<Resource>();
             DeletedResources = new List<Resource>();
             FailedDeleteResources = new List<Resource>();
             NotFoundResources = new List<Resource>();
