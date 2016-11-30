@@ -12,10 +12,12 @@ namespace CogsMinimizer.Migrations
             AddColumn("dbo.Subscriptions", "ReserveIntervalInDays", c => c.Int(nullable: false));
             AddColumn("dbo.Subscriptions", "DeleteIntervalInDays", c => c.Int(nullable: false));
             AddColumn("dbo.Subscriptions", "SendEmailToCoadmins", c => c.Boolean(nullable: false));
+            AddColumn("dbo.Subscriptions", "SendEmailOnlyValidResources", c => c.Boolean(nullable: false));
         }
         
         public override void Down()
         {
+            DropColumn("dbo.Subscriptions", "SendEmailOnlyValidResources");
             DropColumn("dbo.Subscriptions", "SendEmailToCoadmins");
             DropColumn("dbo.Subscriptions", "ReserveIntervalInDays");
             DropColumn("dbo.Subscriptions", "DeleteIntervalInDays");

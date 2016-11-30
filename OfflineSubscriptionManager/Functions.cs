@@ -61,6 +61,19 @@ namespace OfflineSubscriptionManager
             Subscription sub = analysisResult.AnalyzedSubscription;
             string subject = $"SubMinimizer: Subscription Analysis report for {sub.DisplayName}";
 
+            // Don't send mail if all resources are valid if subscription setting set appropriately
+            if (!sub.SendEmailOnlyValidResources)
+            {
+                if (analysisResult.NotFoundResources.Count == 0 &&
+                    analysisResult.NearExpiredResources.Count == 0 &&
+                    analysisResult.DeletedResources.Count == 0 && 
+                    analysisResult.FailedDeleteResources.Count == 0 &&
+                    analysisResult.ExpiredResources.Count == 0)
+                {
+                    return;
+                }
+            }
+
             var message = EmailUtils.CreateEmailMessage(analysisResult, sub);
 
             var to = new List<Email>();
