@@ -13,14 +13,10 @@
     function CheckSubscriptionConnectDate(btn)
     {
         var href = $(btn).prop("href");
-        var connDateMatches = href.match(/ConnectedOn=([0-9]*)%2F([0-9]*)%2F([0-9]*)%20/);
-        var connDate = new Date(connDateMatches[3], connDateMatches[1] - 1, connDateMatches[2])
-        var dateNow = Date.now()
+        var connTimeHoursMatches = href.match(/ConnectedTime=([0-9]*)/);
+        var connTimeHours = connTimeHoursMatches[1]
 
-        var timeDiff = Math.abs(dateNow - connDate.getTime());
-        var diffDays = Math.ceil(timeDiff / (1000 * 3600 * 24));
-
-        if (diffDays < 1)
+        if (connTimeHours <= 24)
         {
             alert("This subscription has not been analysed yet. Please check back tomorrow. If it’s already tomorrow, then contact support.");
         }
@@ -79,7 +75,7 @@
                                    Id = @subscription.Id,
                                    OrganizationId = @subscription.OrganizationId,
                                    DisplayName = @subscription.DisplayName,
-                                   ConnectedOn = @subscription.ConnectedOn
+                                   ConnectedTime = (DateTime.Now - @subscription.ConnectedOn).TotalHours
                                },
                                new { @class = "btn btn-success btn-xs", onclick = "javascript: CheckSubscriptionConnectDate(this); return true;" })
 
