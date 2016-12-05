@@ -18,7 +18,8 @@ namespace CogsMinimizer.Controllers
         {
             context.ExceptionHandled = true;
             context.HttpContext.Response.Clear();
-            context.Result = RedirectToAction("Error", "Home", new { Exception = context.Exception.Message });
+            System.Diagnostics.Trace.TraceError($"{context.Exception.Message} {context.Exception.StackTrace}");
+            context.Result = RedirectToAction("Error", "Home", new { Exception = context.Exception.Message + " " + context.Exception.StackTrace});
         }
     }
 }
