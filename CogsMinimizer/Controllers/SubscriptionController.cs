@@ -12,7 +12,6 @@ using Resource = CogsMinimizer.Shared.Resource;
 
 namespace CogsMinimizer.Controllers
 {
-    [Authorize]
     public class SubscriptionController : SubMinimizerController
     {
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
@@ -52,10 +51,6 @@ namespace CogsMinimizer.Controllers
                     throw new ArgumentException("You are not authorized to edit the subscription settings.Please contact the subscription owner");
                 }
 
-                AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(ServicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
-
-                AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
-
                 string servicePrincipalObjectId = ServicePrincipalObjectId;
                 if (String.IsNullOrEmpty(servicePrincipalObjectId))                {
                     var organizations = AzureResourceManagerUtil.GetUserOrganizations();
@@ -79,8 +74,6 @@ namespace CogsMinimizer.Controllers
                     throw new ArgumentException(string.Format("Service principal with ID '{0}' wasn't found.", servicePrincipalObjectId));
                 }
 
-                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
-
                 existingSubscription.ReserveIntervalInDays = subscription.ReserveIntervalInDays;
                 existingSubscription.ExpirationIntervalInDays = subscription.ExpirationIntervalInDays;
                 existingSubscription.ExpirationUnclaimedIntervalInDays = subscription.ExpirationUnclaimedIntervalInDays;
@@ -88,6 +81,12 @@ namespace CogsMinimizer.Controllers
                 existingSubscription.ManagementLevel = subscription.ManagementLevel;
                 existingSubscription.SendEmailToCoadmins = subscription.SendEmailToCoadmins;
                 dataAccess.Subscriptions.AddOrUpdate<Subscription>(existingSubscription);
+
+                AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
+
+                AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(ServicePrincipalObjectId, existingSubscription.Id, existingSubscription.OrganizationId);
+
+                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, existingSubscription.Id, existingSubscription.OrganizationId, role);
 
                 dataAccess.SaveChanges();
 

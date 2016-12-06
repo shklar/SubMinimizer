@@ -61,6 +61,7 @@ namespace CogsMinimizer.Shared
                 // /tenants/7fe877e6-a150-4992-bbfe-f517e304dfa0 7fe877e6-a150-4992-bbfe-f517e304dfa0
                 // /tenants/62e173e9-301e-423e-bcd4-29121ec1aa24 62e173e9-301e-423e-bcd4-29121ec1aa24
 
+                // add unsuccessful response handling
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = response.Content.ReadAsStringAsync().Result;
@@ -77,9 +78,11 @@ namespace CogsMinimizer.Shared
                         });
                 }
             }
-            catch
+            catch (Exception e)
             {
+                throw e;
             }
+
             return organizations;
         }
 
@@ -110,7 +113,8 @@ namespace CogsMinimizer.Shared
                 // --                                                  --------------                       ----------- -----
                 // /subscriptions/c276fc76-9cd4-44c9-99a7-4fd71546436e c276fc76-9cd4-44c9-99a7-4fd71546436e Production  Enabled
                 // /subscriptions/e91d47c4-76f3-4271-a796-21b4ecfe3624 e91d47c4-76f3-4271-a796-21b4ecfe3624 Development Enabled
-
+                
+                // add unsuccessful response handling
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = response.Content.ReadAsStringAsync().Result;
@@ -126,8 +130,9 @@ namespace CogsMinimizer.Shared
                         });
                 }
             }
-            catch
+            catch (Exception e)
             {
+                throw e;
             }
 
             return subscriptions;
@@ -160,6 +165,7 @@ namespace CogsMinimizer.Shared
                 // {*}      {Microsoft.Authorization/*/Write, Microsoft.Authorization/*/Delete}
                 // {*/read} {}
 
+                // add unsuccessful response handling
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = response.Content.ReadAsStringAsync().Result;
@@ -195,8 +201,9 @@ namespace CogsMinimizer.Shared
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                throw e;
             }
 
             return ret;
@@ -230,6 +237,7 @@ namespace CogsMinimizer.Shared
                 // {*}      {Microsoft.Authorization/*/Write, Microsoft.Authorization/*/Delete}
                 // {*/read} {}
 
+                // add unsuccessful response handling
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = response.Content.ReadAsStringAsync().Result;
@@ -264,8 +272,9 @@ namespace CogsMinimizer.Shared
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                throw e;
             }
 
             return ret;
@@ -312,10 +321,12 @@ namespace CogsMinimizer.Shared
                                       "\",\"principalId\":\"" + objectId + "\"}}");
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
                 request.Content = content;
+                // add unsuccessful response handling
                 HttpResponseMessage response = client.SendAsync(request).Result;
             }
             catch (Exception e)
             {
+                throw e;
             }
         }
 
@@ -366,9 +377,11 @@ namespace CogsMinimizer.Shared
                         response = client.SendAsync(request).Result;
                     }
                 }
+                // add unsuccessful response handling
             }
-            catch
+            catch (Exception e)
             {
+                throw e;
             }
         }
 
