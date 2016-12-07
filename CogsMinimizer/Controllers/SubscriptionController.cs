@@ -84,7 +84,7 @@ namespace CogsMinimizer.Controllers
 
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
 
-                AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(ServicePrincipalObjectId, existingSubscription.Id, existingSubscription.OrganizationId);
+                AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, existingSubscription.Id, existingSubscription.OrganizationId);
 
                 AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, existingSubscription.Id, existingSubscription.OrganizationId, role);
 

@@ -374,6 +374,7 @@ namespace CogsMinimizer.Shared
                             ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleAssignmentsAPIVersion"]);
                         request = new HttpRequestMessage(HttpMethod.Delete, requestUrl);
                         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+                        // add unsuccessful response handling
                         response = client.SendAsync(request).Result;
                     }
                 }
@@ -429,8 +430,9 @@ namespace CogsMinimizer.Shared
                         }
                 }
             }
-            catch
+            catch (Exception e)
             {
+                throw e;
             }
 
             return roleId;
