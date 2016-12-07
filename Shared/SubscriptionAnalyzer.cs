@@ -4,6 +4,7 @@ using System.Data.Entity.Migrations;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Management.Authorization;
 using Microsoft.Azure.Management.Authorization.Models;
@@ -110,6 +111,12 @@ namespace CogsMinimizer.Shared
 
                     // If automatic resources deletion allowed delete marked for deletion resources
                     DeleteMarkedResources();
+                    if (m_analysisResult.DeletedResources.Any())
+                    {
+                        //The purpose of this sleep is to allow Azure to update its status for the deleted resources
+                        //otherwise once we check what's left we might still find them.
+                        Thread.Sleep(5000);
+                    }
                 }
                 else
                 {
