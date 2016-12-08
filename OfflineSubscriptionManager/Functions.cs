@@ -22,6 +22,8 @@ namespace OfflineSubscriptionManager
         [NoAutomaticTrigger]
         public static void ManualTrigger(TextWriter logger)
         {
+            Diagnostics.EnsureArgumentNotNull(() => logger);
+
             ITracer tracer = TracerFactory.CreateTracer(logger);
             tracer.TraceInformation("OfflineSubscriptionManager web job started!");
             tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["TelemetryInstrumentationKey"]}");

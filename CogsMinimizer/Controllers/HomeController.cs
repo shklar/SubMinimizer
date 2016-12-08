@@ -84,6 +84,8 @@ namespace CogsMinimizer.Controllers
 
         public ActionResult Error(string Exception)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => Exception);
+
             ViewData["Exception"] = Exception;
             return View();
         }

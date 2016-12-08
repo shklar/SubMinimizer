@@ -12,6 +12,7 @@ using Resource = CogsMinimizer.Shared.Resource;
 
 namespace CogsMinimizer.Controllers
 {
+    [Authorize]
     public class SubscriptionController : SubMinimizerController
     {
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
@@ -19,6 +20,9 @@ namespace CogsMinimizer.Controllers
         // GET: Subscription
         public ActionResult GetSettings([Bind(Include = "Id, OrganizationId, DisplayName")] string ServicePrincipalObjectId, Subscription subscription)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ServicePrincipalObjectId);
+            Diagnostics.EnsureArgumentNotNull(() => subscription);
+
             using (DataAccess dataAccess = new DataAccess())
             {
                 Subscription existingSubscription =
@@ -35,6 +39,8 @@ namespace CogsMinimizer.Controllers
         [HttpPost]
         public ActionResult SaveSettings(string ServicePrincipalObjectId, Subscription subscription)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ServicePrincipalObjectId);
+            Diagnostics.EnsureArgumentNotNull(() => subscription);
 
             using (DataAccess dataAccess = new DataAccess())
             {
@@ -102,7 +108,9 @@ namespace CogsMinimizer.Controllers
         }
         
         public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
-        {       
+        {
+            Diagnostics.EnsureArgumentNotNull(() => subscription);
+
             var model = GetResourcesViewModel(subscription.Id);
             ViewData["UserId"] = AzureAuthUtils.GetSignedInUserUniqueName();
             return View(model);
@@ -112,6 +120,9 @@ namespace CogsMinimizer.Controllers
         [HttpPost]
         public ActionResult ReserveResource(string ResourceId, string SubscriptionId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
             {
@@ -146,6 +157,9 @@ namespace CogsMinimizer.Controllers
         [HttpPost]
         public ActionResult ResetResource(string ResourceId, string SubscriptionId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
             {
@@ -185,6 +199,9 @@ namespace CogsMinimizer.Controllers
         [HttpPost]
         public ActionResult ExtendResource(string ResourceId, string SubscriptionId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
             {
@@ -357,6 +374,9 @@ namespace CogsMinimizer.Controllers
 
         public ActionResult Connect([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string servicePrincipalObjectId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => servicePrincipalObjectId);
+            Diagnostics.EnsureArgumentNotNull(() => subscription);
+
             if (ModelState.IsValid)
             {
                 //A new subscription is created with ReportOnly mode by default
@@ -387,6 +407,9 @@ namespace CogsMinimizer.Controllers
 
         public ActionResult Disconnect([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => servicePrincipalObjectId);
+            Diagnostics.EnsureArgumentNotNull(() => subscription);
+
             if (ModelState.IsValid)
             {                             
                 Subscription s = db.Subscriptions.Find(subscription.Id);
@@ -425,6 +448,9 @@ namespace CogsMinimizer.Controllers
         }
         public ActionResult RepairAccess([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => servicePrincipalObjectId);
+            Diagnostics.EnsureArgumentNotNull(() => subscription);
+
             if (ModelState.IsValid)
             {
                 AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);

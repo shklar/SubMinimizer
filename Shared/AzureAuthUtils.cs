@@ -13,6 +13,9 @@ namespace CogsMinimizer.Shared
     {
         public static AuthenticationResult AcquireUserToken(string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
+
             // Get user name
             string signedInUserUniqueName = GetSignedInUserUniqueName();
 
@@ -32,6 +35,9 @@ namespace CogsMinimizer.Shared
 
         public static AuthenticationResult AcquireAppToken(string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
+
             // Aquire App Only Access Token to call Azure Resource Manager - Client Credential OAuth Flow
             ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
                 ConfigurationManager.AppSettings["ida:Password"]);

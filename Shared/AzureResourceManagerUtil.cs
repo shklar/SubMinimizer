@@ -88,6 +88,8 @@ namespace CogsMinimizer.Shared
 
         public static List<Subscription> GetUserSubscriptions(string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
             List<Subscription> subscriptions = null;
 
 
@@ -140,6 +142,9 @@ namespace CogsMinimizer.Shared
 
         public static bool UserCanManageAccessForSubscription(string subscriptionId, string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
             bool ret = false;
 
             try
@@ -213,6 +218,9 @@ namespace CogsMinimizer.Shared
 
         public static bool ServicePrincipalHasReadAccessToSubscription(string subscriptionId, string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
             bool ret = false;
 
             try
@@ -295,6 +303,9 @@ namespace CogsMinimizer.Shared
         public static void GrantRoleToServicePrincipalOnSubscription(string objectId, string subscriptionId,
             string organizationId, AzureResourceManagementRole role)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => objectId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
 
             try
             {
@@ -338,6 +349,9 @@ namespace CogsMinimizer.Shared
         /// <param name="organizationId"></param>
         public static void RevokeAllRolesFromServicePrincipalOnSubscription(string objectId, string subscriptionId, string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => objectId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
 
             try
             {
@@ -388,6 +402,10 @@ namespace CogsMinimizer.Shared
 
         public static string GetRoleId(AzureResourceManagementRole role, string subscriptionId, string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
+
             string roleId = null;
             string roleName = role.ToString();
 
@@ -415,7 +433,8 @@ namespace CogsMinimizer.Shared
                 // @{roleName=Owner; type=BuiltInRole; desc... /subscriptions/e91d47c4-76f3-4271-a796-2... Microsoft.Authorization/roleDefinitions     8e3af657-a8ff-443c-a75c-2fe8c4bcb635
                 // @{roleName=Reader; type=BuiltInRole; des... /subscriptions/e91d47c4-76f3-4271-a796-2... Microsoft.Authorization/roleDefinitions     acdd72a7-3385-48ef-bd42-f606fba81ae7
                 // ...
-
+                
+                // add unsuccessful response handling
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = response.Content.ReadAsStringAsync().Result;
@@ -441,13 +460,18 @@ namespace CogsMinimizer.Shared
         public static IEnumerable<GenericResource> GetResourceList(ResourceManagementClient resourceClient,
             string groupName)
         {
+            Diagnostics.EnsureArgumentNotNull(() => resourceClient);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => groupName);
+
             var resourceList = resourceClient.ResourceGroups.ListResources(groupName);
             return resourceList;
         }
 
 
         public static IEnumerable<ResourceGroup> GetResourceGroups(ResourceManagementClient resourceClient)
-        {     
+        {
+            Diagnostics.EnsureArgumentNotNull(() => resourceClient);
+
             var resourceGroupsList = resourceClient.ResourceGroups.List();
             return resourceGroupsList;
         }
@@ -455,6 +479,8 @@ namespace CogsMinimizer.Shared
         public static IEnumerable<ClassicAdministrator> GetSubscriptionAdmins(
             AuthorizationManagementClient authClient)
         {
+            Diagnostics.EnsureArgumentNotNull(() => authClient);
+
             var admins = authClient.ClassicAdministrators.List("2015-06-01");
             return admins;
         }
@@ -463,6 +489,9 @@ namespace CogsMinimizer.Shared
 
         public static ResourceManagementClient GetUserResourceManagementClient(string subscriptionId, string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
             AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
 
             var credentials = new TokenCredentials(result.AccessToken);
@@ -472,6 +501,9 @@ namespace CogsMinimizer.Shared
 
         public static ResourceManagementClient GetAppResourceManagementClient(string subscriptionId, string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
             AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
 
             var credentials = new TokenCredentials(result.AccessToken);
@@ -482,6 +514,9 @@ namespace CogsMinimizer.Shared
         public static AuthorizationManagementClient GetUserAuthorizationManagementClient(string subscriptionId,
             string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
             AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
 
             var credentials = new TokenCredentials(result.AccessToken);
@@ -495,6 +530,9 @@ namespace CogsMinimizer.Shared
         public static AuthorizationManagementClient GetAppAuthorizationManagementClient(string subscriptionId,
          string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
             AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
 
             var credentials = new TokenCredentials(result.AccessToken);
@@ -509,7 +547,11 @@ namespace CogsMinimizer.Shared
 
         public static void DeleteAzureResource(ResourceManagementClient resourceClient, string azureresourceid, ITracer tracer)
         {
-            string [] apiVersion = { "2015-01-01", "2014-04-01", "2015-08-01" , "2016-05-01", "2016-01-01", "2016-04-01",
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => azureresourceid);
+            Diagnostics.EnsureArgumentNotNull(() => resourceClient);
+            Diagnostics.EnsureArgumentNotNull(() => tracer);
+
+            string[] apiVersion = { "2015-01-01", "2014-04-01", "2015-08-01" , "2016-05-01", "2016-01-01", "2016-04-01",
                 "2016-09-01", "2015-11-01", "2015-03-20", "2015-03-01-preview" };
 
             for (int i = 0; i < apiVersion.Length; i++)
