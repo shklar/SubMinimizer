@@ -46,6 +46,10 @@ namespace CogsMinimizer.Shared
         /// </param>
         public SubscriptionAnalyzer(DataAccess dbAccess, Subscription sub, bool isOfflineMode, ITracer tracer)
         {
+            Diagnostics.EnsureArgumentNotNull(() => sub);
+            Diagnostics.EnsureArgumentNotNull(() => tracer);
+            Diagnostics.EnsureArgumentNotNull(() => dbAccess);
+
             m_Db = dbAccess;
             m_analyzedSubscription = sub;
             m_isOfflineMode = isOfflineMode;

@@ -14,6 +14,9 @@ namespace OfflineSubscriptionManager
     {
         internal static string CreateEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
         {
+            Diagnostics.EnsureArgumentNotNull(() => sub);
+            Diagnostics.EnsureArgumentNotNull(() => analysisResult);
+
             string message = @"<!DOCTYPE html>
                             <html lang=""en"">
                             <head>    
@@ -134,6 +137,9 @@ namespace OfflineSubscriptionManager
 
         public static async Task SendEmail(SubMinimizerEmail email, ITracer tracer)
         {
+            Diagnostics.EnsureArgumentNotNull(() => email);
+            Diagnostics.EnsureArgumentNotNull(() => tracer);
+
             string apiKey = ConfigurationManager.AppSettings["API_KEY"];
             dynamic sg = new SendGridAPIClient(apiKey);
 
