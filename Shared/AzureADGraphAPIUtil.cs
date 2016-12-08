@@ -1,10 +1,11 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
+﻿using System;
 using System.Configuration;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Web.Helpers;
 using CogsMinimizer.Shared;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 
 namespace CogsMinimizer
@@ -13,6 +14,8 @@ namespace CogsMinimizer
     {
         public static string GetOrganizationDisplayName(string organizationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+
             string displayName = null;
 
             string signedInUserUniqueName = ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value.Split('#')[ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value.Split('#').Length - 1];
@@ -39,6 +42,7 @@ namespace CogsMinimizer
                 HttpResponseMessage response = client.SendAsync(request).Result;
 
                 // Endpoint returns JSON with an array of Tenant Objects
+                // add unsuccessful response handling
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = response.Content.ReadAsStringAsync().Result;
@@ -53,12 +57,18 @@ namespace CogsMinimizer
                     }
                 }
             }
-            catch { }
+            catch (Exception e)
+            {
+                throw e;
+            }
 
             return displayName;
         }
         public static string GetObjectIdOfServicePrincipalInOrganization(string organizationId, string applicationId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => applicationId);
+
             string objectId = null;
 
             try
@@ -82,6 +92,7 @@ namespace CogsMinimizer
                 HttpResponseMessage response = client.SendAsync(request).Result;
 
                 // Endpoint should return JSON with one or none serviePrincipal object
+                // add unsuccessful response handling
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = response.Content.ReadAsStringAsync().Result;
@@ -90,12 +101,18 @@ namespace CogsMinimizer
                         objectId = servicePrincipalResult[0].objectId;
                 }
             }
-            catch { }
+            catch (Exception e)
+            {
+                throw e;
+            }
 
             return objectId;
         }
         public static string LookupDisplayNameOfAADObject(string organizationId, string objectId)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => objectId);
+
             string objectDisplayName = null;
 
             string signedInUserUniqueName = ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value.Split('#')[ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value.Split('#').Length - 1];
@@ -119,6 +136,7 @@ namespace CogsMinimizer
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
             HttpResponseMessage response = client.SendAsync(request).Result;
 
+            // add unsuccessful response handling
             if (response.IsSuccessStatusCode)
             {
                 var responseContent = response.Content;
