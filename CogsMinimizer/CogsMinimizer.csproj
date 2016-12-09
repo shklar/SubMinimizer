@@ -294,13 +294,17 @@
     <Content Include="Content\bootstrap-sortable.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\main.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
     <Content Include="Content\Site.css" />
     <Content Include="Images\azure.png" />
+    <Content Include="Images\dotted.png" />
+    <Content Include="Images\grip.png" />
     <Content Include="Images\msa.png" />
     <Content Include="Images\org.png" />
+    <Content Include="Images\th.png" />
     <Content Include="Scripts\ai.0.22.9-build00167.js" />
     <Content Include="Scripts\ai.0.22.9-build00167.min.js" />
     <Content Include="Scripts\bootstrap-sortable.js" />
@@ -314,6 +318,7 @@
     <None Include="Properties\PublishProfiles\subminimizer - Web Deploy.pubxml" />
     <Content Include="Properties\webjobs-list.json" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
+    <Content Include="Scripts\colResizable-1.6.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
