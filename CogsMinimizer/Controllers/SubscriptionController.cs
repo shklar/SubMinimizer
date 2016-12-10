@@ -20,7 +20,6 @@ namespace CogsMinimizer.Controllers
         // GET: Subscription
         public ActionResult GetSettings([Bind(Include = "Id, OrganizationId, DisplayName")] string ServicePrincipalObjectId, Subscription subscription)
         {
-            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ServicePrincipalObjectId);
             Diagnostics.EnsureArgumentNotNull(() => subscription);
 
             using (DataAccess dataAccess = new DataAccess())
@@ -32,6 +31,31 @@ namespace CogsMinimizer.Controllers
                     throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
 
+
+                string servicePrincipalObjectId = ServicePrincipalObjectId;
+                if (String.IsNullOrEmpty(servicePrincipalObjectId))
+                {
+                    var organizations = AzureResourceManagerUtil.GetUserOrganizations();
+                    foreach (var org in organizations)
+                    {
+                        var subscriptions = AzureResourceManagerUtil.GetUserSubscriptions(org.Id);
+                        foreach (var sub in subscriptions)
+                        {
+                            if (sub.Id.Equals(subscription.Id))
+                            {
+                                servicePrincipalObjectId = org.objectIdOfCloudSenseServicePrincipal;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+
+                if (String.IsNullOrEmpty(servicePrincipalObjectId))
+                {
+                    throw new ArgumentException(string.Format("Service principal with ID '{0}' wasn't found.", servicePrincipalObjectId));
+                }
+
                 return View(existingSubscription);
             }
         }
@@ -39,7 +63,6 @@ namespace CogsMinimizer.Controllers
         [HttpPost]
         public ActionResult SaveSettings(string ServicePrincipalObjectId, Subscription subscription)
         {
-            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ServicePrincipalObjectId);
             Diagnostics.EnsureArgumentNotNull(() => subscription);
 
             using (DataAccess dataAccess = new DataAccess())

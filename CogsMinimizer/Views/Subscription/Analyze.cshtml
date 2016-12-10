@@ -24,20 +24,19 @@
     }
 </style>
 
-
 @section Scripts
 {
-
+ <!-- all dependency scripts will be loaded here -->   
 @Scripts.Render("~/bundles/jquery")
-<script src="~/Scripts/colResizable-1.6.js"></script>
 @Scripts.Render("~/bundles/bootstrap")
+    <!-- loading remaining scripts -->
+<script src="~/Scripts/colResizable-1.6.js"></script>
 <script src="~/Scripts/bootstrap-sortable.js"></script>
 
 <script>
 
     $(document).ready(function () {
 
-        debugger;
         $('input:radio').change(function () {
             FilterResources(this);
         });
@@ -46,7 +45,7 @@
 
     });
 
-      $("#resourcesTable").colResizable({
+     $("#resourcesTable").colResizable({
             liveDrag: true,
             gripInnerHtml: "<div class='grip'></div>",
             draggingClass: "dragging",
