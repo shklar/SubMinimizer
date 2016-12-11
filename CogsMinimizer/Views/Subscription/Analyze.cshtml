@@ -5,15 +5,9 @@
     ViewBag.Title = "Analyze Subscription";
 }
 
-<link href="~/Content/bootstrap.css" rel="stylesheet" />
+@Styles.Render("~/Content/css")
 <link href="~/Content/bootstrap-sortable.css" rel="stylesheet" />
-<script src="~/Scripts/jquery-1.10.2.js"></script>
-<script src="~/Scripts/bootstrap.js"></script>
-<script src="~/Scripts/bootstrap-sortable.js"></script>
-<h2>Subscription Resources</h2>
-<h4>Subscription name: @Model.SubscriptionData.DisplayName</h4>
-<h4>Subscription id: @Model.SubscriptionData.Id</h4>
-
+<link href="~/Content/main.css" rel="stylesheet" />
 
 <style>
     .btn-round {
@@ -27,11 +21,18 @@
 
     .table {
         table-layout: fixed;
-}
+    }
 </style>
 
 @section Scripts
 {
+ <!-- all dependency scripts will be loaded here -->   
+@Scripts.Render("~/bundles/jquery")
+@Scripts.Render("~/bundles/bootstrap")
+    <!-- loading remaining scripts -->
+<script src="~/Scripts/colResizable-1.6.js"></script>
+<script src="~/Scripts/bootstrap-sortable.js"></script>
+
 <script>
 
     $(document).ready(function () {
@@ -41,7 +42,15 @@
         });
 
         $("[data-toggle='tooltip']").tooltip();
+
     });
+
+     $("#resourcesTable").colResizable({
+            liveDrag: true,
+            gripInnerHtml: "<div class='grip'></div>",
+            draggingClass: "dragging",
+            resizeMode: 'fit'
+        });
 
     function GetBool(colNum, value) {
         var input = $(value.elm).find("td").eq(colNum).find("input")[0];
@@ -63,6 +72,12 @@
     }
         
     function SortResources(th) {
+
+        if ($('#resourcesTable tbody tr').length == 0)
+        {
+            return;
+        }
+
         var order = "asc";
         if ($(th).hasClass("down")) {
             order = "desc";
@@ -258,6 +273,10 @@
 </script>
 }
 
+<h2>Subscription Resources</h2>
+<h4>Subscription name: @Model.SubscriptionData.DisplayName</h4>
+<h4>Subscription id: @Model.SubscriptionData.Id</h4>
+
 <br />
 <table>
     <tr>
@@ -298,7 +317,7 @@
        </tr>
 </table>
 <br/>
-    <table class="table table-hover table-bordered table-striped table-condensed sortable " id="resourcesTable">
+    <table class="table table-hover table-bordered table-striped table-condensed sortable resizable" id="resourcesTable">
         <thead>
             <tr>
                 <th width="23%" id="nameColumn" data-defaultsign="AZ"  onclick="SortResources(this)">
@@ -347,7 +366,7 @@
                     <td title="@item.Owner" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                         @Html.DisplayFor(modelItem => item.Owner)
                     </td>
-                    <td>
+                    <td style="text-align:center">
                         @Html.CheckBoxFor(modelItem => item.ConfirmedOwner, new { disabled = "disabled" })
                     </td>
                     <td title="@item.FirstFoundDate" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
