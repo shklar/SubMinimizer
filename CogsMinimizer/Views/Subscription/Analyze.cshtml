@@ -16,7 +16,7 @@
     }
 
     .btn {
-        display: table-cell;
+        margin: 5px;
     }
 
     .table {
@@ -35,13 +35,28 @@
 
 <script>
 
+    var initialBtnCursor;
+    var initialBodyCursor;
+
+    function SetCursor(bodyCursor, btnCursor)
+    {
+        $('body').css('cursor', bodyCursor); 
+        $('.btn').css('cursor', btnCursor);
+    }
+
     $(document).ready(function () {
+
+        initialBodyCursor = $('body').first().css('cursor');
+        initialBtnCursor = $('.btn').first().css('cursor');
+
+        // In addition to calling controller action buttons click will cause setting cursor to wait while being over body and buttons
+        $('.wait-crs').on('click', function () { SetCursor('wait', 'wait'); });
 
         $('input:radio').change(function () {
             FilterResources(this);
         });
 
-        $("[data-toggle='tooltip']").tooltip();
+        $("[data-toggle='tooltip']").tooltip({trigger: 'hover'});
 
     });
 
@@ -178,6 +193,10 @@
 }
 
     function OnResetResource(resetBtn, resID, subscrID) {
+        SetCursor('wait', 'wait');
+        $(resetBtn).tooltip('hide');
+        // meanwhile somehow previous row button is disabled. so we allow repetitive operations
+        //        $(resetBtn).prop('disabled', 'disabled');
         var $selectedRow = $(resetBtn).parents("tr");
         $.ajax({
             url: "/Subscription/ResetResource",
@@ -202,13 +221,17 @@
                 $selectedRow.find('td').eq(3).html(data.Owner);
                 $selectedRow.find('td').eq(6).html(data.ExpirationDate);
                 $selectedRow.find('td').eq(7).html(data.Status);
-                $(resetBtn).prop('disabled', true);
                 RedrawResourceTable();
+                SetCursor(initialBodyCursor, initialBtnCursor);
             }
         });
     }
 
     function OnReserveResource(reserveBtn, resID, subscrID) {
+        $(reserveBtn).tooltip('hide');
+        // meanwhile somehow previous row button is disabled. so we allow repetitive operations
+        //        $(reserveBtn).prop('disabled', 'disabled');
+        SetCursor('wait', 'wait');
         var $selectedRow = $(reserveBtn).parents("tr");
         $.ajax({
             url: "/Subscription/ReserveResource",
@@ -234,13 +257,17 @@
                 $selectedRow.find('td').eq(3).html(data.Owner);
                 $selectedRow.find('td').eq(6).html(data.ExpirationDate);
                 $selectedRow.find('td').eq(7).html(data.Status);
-                $(reserveBtn).prop('disabled', true);
                 RedrawResourceTable();
+                SetCursor(initialBodyCursor, initialBtnCursor);
             }
         });
     }
 
     function OnExtendResource(extendBtn, resID, subscrID) {
+        $(extendBtn).tooltip('hide');
+// meanwhile somehow previous row button is disabled. so we allow repetitive operations
+//        $(extendBtn).prop('disabled', 'disabled');
+        SetCursor('wait', 'wait');
         var $selectedRow = $(extendBtn).parents("tr");
         $.ajax({
             url: "/Subscription/ExtendResource",
@@ -265,8 +292,9 @@
                 $selectedRow.find('td').eq(3).html(data.Owner);
                 $selectedRow.find('td').eq(6).html(data.ExpirationDate);
                 $selectedRow.find('td').eq(7).html(data.Status);
-                $(extendBtn).prop('disabled', true);
                 RedrawResourceTable();
+
+                SetCursor(initialBodyCursor, initialBtnCursor);
             }
         });
     }
@@ -284,7 +312,7 @@
 <!--
 @Html.ActionLink("Extend Expired", "ExtendExpired",
     new {SubscriptionId = Model.SubscriptionData.Id},
-    new {@class = "btn btn-info"})
+    new {@class = "btn btn-info wait-crs"})
     <br/>
 -->
             @Html.ActionLink("Settings", "GetSettings",
@@ -295,7 +323,7 @@
                             DisplayName = Model.SubscriptionData.DisplayName,
                             ServicePrincipalObjectId = ""
                         },
-                        new { @class = "btn btn-warning btn-round" })
+                        new { @class = "btn btn-warning btn-round wait-crs" })
             <br />
 
         </td>
@@ -320,7 +348,7 @@
     <table class="table table-hover table-bordered table-striped table-condensed sortable resizable" id="resourcesTable">
         <thead>
             <tr>
-                <th width="23%" id="nameColumn" data-defaultsign="AZ"  onclick="SortResources(this)">
+                <th width="22%" id="nameColumn" data-defaultsign="AZ"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Name)
                 </th>
                 <th width="10%" data-defaultsign="AZ"  onclick="SortResources(this)">
@@ -335,16 +363,16 @@
                 <th width="6%" id="confirmedOwnerColumn" data-defaultsign="bool" onclick="SortResources(this)">
                     Claimed
                 </th>
-                <th width="8%" data-defaultsign="month"  onclick="SortResources(this)">
+                <th width="7%" data-defaultsign="month"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().FirstFoundDate)
                 </th>
-                <th width="8%" data-defaultsign="month"  onclick="SortResources(this)">
+                <th width="7%" data-defaultsign="month"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().ExpirationDate)
                 </th>
-                <th width="10%" data-defaultsign="AZ" onclick="SortResources(this)">
+                <th width="7%" data-defaultsign="AZ" onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Status)
                 </th>
-                <th width="15%" data-defaultsort="disabled">
+                <th width="20%" data-defaultsort="disabled">
                     Actions
                 </th>
             </tr>
@@ -379,13 +407,13 @@
                         @Html.DisplayFor(modelItem => item.Status)
                     </td>
                     <td>
-                        <button class="btn-info btn-xs" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"
+                        <button class="btn btn-info btn-xs" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"
                                 data-toggle = "tooltip", title = "Extend expiration date by a short period of time. See subscription settings.">Extend</button>
-                        <button class="btn-success btn-xs" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
+                        <button class="btn btn-success btn-xs" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
                                 data-toggle = "tooltip", title = "Extend expiration date by a long period of time. See subscription settings.">Reserve</button>
                         @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
                         {
-                            <button class="btn-default btn-xs" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
+                            <button class="btn btn-default btn-xs" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
                                     data-toggle = "tooltip", title = "Reset expiration date making resource unclaimed.">Reset</button>
                         }
                         <!--
@@ -393,7 +421,7 @@
                         {
                                         @Html.ActionLink("Delete", "Delete",
                                      new { SubscriptionId = item.SubscriptionId, resourceId = item.Id },
-                                     new { @class = "btn btn-danger btn-xs" })
+                                     new { @class = "btn btn-danger btn-xs wait-crs" })
                         }
                         -->
                     </td>
