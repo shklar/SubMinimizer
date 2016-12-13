@@ -29,6 +29,19 @@ new SelectListItem
 });
 }
 
+@section Scripts
+{
+    <!-- all dependency scripts will be loaded here -->
+    @Scripts.Render("~/bundles/jquery")
+<script>
+    // In addition to calling controller action buttons click will cause setting cursor to wait while being over body and buttons
+    $(document).ready(function () {
+        $('.wait-crs').on('click', function () { $('body').css('cursor', 'wait'); $('.btn').css('cursor', 'wait'); })
+    });
+
+</script>
+}
+
 @using (@Html.BeginForm("SaveSettings", "Subscription",
     new
     {
@@ -124,19 +137,19 @@ new SelectListItem
         @if (Model.ConnectedBy == User.Identity.Name)
         {
             <td>
-                <button class="btn btn-success btn-xs" type="submit">Save</button>
+                <button class="btn btn-success btn-xs wait-crs" type="submit">Save</button>
                 <small>&nbsp;&nbsp;</small>
             </td>
             <td>
-                @Html.ActionLink("Cancel", "CancelGetSettings", "Subscription", 
-            null, new { @class = "btn btn-warning btn-xs"})
+                @Html.ActionLink("Cancel", "CancelGetSettings", "Subscription",
+            null, new { @class = "btn btn-warning btn-xs wait-crs" })
             </td>
         }
         else
         {
         <td>
             @Html.ActionLink("Close", "CancelGetSettings", "Subscription",
-            null, new { @class = "btn btn-warning btn-xs" })
+            null, new { @class = "btn btn-warning btn-xs wait-crs" })
         </td>
 }
     </tr>

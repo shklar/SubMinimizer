@@ -77,7 +77,7 @@
                                    DisplayName = @subscription.DisplayName,
                                    ConnectedTime = (DateTime.Now - @subscription.ConnectedOn).TotalHours
                                },
-                               new { @class = "btn btn-success btn-xs", onclick = "javascript: CheckSubscriptionConnectDate(this); return true;" })
+                               new { @class = "btn btn-success btn-xs wait-crs", onclick = "javascript: CheckSubscriptionConnectDate(this); return true;" })
 
                                 <small>&nbsp;&nbsp;</small>
 
@@ -89,7 +89,7 @@
                                    DisplayName = @subscription.DisplayName,
                                    ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
                                },
-                               new { @class = "btn btn-warning btn-xs" })
+                               new { @class = "btn btn-warning btn-xs wait-crs" })
 
                                 if (@subscription.ConnectedBy == User.Identity.Name)
                                 {
@@ -121,7 +121,7 @@
                                    OrganizationId = @subscription.OrganizationId,
                                    ServicePrincipalObjectId = Model.UserOrganizations[@subscription.OrganizationId].objectIdOfCloudSenseServicePrincipal
                                },
-                                    new { @class = "btn btn-info btn-xs" })
+                                    new { @class = "btn btn-info btn-xs wait-crs" })
                             }
                         }
                         else
