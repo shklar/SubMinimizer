@@ -17,13 +17,68 @@ namespace CogsMinimizer.Controllers
     {
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
 
+        //Reset the duration of all subscription resources ( removes it's confirmed owner and sets its expiration date to today + unclaimed resources expiration date)
+        [HttpPost]
+        public ActionResult ResetResources(string SubscriptionId)
+        {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            List<object> resultList = new List<object>();
+            List<Resource> resourceList = new List<Resource>();
+            using (var db = new DataAccess())
+            {
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
+
+                if (subscription == null)
+                {
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
+                }
+
+                string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
+                if (currentUser != subscription.ConnectedBy)
+                {
+                    throw new ArgumentException("You are not authorized to  reset resources at this subscription.Please contact the subscription owner");
+                }
+
+                // update resources properties and store them in resource list.
+                // after resources properties update we'll update them in database by separate cycle since updating some resource while data reader opened throws exception
+                foreach (Resource resource in db.Resources)
+                {
+                    resourceList.Add(resource);
+
+                    resource.ConfirmedOwner = false;
+
+                    resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+                    resource.Status = ResourceStatus.Valid;
+
+                    resultList.Add(new
+                    {
+                        Id = resource.Id,
+                        Status = resource.Status.ToString(),
+                        ConfirmedOwner = resource.ConfirmedOwner,
+                        ExpirationDate = resource.ExpirationDate.ToShortDateString(),
+                    });
+
+                }
+
+                foreach (Resource resource in resourceList)
+                {
+                    db.Resources.AddOrUpdate(resource);
+                }
+                db.SaveChanges();
+            }
+
+
+            return Json(resultList);
+        }
+
         // GET: Subscription
         public ActionResult GetSettings([Bind(Include = "Id, OrganizationId, DisplayName")] string ServicePrincipalObjectId, Subscription subscription)
         {
             Diagnostics.EnsureArgumentNotNull(() => subscription);
 
             using (DataAccess dataAccess = new DataAccess())
-            {
+            { 
                 Subscription existingSubscription =
                     dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
                 if (existingSubscription == null)
@@ -168,6 +223,39 @@ namespace CogsMinimizer.Controllers
                 resource.ExpirationDate = GetNewReserveDate(subscription, resource);
                 resource.Status = ResourceStatus.Valid;
                 result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
+
+                db.Resources.AddOrUpdate(resource);
+                db.SaveChanges();
+            }
+
+            return result;
+        }
+
+        // Edit resource description
+        [HttpPost]
+        public ActionResult SaveResourceDescription(string ResourceId, string SubscriptionId, string Description)
+        {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            JsonResult result = new JsonResult();
+            using (var db = new DataAccess())
+            {
+                var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
+
+                if (subscription == null)
+                {
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
+                }
+
+                if (resource == null)
+                {
+                    throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", ResourceId));
+                }
+
+                resource.Description = Description;
+                result.Data = resource;
 
                 db.Resources.AddOrUpdate(resource);
                 db.SaveChanges();
