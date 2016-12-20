@@ -39,6 +39,11 @@ namespace CogsMinimizer.Shared
         public string ResourceGroup { get; set; }
 
         /// <summary>
+        ///  Resource description
+        /// </summary>
+        public string Description { get; set; }
+
+        /// <summary>
         /// The first date when the resource was encountered
         /// </summary>
         [DataType(DataType.Date)]
@@ -74,7 +79,7 @@ namespace CogsMinimizer.Shared
         public string SubscriptionId { get; set; }
 
         /// <summary>
-        /// Inidcates the status of the resource (valid, expired, pending deletion etc.)
+        /// Indicates the status of the resource (valid, expired, pending deletion etc.)
         /// </summary>
         public ResourceStatus  Status { get; set; }
         

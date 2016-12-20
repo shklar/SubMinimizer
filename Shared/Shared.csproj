@@ -123,6 +123,10 @@
     <Compile Include="Migrations\201610202358522_AddSubscriptionColumns.Designer.cs">
       <DependentUpon>201610202358522_AddSubscriptionColumns.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201612150032583_AddResourceDescription.cs" />
+    <Compile Include="Migrations\201612150032583_AddResourceDescription.Designer.cs">
+      <DependentUpon>201612150032583_AddResourceDescription.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Organization.cs" />
     <Compile Include="PerUserTokenCache.cs" />
@@ -152,6 +156,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201610202358522_AddSubscriptionColumns.resx">
       <DependentUpon>201610202358522_AddSubscriptionColumns.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201612150032583_AddResourceDescription.resx">
+      <DependentUpon>201612150032583_AddResourceDescription.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
