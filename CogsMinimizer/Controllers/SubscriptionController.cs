@@ -164,7 +164,7 @@ namespace CogsMinimizer.Controllers
                 existingSubscription.DeleteIntervalInDays = subscription.DeleteIntervalInDays;
                 existingSubscription.ManagementLevel = subscription.ManagementLevel;
                 existingSubscription.SendEmailToCoadmins = subscription.SendEmailToCoadmins;
-                existingSubscription.SendEmailOnlyInvalidResources = subscription.SendEmailOnlyInvalidResources;
+                existingSubscription.SendEmailOnlyValidResources = subscription.SendEmailOnlyValidResources;
                 dataAccess.Subscriptions.AddOrUpdate<Subscription>(existingSubscription);
 
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
@@ -509,7 +509,7 @@ namespace CogsMinimizer.Controllers
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format("Unable to monitor subscription with ID '{0}'.", subscription.Id));
+                    throw new ArgumentException(string.Format("Unable to connect subscription with ID '{0}'.", subscription.Id));
                 }
 
             }
@@ -530,7 +530,7 @@ namespace CogsMinimizer.Controllers
                     string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
                     if (currentUser != s.ConnectedBy)
                     {
-                        throw new ArgumentException("You are not authorized to stop monitoring this subscription.Please contact the subscription owner");
+                        throw new ArgumentException("You are not authorized to disconnect this subscription.Please contact the subscription owner");
                     }
 
                     AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);

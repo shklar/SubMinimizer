@@ -64,7 +64,7 @@ namespace OfflineSubscriptionManager
             string subject = $"SubMinimizer: Subscription Analysis report for {sub.DisplayName}";
 
             // Don't send mail if all resources are valid if subscription setting set appropriately
-            if (sub.SendEmailOnlyInvalidResources)
+            if (!sub.SendEmailOnlyValidResources)
             {
                 if (analysisResult.NotFoundResources.Count == 0 &&
                     analysisResult.NearExpiredResources.Count == 0 &&

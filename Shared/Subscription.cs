@@ -38,7 +38,7 @@ namespace CogsMinimizer.Shared
 
         public bool SendEmailToCoadmins { get; set; }
 
-        public bool SendEmailOnlyInvalidResources { get; set; }
+        public bool SendEmailOnlyValidResources { get; set; }
 
         public Subscription()
         {
@@ -48,7 +48,7 @@ namespace CogsMinimizer.Shared
             this.DeleteIntervalInDays = 7;
             this.ManagementLevel = SubscriptionManagementLevel.ReportOnly;
             this.SendEmailToCoadmins = true;
-            this.SendEmailOnlyInvalidResources = true;
+            this.SendEmailOnlyValidResources = false;
         }
     }
 

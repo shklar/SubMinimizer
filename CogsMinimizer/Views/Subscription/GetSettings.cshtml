@@ -29,7 +29,6 @@ new SelectListItem
 });
 }
 
-
 @section Scripts
 {
     <!-- all dependency scripts will be loaded here -->
@@ -59,7 +58,7 @@ new SelectListItem
     <table class="table table-striped table-condensed table-hover">
         <tr>
             <td>
-                <h4>Subscription name</h4>
+                <h4>Subscription Name</h4>
             </td>
             <td>
                 <h4>@Model.DisplayName</h4>
@@ -77,7 +76,7 @@ new SelectListItem
             <td>
                 <h4>Reservation date (days)</h4>
             </td>
-            <td style="vertical-align:middle">
+            <td>
                 @Html.TextBoxFor(m => m.ReserveIntervalInDays)
             </td>
         </tr>
@@ -85,7 +84,7 @@ new SelectListItem
             <td>
                 <h4>Expiration date (days)</h4>
             </td>
-            <td style="vertical-align:middle">
+            <td>
                 @Html.TextBoxFor(m => m.ExpirationIntervalInDays)
             </td>
         </tr>
@@ -93,7 +92,7 @@ new SelectListItem
             <td>
                 <h4>Expiration date for <br /> unclaimed resources (days)</h4>
             </td>
-            <td style="vertical-align:middle">
+            <td>
                 @Html.TextBoxFor(m => m.ExpirationUnclaimedIntervalInDays, null, new { @class = "spinnerTxt"})
             </td>
         </tr>
@@ -101,34 +100,34 @@ new SelectListItem
             <td>
                 <h4>Delete expired resource after (days)</h4>
             </td>
-            <td style="vertical-align:middle">
+            <td>
                 @Html.TextBoxFor(m => m.DeleteIntervalInDays)
             </td>
         </tr>
        <tr>
             <td>
-                <h4>Management level (When resource expires)</h4>
+                <h4>Management level</h4>
             </td>
-           <td style="vertical-align:middle">
+            <td>
                 @Html.DropDownListFor(m => m.ManagementLevel, managementLevelList)
             </td>
         </tr>
         <tr>
-            <td><h1>Report options (mails are sent daily)</h1></td>
+            <td><h1>Report options</h1></td>
         </tr>
         <tr>
             <td>
-                <h4>Send mail only if invalid resources found</h4>
+                <h4>Send mail if all resources valid</h4>
             </td>
-            <td style="vertical-align:middle">
-                @Html.CheckBoxFor(m => m.SendEmailOnlyInvalidResources)
+            <td>
+                @Html.CheckBoxFor(m => m.SendEmailOnlyValidResources)
             </td>
         </tr>
         <tr>
             <td>
-                <h4>Send mail to co-admins</h4>
+                <h4>Send mail to coadmins</h4>
             </td>
-            <td style="vertical-align:middle">
+            <td>
                 @Html.CheckBoxFor(m => m.SendEmailToCoadmins)
             </td>
         </tr>

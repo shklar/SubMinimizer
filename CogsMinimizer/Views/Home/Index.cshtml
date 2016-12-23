@@ -25,7 +25,7 @@
 </script>
 <div class="jumbotron">
     <h1>SubMinimizer</h1>
-    <p class="lead">Helps you detect and delete the idle resources in your Azure subscriptions and save money.</p>
+    <p class="lead">Helps you detect and delete the idle resources in you Azure subscriptions and save money</p>
     <p><a href="https://github.com/shklar/CogsMinimizer" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
 </div>
 
@@ -34,7 +34,7 @@
     {
         <div class="col-lg-4 thumbnail">
             <div class="caption">
-                <h3>Sign-in to  monitor your Azure Subscription</h3>
+                <h3>Sign-in to connect your Azure Subscription</h3>
                 <div id="org"><a href='@Url.Action("SignIn", "Account")'><img src="~/Images/org.png" style="height:65px;width:350px;margin:0px" class="img-thumbnail" /></a></div>
             </div>
         </div>
@@ -47,7 +47,7 @@
                     <h4>Azure Subscription</h4>
                 </td>
                 <td>
-                    <h4>Actions</h4>
+                    <h4>Availability</h4>
                 </td>
             </tr>
             @foreach (KeyValuePair<string, CogsMinimizer.Shared.Subscription> entry in Model.UserSubscriptions.OrderByDescending(x=>x.Value.IsConnected).ThenBy(x=>x.Value.DisplayName))
@@ -95,7 +95,7 @@
                                 {
                                     <small>&nbsp;&nbsp;</small>
 
-                                    @Html.ActionLink("Stop monitoring", "Disconnect", "Subscription",
+                                    @Html.ActionLink("Disconnect", "Disconnect", "Subscription",
                                         new
                                         {
                                             Id = @subscription.Id,
@@ -106,9 +106,9 @@
                                 }
 
                                 <br />
-                                <small>Monitoring started by: @subscription.ConnectedBy </small>
+                                <small>Connected By: @subscription.ConnectedBy </small>
                                 <br />
-                                <small>Monitoring started on: @subscription.ConnectedOn </small>
+                                <small>Connected On: @subscription.ConnectedOn </small>
                             }
                             if (@subscription.AzureAccessNeedsToBeRepaired)
                             {
@@ -130,7 +130,7 @@
                             {
 
 
-                                @Html.ActionLink("Monitor", "Connect", "Subscription",
+                                @Html.ActionLink("Connect", "Connect", "Subscription",
                                new
                                {
                                    Id = @subscription.Id,
@@ -152,7 +152,7 @@
         if (Model.DisconnectedUserOrganizations.Count > 0)
         {
             <div class="alert alert-warning" role="alert">
-                <h4> Didn't find the Azure subscription that you want to monitor? </h4>
+                <h4> Didn't find the Azure subscription that you want to connect? </h4>
                 <h5>
                     It could be in the @Model.DisconnectedUserOrganizations.Count other Organization(s) of which you're a member.
                     Click here to connect to all your Organizations (you will need to provide consent for each).
