@@ -18,7 +18,7 @@
 
         if (connTimeHours <= 24)
         {
-            alert("This subscription has not been analyzed yet. Please check back tomorrow. If it’s already tomorrow, then contact support.");
+            alert("This subscription has not been analyzed yet. Please check back tomorrow. If the problem persists, then contact support.");
         }
     }
 
@@ -48,6 +48,9 @@
                 </td>
                 <td>
                     <h4>Actions</h4>
+                </td>
+                <td>
+                    <h4>Statistics</h4>
                 </td>
             </tr>
             @foreach (KeyValuePair<string, CogsMinimizer.Shared.Subscription> entry in Model.UserSubscriptions.OrderByDescending(x=>x.Value.IsConnected).ThenBy(x=>x.Value.DisplayName))
@@ -144,6 +147,13 @@
                         @if (!Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))
                         {
                             <text>(You do not have the required access for this subscription.)</text>
+                        }
+                    </td>
+                    <td>
+                        @if (Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id) && subscription.IsConnected)
+                        {
+                            <text>Total resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id).Count()</text><br/>
+                            <text>Expired resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Expired).Count()</text>
                         }
                     </td>
                 </tr>
