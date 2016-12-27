@@ -15,6 +15,11 @@
         border: none;
     }
 
+.tbl-btn
+{
+    width: 32px;
+    height: 24px;
+}
     .btn {
         margin: 3px;
     }
@@ -71,6 +76,31 @@
             draggingClass: "dragging",
             resizeMode: 'fit'
         });
+
+     function SetStatusIcon(statusBtn, status)
+     {
+         $(statusBtn).attr('class', '');
+
+         $(statusBtn).addClass("glyphicon");
+         $(statusBtn).addClass("btn");
+         $(statusBtn).addClass("tbl-btn");
+         $(statusBtn).addClass("btn-info");
+         $(statusBtn).addClass("btn-xs");
+
+         if (status == "Valid")
+         {
+             $(statusBtn).addClass("glyphicon-ok");
+         }
+         else if (status == "Expired") {
+             $(statusBtn).addClass("glyphicon-remove");
+         }
+         else if (status == "MarkedForDelete") {
+             $(statusBtn).addClass("glyphicon-trash");
+         }
+         else if (status == "Reserved") {
+             $(statusBtn).addClass("glyphicon-pushpin");
+         }
+}
 
     function GetBool(colNum, value) {
         var input = $(value.elm).find("td").eq(colNum).find("input")[0];
@@ -163,7 +193,7 @@
                     return;
                 }
 
-                var resourceOwner = $.trim($(this).find('td').eq(3).html());
+                var resourceOwner = $.trim($(this).find('td').eq(ownerColumn).html());
                 if (resourceOwner == currentUser)
                 {
                     $(this).show();
@@ -174,18 +204,15 @@
                 }
             });
         }
-        else if ($(radioBtn).attr('id') == 'unclaimedResourcesRadio')
-        {
-            $('#resourcesTable tr').each(function ()
-            {
+        else if ($(radioBtn).attr('id') == 'unclaimedResourcesRadio') {
+            $('#resourcesTable tr').each(function () {
                 // skip table header
-                if ($(this).find('th').length != 0)
-                {
+                if ($(this).find('th').length != 0) {
                     return;
                 }
 
                 var confirmedUser = $(this).find('td #item_ConfirmedOwner').is(':checked');
-                if (confirmedUser )
+                if (confirmedUser)
                 {
                     $(this).hide();
                 }
@@ -195,10 +222,15 @@
                 }
             });
         }
-}
+    }
 
-        function OnResetResources() {
+    function OnResetResources() {
+        $('#resetRessConfDialog').modal('show');
+    }
+
+    function OnResetResourcesImpl() {
             SetCursor('wait', 'wait');
+            $('#resetRessConfDialog').modal('hide');
             $.ajax({
                 url: "/Subscription/ResetResources",
                 type: "POST",
@@ -227,7 +259,7 @@
                             $(resourceRow).find('td').eq(expirationDateColumn).html(resource.ExpirationDate);
                             $(resourceRow).find('td').eq(expirationDateColumn).attr("title", resource.ExpirationDate);
 
-                            $(resourceRow).find('td').eq(statusColumn).html(resource.Status);
+                            SetStatusIcon($(resourceRow).find('td').eq(statusColumn).find("button"), resource.Status);
                             $(resourceRow).find('td').eq(statusColumn).attr("title", resource.Status);
                         }
                     }
@@ -315,7 +347,8 @@
                     $(selectedRow).find('td').eq(ownerColumn).attr("title", data.Owner);
                     $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
                     $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
-                    $(selectedRow).find('td').eq(statusColumn).html(data.Status);
+
+                    SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
                     $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
                     RedrawResourceTable();
                 SetCursor(initialBodyCursor, initialBtnCursor);
@@ -354,7 +387,8 @@
                 $(selectedRow).find('td').eq(ownerColumn).attr("title", data.Owner);
                 $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
                 $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
-                $(selectedRow).find('td').eq(statusColumn).html(data.Status);
+
+                SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
                 $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
 
                 RedrawResourceTable();
@@ -393,7 +427,8 @@
                 $(selectedRow).find('td').eq(ownerColumn).attr("title", data.Owner);
                 $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
                 $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
-                $(selectedRow).find('td').eq(statusColumn).html(data.Status);
+
+                SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
                 $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
 
                 RedrawResourceTable();
@@ -410,16 +445,34 @@
 <h4>Subscription id: @Model.SubscriptionData.Id</h4>
 
 <br />
-<table>
-    <tr>
-        <td style="padding-left : 5px">
-<!--
-@Html.ActionLink("Extend Expired", "ExtendExpired",
-    new {SubscriptionId = Model.SubscriptionData.Id},
-    new {@class = "btn btn-info wait-crs"})
-    <br/>
--->
-            @Html.ActionLink("Settings", "GetSettings",
+<div class="panel panel-default" style="border:none;width:1100px">
+    <div class="row">
+        <div class="col-md-6 pull-left" style="width:250px">
+
+            <div class="panel panel-default">
+                <div style="text-align:left" class="panel-heading">Choose resources to view</div>
+                <div class="panel-body">
+
+                    <div style="align-content:center" class="row">
+                        <span style="width:50px"></span>@Html.RadioButton("resource filter", "All resources", true, new { id = "allResourcesRadio", style = "margin-left:15px" }) All resources
+                    </div>
+                    <div class="row">
+                        <span style="width:50px"></span>@Html.RadioButton("resource filter", "My resources", false, new { id = "yourResourcesRadio", style = "margin-left:15px" }) My resources
+                    </div>
+                    <div class="row">
+                        <span style="width:50px"></span>@Html.RadioButton("resource filter", "Unclaimed resources", false, new { id = "unclaimedResourcesRadio", style = "margin-left:15px" })  Unclaimed resources
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+            <div class="col-md-6 pull-left" style="width:200px">
+
+                <div class="panel panel-default" style="border:none">
+                    <div class="panel-body">
+                        <div class="row">
+                            @Html.ActionLink("Settings", "GetSettings",
                         new
                         {
                             Id = Model.SubscriptionData.Id,
@@ -428,35 +481,65 @@
                             ServicePrincipalObjectId = ""
                         },
                         new { @class = "btn btn-warning btn-round wait-crs" })
-            <br />
-
-        </td>
-        </tr>
-    <tr>
-        <td style="padding-left : 5px">
-        @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
+                        </div>
+    @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
             {
-                <button class="btn btn-warning btn-round wait-crs" onclick="OnResetResources()">Reset resources</button>
-                <br />
-            }
-        </td>
-    </tr>
-    <tr>
-        <td style="padding-left : 5px">
-            @Html.RadioButton("resource filter", "All resources", true, new { id = "allResourcesRadio" }) All resources
-        </td>
-        </tr>
-    <tr>
-            <td style="padding-left : 5px">
-            @Html.RadioButton("resource filter", "Your resources", false, new { id = "yourResourcesRadio" }) Your resources
-        </td>
-        </tr>
-        <tr>
-     <td style="padding-left : 5px">
-            @Html.RadioButton("resource filter", "Unclaimed resources", false, new { id = "unclaimedResourcesRadio" })  Unclaimed resources
-        </td>
-       </tr>
-</table>
+        <div class="row">
+            <button class="btn btn-warning btn-round" onclick="OnResetResources()">Reset resources</button>
+            <br />
+        </div>
+    }
+                    </div>
+                </div>
+
+            </div>
+        
+        <div class="col-md-6 pull-right" style="width:250px">
+
+            <div class="panel panel-default">
+                <div style="text-align:left" class="panel-heading">Status Legend</div>
+                <div class="panel-body">
+                    <div style="align-content:center" class="row">
+                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-ok tbl-btn"></button>&nbsp;Valid
+                    </div>
+                    <div style="align-content:center" class="row">
+                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-remove tbl-btn"></button>&nbsp;Expired
+                    </div>
+                    <div class="row">
+                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-trash tbl-btn"></button>&nbsp;Marked for deletion
+                    </div>
+                    <div class="row">
+                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-pushpin tbl-btn"></button>&nbsp;Reserved
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-6 pull-right" style="width:250px">
+
+            <div class="panel panel-default">
+                <div style="text-align:left" class="panel-heading">Actions Legend</div>
+                <div class="panel-body">
+                    <div style="align-content:center" class="row">
+                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-pencil tbl-btn"></button>&nbsp;Edit resource description
+                    </div>
+                    <div style="align-content:center" class="row">
+                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resource
+                    </div>
+                    <div class="row">
+                        <button style="margin-left:15px" class="btn btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resource
+                    </div>
+                    <div class="row">
+                        <button style="margin-left:15px" class="btn btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn"></button>&nbsp;Reset resource
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>   
+</div>
+
 <br/>
     <table class="table table-hover table-bordered table-striped table-condensed sortable resizable" id="resourcesTable">
         <thead>
@@ -468,30 +551,27 @@
                 <th width="10%" data-defaultsign="AZ"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Type)
                 </th>
-            <th width="7%" data-defaultsign="AZ" onclick="SortResources(this)">
-                    @Html.DisplayNameFor(model => model.Resources.First().ResourceGroup)
-                </th>
-            <th width="4%" data-defaultsign="AZ" onclick="SortResources(this)">
+            <th width="9%" data-defaultsign="AZ" onclick="SortResources(this)">Resource<br/>Group</th>
+            <th width="7%" data-defaultsign="AZ" onclick="SortResources(this)" style="border-right:0px">
                 @Html.DisplayNameFor(model => model.Resources.First().Description)
+                <th width="48px"  style="border-left:0px"></th>
             </th>
-                <th width="5%" data-defaultsign="disabled">
-                </th>
-                <th width="10%" data-defaultsign="AZ"  onclick="SortResources(this)">
+                <th width="14%" data-defaultsign="AZ"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Owner)
                 </th>
                 <th width="6%" id="confirmedOwnerColumn" data-defaultsign="bool" onclick="SortResources(this)">
                     Claimed
                 </th>
-                <th width="7%" data-defaultsign="month"  onclick="SortResources(this)">
+                <th width="8%" data-defaultsign="month"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().FirstFoundDate)
                 </th>
-                <th width="7%" data-defaultsign="month"  onclick="SortResources(this)">
+                <th width="8%" data-defaultsign="month"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().ExpirationDate)
                 </th>
-                <th width="7%" data-defaultsign="AZ" onclick="SortResources(this)">
-                    @Html.DisplayNameFor(model => model.Resources.First().Status)
+                <th width="5%" data-defaultsign="AZ" onclick="SortResources(this)">
+                   @Html.DisplayNameFor(model => model.Resources.First().Status)
                 </th>
-                <th width="20%" data-defaultsort="disabled">
+                <th width="12%" data-defaultsort="disabled">
                     Actions
                 </th>
             </tr>
@@ -510,13 +590,12 @@
                     <td title="@item.ResourceGroup" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                         @Html.DisplayFor(modelItem => item.ResourceGroup)
                     </td>
-                <td title="@item.Description" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                <td title="@item.Description" style="border-right:0px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                     @Html.DisplayFor(modelItem => item.Description)
-                </td>
-                <td style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap" align="center">
-                    <button class="btn btn-info btn-xs" data-toggle="tooltip" title="Edit resource description"
+                    </td>
+                <td style="border-left:0px">
+                    <button class="btn btn-info btn-xs glyphicon glyphicon-pencil tbl-btn" data-toggle="tooltip" title="Edit resource description" style="height:24px;width:32px"
                             onclick="OnEditDescription(this, '@item.Id', '@item.SubscriptionId')">
-                        Edit
                     </button>
                 </td>
                     <td title="@item.Owner" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
@@ -532,17 +611,17 @@
                         @Html.DisplayFor(modelItem => item.ExpirationDate)
                     </td>
                     <td title="@item.Status" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                        @Html.DisplayFor(modelItem => item.Status)
+                        <button class="btn btn-info btn-xs glyphicon glyphicon-ok tbl-btn" onload="SetStatusIcon(this, '@item.Status')"></button>
                     </td>
                     <td>
-                        <button class="btn btn-info btn-xs" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"
-                                data-toggle = "tooltip", title = "Extend expiration date by a short period of time. See subscription settings.">Extend</button>
-                        <button class="btn btn-success btn-xs" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
-                                data-toggle = "tooltip", title = "Extend expiration date by a long period of time. See subscription settings.">Reserve</button>
+                        <button class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"
+                                data-toggle = "tooltip", title = "Extend expiration date by a short period of time. See subscription settings."></button>
+                        <button class="btn btn-success btn-xs glyphicon glyphicon-forward tbl-btn" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
+                                data-toggle = "tooltip", title = "Extend expiration date by a long period of time. See subscription settings."></button>
                         @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
                         {
-                            <button class="btn btn-default btn-xs" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
-                                    data-toggle = "tooltip", title = "Reset expiration date making resource unclaimed.">Reset</button>
+                            <button class="btn btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
+                                    data-toggle = "tooltip", title = "Reset expiration date making resource unclaimed."></button>
                         }
                         <!--
                         @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
@@ -590,6 +669,28 @@
             </div>
     
         </div> 
+    </div>
+</div>
+<div id="resetRessConfDialog" class="modal fade">2
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Reset Resources</h4>
+            </div>
+            <div class="modal-body">
+                <div>This will reset the expiration date and ownership information for all the resources.</div>
+               <br />
+                <div style="text-align:center">Are you sure?</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="OnResetResourcesImpl()">Yes</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">No</button>
+            </div>
+
+        </div>
     </div>
 </div>
     

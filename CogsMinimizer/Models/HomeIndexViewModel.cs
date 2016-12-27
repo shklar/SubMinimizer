@@ -12,5 +12,6 @@ namespace CogsMinimizer.Models
         public Dictionary<string, Subscription> UserSubscriptions { get; set; }
         public List<string> UserCanManageAccessForSubscriptions { get; set; }
         public List<string> DisconnectedUserOrganizations { get; set; }
+        public List<Resource>  Resources { get; set; }
     }
 }
