@@ -67,15 +67,39 @@ namespace CogsMinimizer.Shared
                     string responseContent = response.Content.ReadAsStringAsync().Result;
                     var organizationsResult = (Json.Decode(responseContent)).value;
 
+                    string objectIdOfCloudSenseServicePrincipal = null;
+
                     foreach (var organization in organizationsResult)
-                        organizations.Add(new Organization()
+                    {
+                        try
                         {
-                            Id = organization.tenantId,
-                            //DisplayName = AzureADGraphAPIUtil.GetOrganizationDisplayName(organization.tenantId),
                             objectIdOfCloudSenseServicePrincipal =
                                 AzureADGraphAPIUtil.GetObjectIdOfServicePrincipalInOrganization(organization.tenantId,
-                                    ConfigurationManager.AppSettings["ida:ClientID"])
-                        });
+                                    ConfigurationManager.AppSettings["ida:ClientID"]);
+                        }
+                        catch (Exception)
+                        {
+                            // Usually this mean our application isn't registered at tenant
+                            objectIdOfCloudSenseServicePrincipal = null;
+                        }
+
+                        // We proceed only tenants with our application authorized
+                        // By now it's only Microsoft AAD.
+                        // In order to support another tenants we should use consent framework here.
+                        // Consent dialog should require here user to trust some role to application.
+                        // User logs in into tenant where resources expected to be monitored by application are registered
+                        // user marks roles to be granted
+                        // After that appropriate active directory tenant remembers application rights and afterwards access token can be acquired silently.
+                        if (objectIdOfCloudSenseServicePrincipal != null)
+                        {
+                            organizations.Add(new Organization()
+                            {
+                                Id = organization.tenantId,
+                                objectIdOfCloudSenseServicePrincipal = objectIdOfCloudSenseServicePrincipal
+                                //DisplayName = AzureADGraphAPIUtil.GetOrganizationDisplayName(organization.tenantId),
+                            });
+                        }
+                    }
                 }
             }
             catch (Exception e)
