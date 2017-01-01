@@ -23,89 +23,18 @@ namespace CogsMinimizer.Shared
         public static List<Organization> GetUserOrganizations()
         {
             List<Organization> organizations = new List<Organization>();
+            string microsoftAADID = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
 
-            string tenantId =
-                ClaimsPrincipal.Current.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid").Value;
-            var signedInUserUniqueName = AzureAuthUtils.GetSignedInUserUniqueName();
+            string objectIdOfCloudSenseServicePrincipal =
+                AzureADGraphAPIUtil.GetObjectIdOfServicePrincipalInOrganization(microsoftAADID,
+                    ConfigurationManager.AppSettings["ida:ClientID"]);
 
-            try
+            organizations.Add(new Organization()
             {
-                // Aquire Access Token to call Azure Resource Manager
-                ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
-                    ConfigurationManager.AppSettings["ida:Password"]);
-                // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
-                AuthenticationContext authContext = new AuthenticationContext(
-                    string.Format(ConfigurationManager.AppSettings["ida:Authority"], tenantId),
-                    new ADALTokenCache(signedInUserUniqueName));
-                AuthenticationResult result =
-                    authContext.AcquireTokenSilent(
-                        ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"], credential,
-                        new UserIdentifier(signedInUserUniqueName, UserIdentifierType.RequiredDisplayableId));
-
-
-
-                // Get a list of Organizations of which the user is a member            
-                string requestUrl = string.Format("{0}/tenants?api-version={1}",
-                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"],
-                    ConfigurationManager.AppSettings["ida:AzureResourceManagerAPIVersion"]);
-
-                // Make the GET request
-                HttpClient client = new HttpClient();
-                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
-                HttpResponseMessage response = client.SendAsync(request).Result;
-
-                // Endpoint returns JSON with an array of Tenant Objects
-                // id                                            tenantId
-                // --                                            --------
-                // /tenants/7fe877e6-a150-4992-bbfe-f517e304dfa0 7fe877e6-a150-4992-bbfe-f517e304dfa0
-                // /tenants/62e173e9-301e-423e-bcd4-29121ec1aa24 62e173e9-301e-423e-bcd4-29121ec1aa24
-
-                // add unsuccessful response handling
-                if (response.IsSuccessStatusCode)
-                {
-                    string responseContent = response.Content.ReadAsStringAsync().Result;
-                    var organizationsResult = (Json.Decode(responseContent)).value;
-
-                    string objectIdOfCloudSenseServicePrincipal = null;
-
-                    foreach (var organization in organizationsResult)
-                    {
-                        try
-                        {
-                            objectIdOfCloudSenseServicePrincipal =
-                                AzureADGraphAPIUtil.GetObjectIdOfServicePrincipalInOrganization(organization.tenantId,
-                                    ConfigurationManager.AppSettings["ida:ClientID"]);
-                        }
-                        catch (Exception)
-                        {
-                            // Usually this mean our application isn't registered at tenant
-                            objectIdOfCloudSenseServicePrincipal = null;
-                        }
-
-                        // We proceed only tenants with our application authorized
-                        // By now it's only Microsoft AAD.
-                        // In order to support another tenants we should use consent framework here.
-                        // Consent dialog should require here user to trust some role to application.
-                        // User logs in into tenant where resources expected to be monitored by application are registered
-                        // user marks roles to be granted
-                        // After that appropriate active directory tenant remembers application rights and afterwards access token can be acquired silently.
-                        if (objectIdOfCloudSenseServicePrincipal != null)
-                        {
-                            organizations.Add(new Organization()
-                            {
-                                Id = organization.tenantId,
-                                objectIdOfCloudSenseServicePrincipal = objectIdOfCloudSenseServicePrincipal
-                                //DisplayName = AzureADGraphAPIUtil.GetOrganizationDisplayName(organization.tenantId),
-                            });
-                        }
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                throw e;
-            }
+                Id = microsoftAADID,
+                objectIdOfCloudSenseServicePrincipal = objectIdOfCloudSenseServicePrincipal
+                //DisplayName = AzureADGraphAPIUtil.GetOrganizationDisplayName(organization.tenantId),
+            });
 
             return organizations;
         }
