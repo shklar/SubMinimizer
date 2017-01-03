@@ -16,11 +16,8 @@ body{
 }
 
 .resizable th{
-//   background-image:url('../images/th.png');
    height:30px;
    background-repeat:no-repeat;
-//   color:white;
-//   text-shadow: #012b4d 2px 2px 2px;
    text-align: left;   
 }
 
