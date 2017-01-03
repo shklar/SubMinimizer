@@ -15,11 +15,23 @@
         border: none;
     }
 
+.btn-status {
+  color: #ffffff;
+  background-color: #cccccc;
+  border-color: #cccccc;
+}
+
 .tbl-btn
 {
     width: 32px;
     height: 24px;
 }
+
+.btn-cmd
+{
+    width:150px;
+}
+
     .btn {
         margin: 3px;
     }
@@ -54,21 +66,26 @@
         $('.btn').css('cursor', btnCursor);
     }
 
-    $(document).ready(function () {
+        $(document).ready(function () {
 
-        initialBodyCursor = $('body').first().css('cursor');
-        initialBtnCursor = $('.btn').first().css('cursor');
+            initialBodyCursor = $('body').first().css('cursor');
+            initialBtnCursor = $('.btn').first().css('cursor');
 
-        // In addition to calling controller action buttons click will cause setting cursor to wait while being over body and buttons
-        $('.wait-crs').on('click', function () { SetCursor('wait', 'wait'); });
+            // In addition to calling controller action buttons click will cause setting cursor to wait while being over body and buttons
+            $('.wait-crs').on('click', function () { SetCursor('wait', 'wait'); });
 
-        $('input:radio').change(function () {
-            FilterResources(this);
+            $('input:radio').change(function () {
+                FilterResources(this);
+            });
+
+            $("[data-toggle='tooltip']").tooltip({trigger: 'hover'});
+
+            $('.btn-status').each(
+                function(index, btn)
+                { 
+                    if ($(btn).attr('data-status').length != 0) { SetStatusIcon(btn, $(btn).attr('data-status')); }
+                });
         });
-
-        $("[data-toggle='tooltip']").tooltip({trigger: 'hover'});
-
-    });
 
      $("#resourcesTable").colResizable({
             liveDrag: true,
@@ -84,7 +101,7 @@
          $(statusBtn).addClass("glyphicon");
          $(statusBtn).addClass("btn");
          $(statusBtn).addClass("tbl-btn");
-         $(statusBtn).addClass("btn-info");
+         $(statusBtn).addClass("btn-status");
          $(statusBtn).addClass("btn-xs");
 
          if (status == "Valid")
@@ -96,9 +113,6 @@
          }
          else if (status == "MarkedForDelete") {
              $(statusBtn).addClass("glyphicon-trash");
-         }
-         else if (status == "Reserved") {
-             $(statusBtn).addClass("glyphicon-pushpin");
          }
 }
 
@@ -480,12 +494,12 @@
                             DisplayName = Model.SubscriptionData.DisplayName,
                             ServicePrincipalObjectId = ""
                         },
-                        new { @class = "btn btn-warning btn-round wait-crs" })
+                        new { @class = "btn btn-warning btn-round wait-crs btn-cmd", @title= "Edit subscription settings" })
                         </div>
     @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
             {
         <div class="row">
-            <button class="btn btn-warning btn-round" onclick="OnResetResources()">Reset resources</button>
+            <button class="btn btn-warning btn-round btn-cmd" title="Makes all resources unclaimed. Sets expiration date to established for unclaimed resources." onclick="OnResetResources()">Reset resources</button>
             <br />
         </div>
     }
@@ -500,18 +514,14 @@
                 <div style="text-align:left" class="panel-heading">Status Legend</div>
                 <div class="panel-body">
                     <div style="align-content:center" class="row">
-                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-ok tbl-btn"></button>&nbsp;Valid
+                        <button style="margin-left:15px" class="btn btn-status btn-xs glyphicon glyphicon-ok tbl-btn" data-status=""></button>&nbsp;Valid
                     </div>
                     <div style="align-content:center" class="row">
-                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-remove tbl-btn"></button>&nbsp;Expired
+                        <button style="margin-left:15px" class="btn btn-status btn-xs glyphicon glyphicon-remove tbl-btn"  data-status=""></button>&nbsp;Expired
                     </div>
                     <div class="row">
-                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-trash tbl-btn"></button>&nbsp;Marked for deletion
+                        <button style="margin-left:15px" class="btn btn-status btn-xs glyphicon glyphicon-trash tbl-btn"  data-status=""></button>&nbsp;Marked for deletion
                     </div>
-                    <div class="row">
-                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-pushpin tbl-btn"></button>&nbsp;Reserved
-                    </div>
-
                 </div>
             </div>
         </div>
@@ -522,7 +532,7 @@
                 <div style="text-align:left" class="panel-heading">Actions Legend</div>
                 <div class="panel-body">
                     <div style="align-content:center" class="row">
-                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-pencil tbl-btn"></button>&nbsp;Edit resource description
+                        <button style="margin-left:15px" class="btn btn-warning btn-xs glyphicon glyphicon-pencil tbl-btn"></button>&nbsp;Edit resource description
                     </div>
                     <div style="align-content:center" class="row">
                         <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resource
@@ -594,7 +604,7 @@
                     @Html.DisplayFor(modelItem => item.Description)
                     </td>
                 <td style="border-left:0px">
-                    <button class="btn btn-info btn-xs glyphicon glyphicon-pencil tbl-btn" data-toggle="tooltip" title="Edit resource description" style="height:24px;width:32px"
+                    <button class="btn btn-warning btn-xs glyphicon glyphicon-pencil tbl-btn" data-toggle="tooltip" title="Edit resource description" style="height:24px;width:32px"
                             onclick="OnEditDescription(this, '@item.Id', '@item.SubscriptionId')">
                     </button>
                 </td>
@@ -611,7 +621,7 @@
                         @Html.DisplayFor(modelItem => item.ExpirationDate)
                     </td>
                     <td title="@item.Status" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                        <button class="btn btn-info btn-xs glyphicon glyphicon-ok tbl-btn" onload="SetStatusIcon(this, '@item.Status')"></button>
+                        <button class="btn btn-status btn-xs glyphicon glyphicon-ok tbl-btn" data-status="@item.Status"></button>
                     </td>
                     <td>
                         <button class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"

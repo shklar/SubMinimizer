@@ -304,7 +304,6 @@
     <Content Include="Images\grip.png" />
     <Content Include="Images\msa.png" />
     <Content Include="Images\org.png" />
-    <Content Include="Images\th.png" />
     <Content Include="Scripts\ai.0.22.9-build00167.js" />
     <Content Include="Scripts\ai.0.22.9-build00167.min.js" />
     <Content Include="Scripts\bootstrap-sortable.js" />

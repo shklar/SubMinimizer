@@ -2,7 +2,12 @@
 @{
     ViewBag.Title = "Home Page";
 }
-
+<style>
+    .red_txt
+    {
+        color:red;
+    }
+</style>
 <script src="~/Scripts/jquery-1.10.2.js"></script>
 <script>
     // In addition to calling controller action buttons click will cause setting cursor to wait while being over body and buttons
@@ -52,6 +57,9 @@
                 <td>
                     <h4>Statistics</h4>
                 </td>
+                <td>
+                    <h4>Monitoring</h4>
+                </td>
             </tr>
             @foreach (KeyValuePair<string, CogsMinimizer.Shared.Subscription> entry in Model.UserSubscriptions.OrderByDescending(x=>x.Value.IsConnected).ThenBy(x=>x.Value.DisplayName))
             {
@@ -72,7 +80,7 @@
                             
                             if (Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))
                             {
-                                @Html.ActionLink("Analyze", "Analyze", "Subscription",
+                                @Html.ActionLink("View resources", "Analyze", "Subscription",
                                new
                                {
                                    Id = @subscription.Id,
@@ -107,11 +115,6 @@
                                         },
                                              new { @class = "btn btn-danger btn-xs wait-crs" })
                                 }
-
-                                <br />
-                                <small>Monitoring started by: @subscription.ConnectedBy </small>
-                                <br />
-                                <small>Monitoring started on: @subscription.ConnectedOn </small>
                             }
                             if (@subscription.AzureAccessNeedsToBeRepaired)
                             {
@@ -152,11 +155,25 @@
                     <td>
                         @if (Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id) && subscription.IsConnected)
                         {
-                            <text>Total resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id).Count()</text><br/>
-                            <text>Expired resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Expired).Count()</text>
+                            <div>Total resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id).Count()</div>
+                            if (Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Expired).Count() > 0)
+                            {
+                                <div class="red_txt">Expired resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Expired).Count()</div>
+                            }
+                            else
+                            {
+                                <div>Expired resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Expired).Count()</div>
+                            }
                         }
                     </td>
-                </tr>
+                    <td>
+                        @if (Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id) && subscription.IsConnected)
+                        {
+                            <div>Started by: @subscription.ConnectedBy </div>
+                            <div>Started on: @subscription.ConnectedOn </div>
+                        }
+                    </td>
+            </tr>
             }
         </table>
         if (Model.DisconnectedUserOrganizations.Count > 0)
