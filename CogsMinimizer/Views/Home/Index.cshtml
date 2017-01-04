@@ -156,13 +156,13 @@
                         @if (Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id) && subscription.IsConnected)
                         {
                             <div>Total resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id).Count()</div>
-                            if (Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Expired).Count() > 0)
+                            if (Model.Resources.Where(r => (r.SubscriptionId == subscription.Id && r.Status == CogsMinimizer.Shared.ResourceStatus.Expired)).Count() > 0)
                             {
-                                <div class="red_txt">Expired resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Expired).Count()</div>
+                                <div class="red_txt">Expired resources: @Model.Resources.Where(r => (r.SubscriptionId == subscription.Id && r.Status == CogsMinimizer.Shared.ResourceStatus.Expired)).Count()</div>
                             }
                             else
                             {
-                                <div>Expired resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Expired).Count()</div>
+                                <div>Expired resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Status == CogsMinimizer.Shared.ResourceStatus.Expired).Count()</div>
                             }
                         }
                     </td>
