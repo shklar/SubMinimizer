@@ -70,7 +70,8 @@ namespace OfflineSubscriptionManager
                     sub.ManagementLevel == SubscriptionManagementLevel.ManualDelete)
                 {
                     message +=
-                        "<h3><font color=\"#ff0000\"><b>WARNING - All expired resources will be deleted shortly!</b></font></h3>";
+                        "<h3><font color=\"#ff0000\"><b>WARNING - Expired resources are about to be deleted!</b></font></h3>" +
+                        $"<h3>Based on current settings, expired resources will be deleted after {sub.DeleteIntervalInDays} days </h3>";
                 }
 
                 message += GetHTMLTableForResources(analysisResult.ExpiredResources);
