@@ -55,11 +55,11 @@
     var initialBtnCursor;
     var initialBodyCursor;
 
-        var nameColumn = 0;
-        var descriptionColumn = 3;
-        var ownerColumn = 5;
-        var expirationDateColumn = 8;
-        var statusColumn = 9;
+    var statusColumn = 0;
+    var nameColumn = 1;
+        var descriptionColumn = 4;
+        var ownerColumn = 6;
+        var expirationDateColumn = 9;
 
         function SetCursor(bodyCursor, btnCursor) {
         $('body').css('cursor', bodyCursor); 
@@ -111,7 +111,7 @@
          else if (status == "Expired") {
              $(statusBtn).addClass("glyphicon-remove");
          }
-         else if (status == "MarkedForDelete") {
+         else if (status == "MarkedForDeletion") {
              $(statusBtn).addClass("glyphicon-trash");
          }
 }
@@ -126,6 +126,21 @@
             return 0;
         }
     }
+
+    function GetStatus(colNum, value) {
+        var status = $(value.elm).find("td").eq(colNum).attr("title");
+
+        if (status == "Valid")
+        {
+            return 0;
+        }
+        else if (status == "Expired") {
+            return 1;
+        }
+        else if (status == "MarkedForDeletion") {
+            return 2;
+        }
+}
 
     function GetDate(colNum, value)
     {
@@ -157,6 +172,9 @@
         else if ($(th).attr("data-defaultsign") == "bool") {
             sortKind = "bool";
         }
+        else if ($(th).attr("data-defaultsign") == "status") {
+            sortKind = "status";
+        }
 
         if (sortKind == "Date") {
             tinysort($('#resourcesTable tbody tr'), {
@@ -169,6 +187,13 @@
             tinysort($('#resourcesTable tbody tr'), {
                 order: order, selector: selector, sortFunction: function (a, b) {
                     return GetBool(colNum, a) - GetBool(colNum, b);
+                }
+            });
+        }
+        else if (sortKind == "status") {
+            tinysort($('#resourcesTable tbody tr'), {
+                order: order, selector: selector, sortFunction: function (a, b) {
+                    return GetStatus(colNum, a) - GetStatus(colNum, b);
                 }
             });
         }
@@ -192,10 +217,40 @@
         }
     }
 
+    function IsStatusShown(resourceRow)
+    {
+        var status = $(resourceRow).find('td').eq(statusColumn).attr('title');
+        if (status == "Valid")
+        {
+            return $('#showValidResourcesCheckBox').is(':checked');
+        }
+        else if (status == "Expired")
+        {
+            return $('#showExpiredResourcesCheckBox').is(':checked');
+        }
+        else if (status == "MarkedForDeletion") {
+            return $('#showDeletedResourcesCheckBox').is(':checked');
+        }
+    }
+
     function FilterResources(radioBtn) {
         if ($(radioBtn).attr('id') == 'allResourcesRadio')
         {
-            $('#resourcesTable').find('tr').each(function () { $(this).show(); });
+            $('#resourcesTable').find('tr').each(function () {
+                // skip table header
+                if ($(this).find('th').length != 0) {
+                    return;
+                }
+
+                if (IsStatusShown(this))
+                {
+                    $(this).show();
+                }
+                else
+                {
+                    $(this).hide();
+                }
+            });
         }
         else if ($(radioBtn).attr('id') == 'yourResourcesRadio')
         {
@@ -210,7 +265,13 @@
                 var resourceOwner = $.trim($(this).find('td').eq(ownerColumn).html());
                 if (resourceOwner == currentUser)
                 {
-                    $(this).show();
+                    if (IsStatusShown(this)) {
+                        $(this).show();
+                    }
+                    else
+                    {
+                        $(this).hide();
+                    }
                 }
                 else
                 {
@@ -232,7 +293,14 @@
                 }
                 else
                 {
-                    $(this).show();
+                    if (IsStatusShown(this)) {
+                        $(this).show();
+                    }
+                    else
+                    {
+                        $(this).hide();
+
+                    }
                 }
             });
         }
@@ -291,8 +359,7 @@
             var resourceId = $(selectedRow).attr("data-resource-id");
             var resourceName = $(selectedRow).find("td").eq(nameColumn).find("a").text();
             // multi line value is padded by spaces at beginning/ending. let's trim it
-            var resourceDescription = $.trim($(selectedRow).find("td").eq(descriptionColumn).html());
-
+            var resourceDescription = $.trim($(selectedRow).find("td").eq(descriptionColumn).attr("title"));
 
             $('#resourceId').html(resourceId);
             $('#resourceName').html(resourceName);
@@ -321,8 +388,9 @@
                     var rowSelector = "#resourcesTable tr[data-resource-id='" + resourceId + "']";
                     var resourceRow = $(rowSelector).first();
                     if (resourceRow != null) {
-                        $(resourceRow).find('td').eq(descriptionColumn).html(data.Description);
-                        $(resourceRow).find('td').eq(descriptionColumn).attr("title", data.Description);
+     
+                       $(resourceRow).find('td').eq(descriptionColumn).html(data.Description);
+                       $(resourceRow).find('td').eq(descriptionColumn).attr("title", data.Description);
                     }
 
                     $('#descriptionDialog').modal('hide');
@@ -429,7 +497,6 @@
             success: function(data) {
                 // Let's update expiration date, validity status, resource owner
                 // Model at server is updated at controller method and will be used for table complete updating at refresh table
-
                 if (data.ConfirmedOwner) {
                     $(selectedRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
                 }
@@ -481,12 +548,12 @@
             </div>
         </div>
 
-            <div class="col-md-6 pull-left" style="width:200px">
+        <div class="col-md-6 pull-left" style="width:200px">
 
-                <div class="panel panel-default" style="border:none">
-                    <div class="panel-body">
-                        <div class="row">
-                            @Html.ActionLink("Settings", "GetSettings",
+            <div class="panel panel-default" style="border:none">
+                <div class="panel-body">
+                    <div class="row">
+                        @Html.ActionLink("Settings", "GetSettings",
                         new
                         {
                             Id = Model.SubscriptionData.Id,
@@ -494,92 +561,91 @@
                             DisplayName = Model.SubscriptionData.DisplayName,
                             ServicePrincipalObjectId = ""
                         },
-                        new { @class = "btn btn-warning btn-round wait-crs btn-cmd", @title= "Edit subscription settings" })
-                        </div>
-    @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
+                        new { @class = "btn btn-warning btn-round wait-crs btn-cmd", @title = "Edit subscription settings" })
+                    </div>
+                    @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
             {
-        <div class="row">
-            <button class="btn btn-warning btn-round btn-cmd" title="Makes all resources unclaimed. Sets expiration date to established for unclaimed resources." onclick="OnResetResources()">Reset resources</button>
-            <br />
-        </div>
-    }
-                    </div>
+                        <div class="row">
+                            <button class="btn btn-warning btn-round btn-cmd" title="Makes all resources unclaimed. Sets expiration date to established for unclaimed resources." onclick="OnResetResources()">Reset resources</button>
+                            <br />
+                        </div>
+                    }
                 </div>
-
             </div>
-        
+
+        </div>
+
         <div class="col-md-6 pull-right" style="width:250px">
 
             <div class="panel panel-default">
-                <div style="text-align:left" class="panel-heading">Status Legend</div>
+                <div style="text-align:left" class="panel-heading">Status Legend (check to view)</div>
                 <div class="panel-body">
-                    <div style="align-content:center" class="row">
-                        <button style="margin-left:15px" class="btn btn-status btn-xs glyphicon glyphicon-ok tbl-btn" data-status=""></button>&nbsp;Valid
-                    </div>
-                    <div style="align-content:center" class="row">
-                        <button style="margin-left:15px" class="btn btn-status btn-xs glyphicon glyphicon-remove tbl-btn"  data-status=""></button>&nbsp;Expired
+                    <div class="row">
+                        <input id="showValidResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon glyphicon-ok tbl-btn" data-status=""></button>&nbsp;Valid
                     </div>
                     <div class="row">
-                        <button style="margin-left:15px" class="btn btn-status btn-xs glyphicon glyphicon-trash tbl-btn"  data-status=""></button>&nbsp;Marked for deletion
+                        <input id="showExpiredResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon glyphicon-remove tbl-btn" data-status=""></button>&nbsp;Expired
+                    </div>
+                    <div class="row">
+                        <input id="showDeletedResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon glyphicon-trash tbl-btn" data-status=""></button>&nbsp;Marked for deletion
                     </div>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-6 pull-right" style="width:250px">
+            <div class="col-md-6 pull-right" style="width:250px">
 
-            <div class="panel panel-default">
-                <div style="text-align:left" class="panel-heading">Actions Legend</div>
-                <div class="panel-body">
-                    <div style="align-content:center" class="row">
-                        <button style="margin-left:15px" class="btn btn-warning btn-xs glyphicon glyphicon-pencil tbl-btn"></button>&nbsp;Edit resource description
-                    </div>
-                    <div style="align-content:center" class="row">
-                        <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resource
-                    </div>
-                    <div class="row">
-                        <button style="margin-left:15px" class="btn btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resource
-                    </div>
-                    <div class="row">
-                        <button style="margin-left:15px" class="btn btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn"></button>&nbsp;Reset resource
-                    </div>
+                <div class="panel panel-default">
+                    <div style="text-align:left" class="panel-heading">Actions Legend</div>
+                    <div class="panel-body">
+                        <div style="align-content:center" class="row">
+                            <button style="margin-left:15px" class="btn btn-warning btn-xs glyphicon glyphicon-pencil tbl-btn"></button>&nbsp;Edit resource description
+                        </div>
+                        <div style="align-content:center" class="row">
+                            <button style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resource
+                        </div>
+                        <div class="row">
+                            <button style="margin-left:15px" class="btn btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resource
+                        </div>
+                        <div class="row">
+                            <button style="margin-left:15px" class="btn btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn"></button>&nbsp;Reset resource
+                        </div>
 
+                    </div>
                 </div>
             </div>
         </div>
-    </div>   
 </div>
 
 <br/>
     <table class="table table-hover table-bordered table-striped table-condensed sortable resizable" id="resourcesTable">
         <thead>
             <tr>
+                <th width="5%" data-defaultsign="status" onclick="SortResources(this)">
+                    @Html.DisplayNameFor(model => model.Resources.First().Status)
+                </th>
             <th width="17%" id="nameColumn" data-defaultsign="AZ" onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Name)
                 </th>
 
-                <th width="10%" data-defaultsign="AZ"  onclick="SortResources(this)">
+                <th width="22%" data-defaultsign="AZ"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Type)
                 </th>
             <th width="9%" data-defaultsign="AZ" onclick="SortResources(this)">Resource<br/>Group</th>
-            <th width="7%" data-defaultsign="AZ" onclick="SortResources(this)" style="border-right:0px">
+            <th width="5%" data-defaultsign="AZ" onclick="SortResources(this)" style="border-right:0px">
                 @Html.DisplayNameFor(model => model.Resources.First().Description)
-                <th width="48px"  style="border-left:0px"></th>
             </th>
-                <th width="14%" data-defaultsign="AZ"  onclick="SortResources(this)">
+                <th data-defaultsort="disabled" width="48px" style="border-left:0px"></th>
+                <th width="6%" data-defaultsign="AZ"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Owner)
                 </th>
-                <th width="6%" id="confirmedOwnerColumn" data-defaultsign="bool" onclick="SortResources(this)">
+                <th width="5%" id="confirmedOwnerColumn" data-defaultsign="bool" onclick="SortResources(this)">
                     Claimed
                 </th>
-                <th width="8%" data-defaultsign="month"  onclick="SortResources(this)">
+                <th width="7%" data-defaultsign="month"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().FirstFoundDate)
                 </th>
                 <th width="8%" data-defaultsign="month"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().ExpirationDate)
-                </th>
-                <th width="5%" data-defaultsign="AZ" onclick="SortResources(this)">
-                   @Html.DisplayNameFor(model => model.Resources.First().Status)
                 </th>
                 <th width="12%" data-defaultsort="disabled">
                     Actions
@@ -591,6 +657,9 @@
             {
                 string rowClass = item.Expired ? "alert alert - warning" : null;
             <tr class="@rowClass" data-resource-id="@item.Id">
+                <td title="@item.Status" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    <button style="text-align:center;vertical-align:middle" class="btn btn-xs btn-status glyphicon glyphicon-ok tbl-btn" data-status="@item.Status"></button>
+             </td>
                     <td title="@item.AzureResourceIdentifier" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                         @Html.Raw(HTMLUtilities.CreateAzureResourceAnchor(item.Name, item.AzureResourceIdentifier))
                     </td>
@@ -619,9 +688,6 @@
                     </td>
                     <td title="@item.ExpirationDate" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                         @Html.DisplayFor(modelItem => item.ExpirationDate)
-                    </td>
-                    <td title="@item.Status" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                        <button class="btn btn-status btn-xs glyphicon glyphicon-ok tbl-btn" data-status="@item.Status"></button>
                     </td>
                     <td>
                         <button class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"
@@ -674,14 +740,14 @@
                             </table>
             </div>
                    <div class="modal-footer">
-                <button type="button" class="btn btn-primary" onclick="OnSaveDescription()">Ok</button>
+                <button type="button" class="btn btn-primary" onclick="OnSaveDescription()">Save</button>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
             </div>
     
         </div> 
     </div>
 </div>
-<div id="resetRessConfDialog" class="modal fade">2
+<div id="resetRessConfDialog" class="modal fade">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
