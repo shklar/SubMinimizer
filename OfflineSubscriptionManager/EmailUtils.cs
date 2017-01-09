@@ -37,13 +37,13 @@ namespace OfflineSubscriptionManager
 
 
             string analyzeControllerLink = "http://subminimizer.azurewebsites.net/Subscription/Analyze/";
-            string headerLink = HTMLUtilities.CreateHTMLLink($"Subminimizer report for subscription: {sub.DisplayName}",
+            string headerLink = HTMLUtilities.CreateHTMLLink($"SubMinimizer report for subscription: {sub.DisplayName}",
                 $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");
 
             message += $"<H2>{headerLink}</H2>";
 
             message += $"<H2>Subscription ID : {sub.Id} </H2>";
-            message += $"<h3>Analysis Date : {GetShortDate(sub.LastAnalysisDate)}</h3>";
+            message += $"<H2>Analysis Date : {GetShortDate(sub.LastAnalysisDate)}</H2>";
             message += "<br>";
 
             if (analysisResult.DeletedResources.Count != 0)
@@ -107,6 +107,7 @@ namespace OfflineSubscriptionManager
             result += "<th class=\"tableheadercolor\">Name</th>";
             result += "<th class=\"tableheadercolor\">Type</th>";
             result += "<th class=\"tableheadercolor\">Group</th>";
+            result += "<th class=\"tableheadercolor\">Description</th>";
             result += "<th class=\"tableheadercolor\">Owner</th>";
             result += "<th class=\"tableheadercolor\">Expiration Date</th>";
 
@@ -120,6 +121,7 @@ namespace OfflineSubscriptionManager
                 //result += $"<td>{CreateHTMLLink(resource.Name, "https://ms.portal.azure.com/#resource\{resource.AzureResourceIdentifier}\\")}</td>";
                 result += $"<td>{resource.Type}</td>";
                 result += $"<td>{resource.ResourceGroup}</td>";
+                result += $"<td>{resource.Description}</td>";
                 string unclearOwner = !string.IsNullOrWhiteSpace(resource.Owner) && ! resource.ConfirmedOwner ? "(?)" : string.Empty;
                 result += $"<td>{resource.Owner} {unclearOwner}</td>";
                 result += $"<td>{GetShortDate(resource.ExpirationDate)}</td>";
@@ -132,7 +134,7 @@ namespace OfflineSubscriptionManager
         }
         private static string GetShortDate(DateTime dateTime)
         {
-            return dateTime.ToString("dd MMMM yyyy");
+            return dateTime.ToString("dd-MMM-yy");
         }
 
 
