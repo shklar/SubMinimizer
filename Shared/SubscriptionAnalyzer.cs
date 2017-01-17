@@ -194,6 +194,13 @@ namespace CogsMinimizer.Shared
                 //Go over all the resource
                 foreach (var genericResource in resourceList)
                 {
+                    //Skip any resources that appear although we have successfully deleted them
+                    if (m_analysisResult.DeletedResources.Any(x=>x.AzureResourceIdentifier.Equals(genericResource.Id)))
+                    {
+                        _tracer.TraceVerbose($"Found and skipping a resource which was just deleted: {genericResource.Name}");
+                        continue;
+                    }
+
                     //Try to find the resource in the DB
                     var resourceEntryFromDb = m_Db.Resources.FirstOrDefault(x => x.AzureResourceIdentifier.Equals(genericResource.Id));
 
