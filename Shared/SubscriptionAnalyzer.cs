@@ -152,20 +152,20 @@ namespace CogsMinimizer.Shared
             //Try to delete the resources that are marked for delete
             foreach (var resource in resourcesMarkedForDeletion)
             {
-                try
-                {
-                    _tracer.TraceVerbose($"Trying to delete the resource {resource.Name} of Type {resource.Type}");
-
-                    AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier, _tracer);
+                _tracer.TraceVerbose($"Trying to delete the resource {resource.Name} of Type {resource.Type}");
+                // We don't catch exceptions since method doesn't throw but catches all possible exceptions, trace them and 
+                // return  succeeded when succeeded deleting resource or resource doesn't exist (we suppose it is deleted manually by somebody
+                //  failed if deleting failed
+                ResourceOperationResult result = AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier, _tracer);
+                if (result.Result == ResourceOperationStatus.Succeeded)
+                { 
                     m_Db.Resources.Remove(resource);
                     m_analysisResult.DeletedResources.Add(resource);
                     _tracer.TraceVerbose($"Successfully deleted the resource {resource.Name} of Type {resource.Type}");
-
                 }
-                catch (Exception e)
+                else
                 {
-                    _tracer.TraceError($"Failed to delete the resource {resource.Name} of Type {resource.Type}. Exception details: {e.Message}");
-                    
+                    _tracer.TraceError($"Failed to delete the resource {resource.Name} of Type {resource.Type}");
                     m_analysisResult.FailedDeleteResources.Add(resource);                  
                 }
             }

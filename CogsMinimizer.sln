@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OfflineSubscriptionManager"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{817FA706-5649-4CA1-A6C3-5CC3248A8A06}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubMinimizerTests", "SubMinimizerTests\SubMinimizerTests.csproj", "{A3B72F3F-8A94-4486-BCCA-818E70D0AEB5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{817FA706-5649-4CA1-A6C3-5CC3248A8A06}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{817FA706-5649-4CA1-A6C3-5CC3248A8A06}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{817FA706-5649-4CA1-A6C3-5CC3248A8A06}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3B72F3F-8A94-4486-BCCA-818E70D0AEB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3B72F3F-8A94-4486-BCCA-818E70D0AEB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3B72F3F-8A94-4486-BCCA-818E70D0AEB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3B72F3F-8A94-4486-BCCA-818E70D0AEB5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

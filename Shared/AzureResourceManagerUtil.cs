@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Linq;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Web.Helpers;
@@ -13,6 +14,7 @@ using Microsoft.Azure.Management.Authorization.Models;
 using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Azure.Management.ResourceManager.Models;
 using Microsoft.Rest;
+using Microsoft.Rest.Azure;
 using ResourceManagementClient = Microsoft.Azure.Management.ResourceManager.ResourceManagementClient;
 using Subscription = CogsMinimizer.Shared.Subscription;
 
@@ -20,6 +22,8 @@ namespace CogsMinimizer.Shared
 {
     public static class AzureResourceManagerUtil
     {
+        private static Dictionary<string, IEnumerable<Provider>> providerList = new Dictionary<string, IEnumerable<Provider>>();
+
         public static List<Organization> GetUserOrganizations()
         {
             List<Organization> organizations = new List<Organization>();
@@ -91,6 +95,50 @@ namespace CogsMinimizer.Shared
             }
 
             return subscriptions;
+        }
+
+        public static ResourceOperationResult GetApiVersionSupportedForResource(ResourceManagementClient resourceManagementClient, string azureresourceId, ref string apiVersion)
+        {
+            Diagnostics.EnsureArgumentNotNull(() => resourceManagementClient);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => azureresourceId);
+
+            ResourceOperationResult result = new ResourceOperationResult();
+            ProviderResourceType resourceType = GetResourceType(resourceManagementClient, azureresourceId);
+            if (resourceType == null)
+            {
+                result.Result = ResourceOperationStatus.Failed;
+                result.FailureReason = FailureReason.UnknownError;
+                result.Message = "Unable to determine resource type";
+                return result;
+            }
+
+            // Let's try get resource by each of listed versions api. discovered that not all locations support all version listed
+            foreach (string apiTryVersion in resourceType.ApiVersions)
+            {
+                try
+                {
+                    GenericResource resource = resourceManagementClient.Resources.GetById(azureresourceId, apiTryVersion);
+                    result.Result = ResourceOperationStatus.Succeeded;
+                    result.FailureReason = FailureReason.NoError;
+                    result.Message = string.Empty;
+                    apiVersion = apiTryVersion;
+                    return result;
+                }
+                catch (CloudException e)
+                {
+                    FailureReason failureReason = GetFailureReason(e.Response.Content);
+                    result.Result = ResourceOperationStatus.Failed;
+                    result.FailureReason = failureReason;
+                    result.Message = e.Response.Content;
+                    if (failureReason == FailureReason.ResourceNotFound)
+                    {
+                        // If resource not found stop trying
+                        break;
+                    }
+                }
+            }
+
+            return result;
         }
 
         public static bool UserCanManageAccessForSubscription(string subscriptionId, string organizationId)
@@ -353,6 +401,51 @@ namespace CogsMinimizer.Shared
             }
         }
 
+        public static ProviderResourceType GetResourceType(ResourceManagementClient resourceManagementClient, string azureresourceId)
+        {
+            Diagnostics.EnsureArgumentNotNull(() => resourceManagementClient);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => azureresourceId);
+
+            string[] resourceIdProps = azureresourceId.Split(new char[] { '/' });
+            if (resourceIdProps.Count() < 3)
+            {
+                return null;
+            }
+
+            string providerName = resourceIdProps[resourceIdProps.Count() - 3];
+            string resourceTypeName = resourceIdProps[resourceIdProps.Count() - 2];
+
+            try
+            {
+                IEnumerable<Provider> providerList = GetResourceProviderList(resourceManagementClient);
+                IEnumerable<ProviderResourceType> resourceTypes = from p in providerList where p.NamespaceProperty == providerName from t in p.ResourceTypes where t.ResourceType == resourceTypeName select t;
+                if (resourceTypes.Count() > 0)
+                {
+                    return resourceTypes.First();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        public static IEnumerable<Provider> GetResourceProviderList(ResourceManagementClient resourceManagementClient)
+        {
+            Diagnostics.EnsureArgumentNotNull(() => resourceManagementClient);
+
+            if (!providerList.ContainsKey(resourceManagementClient.SubscriptionId))
+            {
+                providerList[resourceManagementClient.SubscriptionId] = resourceManagementClient.Providers.List();
+            }
+
+            return providerList[resourceManagementClient.SubscriptionId];
+        }
+
         public static string GetRoleId(AzureResourceManagementRole role, string subscriptionId, string organizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
@@ -496,39 +589,104 @@ namespace CogsMinimizer.Shared
             return authorizationManagementClient;
         }
 
-        #endregion
+        public static GenericResource GetAzureResource(ResourceManagementClient resourceClient, string azureresourceid, string apiVersion, ITracer tracer)
+        {
+            Diagnostics.EnsureArgumentNotNull(() => resourceClient);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => azureresourceid);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => apiVersion);
 
-        public static void DeleteAzureResource(ResourceManagementClient resourceClient, string azureresourceid, ITracer tracer)
+            try
+            {
+                tracer.TraceVerbose($"Getting resource {azureresourceid} with API version: {apiVersion}");
+                GenericResource resource = resourceClient.Resources.GetById(azureresourceid, apiVersion);
+                tracer.TraceVerbose($"Succeeded getting resource {azureresourceid} with API version: {apiVersion}");
+                return resource;
+            }
+            catch (Exception e)
+            {
+                // Resource isn't found or another error
+                tracer.TraceError($"Failed to get the resource {azureresourceid} with API version: {apiVersion}, error: {e.Message}");
+                return null;
+            }
+        }
+
+        public static ResourceOperationResult DeleteAzureResource(ResourceManagementClient resourceClient, string azureresourceid, ITracer tracer)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => azureresourceid);
             Diagnostics.EnsureArgumentNotNull(() => resourceClient);
             Diagnostics.EnsureArgumentNotNull(() => tracer);
 
-            string[] apiVersion = { "2015-01-01", "2014-04-01", "2015-08-01" , "2016-05-01", "2016-01-01", "2016-04-01",
-                "2016-09-01", "2015-11-01", "2015-03-20", "2015-03-01-preview" };
-
-            for (int i = 0; i < apiVersion.Length; i++)
+            string apiVersion = null;
+            ResourceOperationResult result = new ResourceOperationResult();
+            try
             {
-                try
-                {
-                    tracer.TraceVerbose($"Trying to delete the resource {azureresourceid} with API version: {apiVersion[i]}");
-                    resourceClient.Resources.DeleteById(azureresourceid, apiVersion[i]);
+                tracer.TraceVerbose($"Trying to delete the resource {azureresourceid}");
 
-                    //If successfully deleted the resource no need to continue
-                    tracer.TraceVerbose($"Deleted the resource {azureresourceid} with API version: {apiVersion[i]}");
-                    return;
-                }
-                catch (Exception e)
+                ResourceOperationResult getApiResult = GetApiVersionSupportedForResource(resourceClient, azureresourceid, ref apiVersion);
+                if (getApiResult.Result == ResourceOperationStatus.Failed)
                 {
-                    tracer.TraceError($"Failed to delete the resource {azureresourceid} with API version: {apiVersion[i]}");
-                    if (i==apiVersion.Length-1)
+                    if (getApiResult.FailureReason == FailureReason.ResourceNotFound)
                     {
-                        throw e;
+                        // Resource most probably deleted manually, treat delete as succeeded
+                        tracer.TraceVerbose($"Deleting the resource {azureresourceid} skip, resource doesn't exist probably deleted manually");
+                        return result;
                     }
+                    else
+                    {
+                        CloudException exception = new CloudException("No API to operate discovered");
+                        exception.Response = new HttpResponseMessageWrapper(new HttpResponseMessage(), getApiResult.Message);
+                        throw exception;
+                    }
+
                 }
+
+                GenericResource existingResource = GetAzureResource(resourceClient, azureresourceid, apiVersion, tracer);
+                // Check if resource exist probably it's deleted manually but still exist in our database
+                if (existingResource != null)
+                {
+                    resourceClient.Resources.DeleteById(azureresourceid, apiVersion);
+                    tracer.TraceVerbose($"Deleted the resource {azureresourceid} with API version: {apiVersion}");
+                }
+                else
+                {
+                    tracer.TraceVerbose($"Deleting the resource {azureresourceid} with API version: {apiVersion} skip, resource doesn't exist probably deleted manually");
+                }
+
+                result.Result = ResourceOperationStatus.Succeeded;
+            }
+            catch (CloudException e)
+            {                
+                tracer.TraceError($"Failed to delete the resource {azureresourceid} with API version: {apiVersion}, error: {e.Message},  response content: {e.Response.Content}");
+                result.Result = ResourceOperationStatus.Failed;
+                result.FailureReason = GetFailureReason(e.Response.Content);
+            }
+
+            return result;
+        }
+
+        public static FailureReason GetFailureReason(string content)
+        {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => content);
+
+            if (Regex.IsMatch(content, "cannot be deleted because it is in use by the following resources"))
+            {
+                return FailureReason.ResourceInUse;
+            }
+            else if (Regex.IsMatch(content, "No registered resource provider found for location[\\w\\W]*and API version"))
+            {
+                return FailureReason.WrongApiVersion;
+            }
+            else if (Regex.IsMatch(content, "The Resource[\\w\\W]*under resource group[\\w\\W]*was not found."))
+            {
+                return FailureReason.ResourceNotFound;
+            }
+            else
+            {
+                return FailureReason.UnknownError;
             }
         }
 
-     
+
+        #endregion
     }
 }
