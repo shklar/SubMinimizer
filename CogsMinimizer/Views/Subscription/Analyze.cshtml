@@ -554,15 +554,16 @@
                 <div class="panel-body">
                     <div class="row">
                         @Html.ActionLink("Settings", "GetSettings",
-                        new
-                        {
-                            Id = Model.SubscriptionData.Id,
-                            OrganizationId = Model.SubscriptionData.OrganizationId,
-                            DisplayName = Model.SubscriptionData.DisplayName,
-                            ServicePrincipalObjectId = ""
-                        },
-                        new { @class = "btn btn-warning btn-round wait-crs btn-cmd", @title = "Edit subscription settings" })
+                            new
+                            {
+                                Id = Model.SubscriptionData.Id,
+                                OrganizationId = Model.SubscriptionData.OrganizationId,
+                                DisplayName = Model.SubscriptionData.DisplayName,
+                                ServicePrincipalObjectId = ""
+                            },
+                            new {@class = "btn btn-warning btn-round wait-crs btn-cmd", @title = "Edit subscription settings"})
                     </div>
+                    <!--
                     @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
             {
                         <div class="row">
@@ -570,6 +571,7 @@
                             <br />
                         </div>
                     }
+                    -->
                 </div>
             </div>
 

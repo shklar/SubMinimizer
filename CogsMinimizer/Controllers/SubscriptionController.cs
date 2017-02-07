@@ -21,6 +21,8 @@ namespace CogsMinimizer.Controllers
         [HttpPost]
         public ActionResult ResetResources(string SubscriptionId)
         {
+            return null;
+
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
 
             List<object> resultList = new List<object>();
