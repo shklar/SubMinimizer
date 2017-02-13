@@ -101,6 +101,8 @@ namespace OfflineSubscriptionManager
 
         private static string GetHTMLTableForResources(IEnumerable<Resource> resources)
         {
+            resources = resources.OrderBy(x => x.ExpirationDate);
+
             string result = "<Table class=\"courses-table\">";
 
             result += "<tr>";
