@@ -505,7 +505,7 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureArgumentNotNull(() => tracer);
 
             string[] apiVersion = { "2015-01-01", "2014-04-01", "2015-08-01" , "2016-05-01", "2016-01-01", "2016-04-01",
-                "2016-09-01", "2015-11-01", "2015-03-20", "2015-03-01-preview" };
+                "2016-09-01", "2015-11-01", "2015-03-20", "2015-03-01-preview", "2015-08-01-preview" };
 
             for (int i = 0; i < apiVersion.Length; i++)
             {
@@ -523,7 +523,11 @@ namespace CogsMinimizer.Shared
                     tracer.TraceError($"Failed to delete the resource {azureresourceid} with API version: {apiVersion[i]}");
                     if (i==apiVersion.Length-1)
                     {
-                        throw e;
+                        if (!string.IsNullOrEmpty(e.Message))
+                        {
+                            tracer.TraceError($"Failed to delete the resource {azureresourceid} with error message {e.Message}");
+                        }
+                        throw;
                     }
                 }
             }
