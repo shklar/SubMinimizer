@@ -506,7 +506,7 @@ namespace CogsMinimizer.Shared
 
             string[] apiVersion = { "2015-01-01", "2014-04-01", "2015-08-01" , "2016-05-01", "2016-01-01", "2016-04-01",
                 "2016-09-01", "2015-11-01", "2015-03-20", "2015-03-01-preview", "2015-08-01-preview",
-                "2016-12-01", "2017-03-30", "2015-10-31", "2015-03-15" ,"2014-02-26", "2016-03-30" };
+                "2016-12-01", "2017-03-30", "2015-10-31", "2015-03-15" ,"2014-02-26", "2016-03-30", "2015-11-01-preview" };
 
             for (int i = 0; i < apiVersion.Length; i++)
             {
@@ -528,6 +528,11 @@ namespace CogsMinimizer.Shared
                         {
                             tracer.TraceError($"Failed to delete the resource {azureresourceid} with error message {e.Message}");
                         }
+                        if (!string.IsNullOrEmpty(e.InnerException?.Message))
+                        {
+                            tracer.TraceError($"Failed to delete the resource {azureresourceid} with internal exception message {e.InnerException.Message}");
+                        }
+
                         throw;
                     }
                 }
