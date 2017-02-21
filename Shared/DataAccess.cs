@@ -1,9 +1,12 @@
-﻿using System.Data.Entity;
+﻿using System.Data.Common;
+using System.Data.Entity;
 
 namespace CogsMinimizer.Shared
 {
     public class DataAccess : DbContext
     {
+        public DataAccess(DbConnection connection, bool ownConnection) : base(connection, ownConnection) { }
+
         public DataAccess() : base("DataAccess") { }
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<PerUserTokenCache> PerUserTokenCacheList { get; set; }
