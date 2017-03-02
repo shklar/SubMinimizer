@@ -40,26 +40,16 @@ namespace CogsMinimizer.Controllers
                     throw new ArgumentException("You are not authorized to  reset resources at this subscription.Please contact the subscription owner");
                 }
 
-                // Load collections locally from database tables to objects instances
-                db.Resources.Load();
-                db.Subscriptions.Load();
-
                 // Let's compose result list in order to fill resources table at view
-                List<Resource> subscriptionResourceList = new List<Resource>();
-                foreach (Resource resource in db.Resources)
-                {
-                    if (resource.SubscriptionId == SubscriptionId)
-                    {
-                        subscriptionResourceList.Add(resource);
-                    }
-                }
-
-                // Reset expiration date for resources of selected subscription
-                ResourceOperationsUtil.ResetResources(subscriptionResourceList, subscription);
+                List<Resource> subscriptionResourceList = db.Resources.Where(r => r.SubscriptionId == SubscriptionId).ToList();
 
                 // Let's compose result list in order to fill resources table at view
                 foreach (Resource resource in subscriptionResourceList)
                 {
+
+                    // Reset expiration date for resources of selected subscription
+                    ResourceOperationsUtil.ResetResource(resource, subscription);
+
                     db.Resources.AddOrUpdate(resource);
 
                     resultList.Add(new
@@ -225,7 +215,7 @@ namespace CogsMinimizer.Controllers
 
                 resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
                 resource.ConfirmedOwner = true;
-                resource.ExpirationDate = GetNewReserveDate(subscription, resource);
+                resource.ExpirationDate = ResourceOperationsUtil.GetNewReserveDate(subscription, resource);
                 resource.Status = ResourceStatus.Valid;
                 result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
 
@@ -301,7 +291,7 @@ namespace CogsMinimizer.Controllers
 
                 resource.ConfirmedOwner = false;
 
-                resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+                resource.ExpirationDate = ResourceOperationsUtil.GetNewExpirationDate(subscription, resource);
                 resource.Status = ResourceStatus.Valid;
                 result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id, SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
 
@@ -338,7 +328,7 @@ namespace CogsMinimizer.Controllers
                 resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
                 resource.ConfirmedOwner = true;
 
-                resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+                resource.ExpirationDate = ResourceOperationsUtil.GetNewExpirationDate(subscription, resource);
                 resource.Status = ResourceStatus.Valid;
                 result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id,  SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
 
@@ -411,23 +401,6 @@ namespace CogsMinimizer.Controllers
             return View("Analyze", model);
         }
 
-        private bool HasExpired(Resource resource)
-        {
-            return resource.ExpirationDate.Date < DateTime.UtcNow.Date;
-        }
-
-        private static DateTime GetNewReserveDate(Subscription subscription, Resource resource)
-        {
-
-            return DateTime.UtcNow.AddDays(subscription.ReserveIntervalInDays);
-        }
-
-        private static DateTime GetNewExpirationDate(Subscription  subscription, Resource resource)
-        {
-            
-           return DateTime.UtcNow.AddDays(resource.ConfirmedOwner ? subscription.ExpirationIntervalInDays : subscription.ExpirationUnclaimedIntervalInDays);
-        }
-
         /// <summary>
         /// Marks all the expired resources in the subscription for deletion
         /// </summary>
@@ -438,7 +411,7 @@ namespace CogsMinimizer.Controllers
             using (var db = new DataAccess())
             {
                 var subResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId)).ToList();
-                var expiredResources = subResources.Where(HasExpired);
+                var expiredResources = subResources.Where(r => ResourceOperationsUtil.HasExpired(r));
 
                 foreach (var resource in expiredResources)
                 {
@@ -469,12 +442,12 @@ namespace CogsMinimizer.Controllers
                 }
 
                 var subResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId)).ToList();
-                var expiredResources = subResources.Where(HasExpired);
+                var expiredResources = subResources.Where(r => ResourceOperationsUtil.HasExpired(r));
 
                 foreach (var resource in expiredResources)
                 {
                     resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
-                    resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+                    resource.ExpirationDate = ResourceOperationsUtil.GetNewExpirationDate(subscription, resource);
                     resource.Status = ResourceStatus.Valid;
                 }
 

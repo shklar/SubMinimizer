@@ -12,27 +12,23 @@ namespace CogsMinimizer.Shared
 {
     public static class ResourceOperationsUtil
     {
-        public static void ResetResources(List<Resource> resourceList , Subscription subscription)
+        public static void ResetResource(Resource resource, Subscription subscription)
         {
-            Diagnostics.EnsureArgumentNotNull(() => resourceList);
+            Diagnostics.EnsureArgumentNotNull(() => resource);
             Diagnostics.EnsureArgumentNotNull(() => subscription);
 
-            // update resources properties and store them in resource list.
-            // after resources properties update we'll update them in database by separate cycle since updating some resource while data reader opened throws exception
-            foreach (Resource resource in resourceList)
+            // Add for resetting only resources
+            if (resource.SubscriptionId != subscription.Id)
             {
-                // Add for resetting only resources
-                if (resource.SubscriptionId != subscription.Id)
-                {
-                    continue;
-                }
-
-                resource.ConfirmedOwner = false;
-
-                resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
-                resource.Status = ResourceStatus.Valid;
+                throw new ArgumentException(string.Format("Given resource with ID '{0}' doesn't belong to specified subscription with ID '{1}'", resource.Id, subscription.Id));
             }
+
+            resource.ConfirmedOwner = false;
+
+            resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
+            resource.Status = ResourceStatus.Valid;
         }
+
         public static bool HasExpired(Resource resource)
         {
             Diagnostics.EnsureArgumentNotNull(() => resource);
