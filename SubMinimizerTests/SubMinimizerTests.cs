@@ -33,8 +33,8 @@ namespace SubMinimizerTests
             Resource resource = new Resource();
             resource.Id = Guid.NewGuid().ToString();
             resource.Name = "resource - " + resource.Id;
-            resource.FirstFoundDate = DateTime.Now;
-            resource.ExpirationDate = DateTime.Now;
+            resource.FirstFoundDate = DateTime.UtcNow;
+            resource.ExpirationDate = DateTime.UtcNow;
             return resource;
         }
 
@@ -68,8 +68,8 @@ namespace SubMinimizerTests
             
             // Expect received expiration date greater than current date
             // Expect received expiration date difference with current data is about to established by subscription properties claimed resources expiration interval
-            Assert.IsTrue(newExpirationDate > DateTime.Now);
-            Assert.IsTrue(Math.Abs(newExpirationDate.Subtract(DateTime.Now).Days - subscription.ExpirationIntervalInDays) < 2);
+            Assert.IsTrue(newExpirationDate > DateTime.UtcNow);
+            Assert.IsTrue(Math.Abs(newExpirationDate.Subtract(DateTime.UtcNow).Days - subscription.ExpirationIntervalInDays) < 2);
         }
 
         [TestMethod]
@@ -84,8 +84,8 @@ namespace SubMinimizerTests
 
             // Expect received expiration date greater than current date
             // Expect received expiration date difference with current data is about to established by subscription properties for unclaimed resources expiration interval
-            Assert.IsTrue(newExpirationDate > DateTime.Now);
-            Assert.IsTrue(Math.Abs(newExpirationDate.Subtract(DateTime.Now).Days - subscription.ExpirationUnclaimedIntervalInDays) < 2);
+            Assert.IsTrue(newExpirationDate > DateTime.UtcNow);
+            Assert.IsTrue(Math.Abs(newExpirationDate.Subtract(DateTime.UtcNow).Days - subscription.ExpirationUnclaimedIntervalInDays) < 2);
         }
 
         [TestMethod]
@@ -101,11 +101,12 @@ namespace SubMinimizerTests
 
             // Expect received expiration date greater than current date
             // Expect received expiration date difference with current data is about to established by subscription properties for unclaimed resources expiration interval
-            Assert.IsTrue(newExpirationDate > DateTime.Now);
-            Assert.IsTrue(Math.Abs(newExpirationDate.Subtract(DateTime.Now).Days - subscription.ReserveIntervalInDays) < 2);
+            Assert.IsTrue(newExpirationDate > DateTime.UtcNow);
+            Assert.IsTrue(Math.Abs(newExpirationDate.Subtract(DateTime.UtcNow).Days - subscription.ReserveIntervalInDays) < 2);
         }
 
         [TestMethod]
+        [ExpectedException(typeof(ArgumentException), "Wrong subscription specified wasn't discovered.")]
         public void TestResetResourceFromWrongSubscription()
         {
             // Let's create resource and subscription to test
@@ -117,21 +118,13 @@ namespace SubMinimizerTests
             // Resource belong to another subscription
             resource.SubscriptionId = Guid.NewGuid().ToString();
 
-            DateTime preResetExpirationDate = DateTime.Now.Add(new TimeSpan(730, 0, 0, 0, 0));
+            DateTime preResetExpirationDate = DateTime.UtcNow.Add(new TimeSpan(730, 0, 0, 0, 0));
             resource.ConfirmedOwner = true;
             resource.Status = ResourceStatus.Expired;
             resource.ExpirationDate = preResetExpirationDate;
 
-            try
-            {
-                // Expect exception
-                ResourceOperationsUtil.ResetResource(resource, subscription);
-                Assert.Fail("No exception about wrong subscription thrown.");
-            }
-            catch (ArgumentException)
-            {
-                // Test succeeded
-            }
+            // Expect exception
+            ResourceOperationsUtil.ResetResource(resource, subscription);
         }
 
         [TestMethod]
@@ -143,7 +136,7 @@ namespace SubMinimizerTests
             Subscription subscription = CreateSubscription();
             resource.SubscriptionId = subscription.Id;
 
-            DateTime preResetExpirationDate = DateTime.Now.Add(new TimeSpan(730, 0, 0, 0, 0));
+            DateTime preResetExpirationDate = DateTime.UtcNow.Add(new TimeSpan(730, 0, 0, 0, 0));
             resource.ConfirmedOwner = true;
             resource.Status = ResourceStatus.Expired;
             resource.ExpirationDate = preResetExpirationDate;
@@ -153,12 +146,11 @@ namespace SubMinimizerTests
             // Resource properties were changed
             Assert.IsFalse(resource.ConfirmedOwner);
             Assert.AreEqual(ResourceStatus.Valid, resource.Status);
-            Assert.AreNotEqual(preResetExpirationDate, resource.ExpirationDate);
 
             // Expect received expiration date greater than current date
             // Expect received expiration date difference with current data is about to established by subscription properties for unclaimed resources expiration interval
-            Assert.IsTrue(resource.ExpirationDate > DateTime.Now);
-            Assert.IsTrue(Math.Abs(resource.ExpirationDate.Subtract(DateTime.Now).Days - subscription.ExpirationUnclaimedIntervalInDays) < 2);
+            Assert.IsTrue(resource.ExpirationDate > DateTime.UtcNow);
+            Assert.IsTrue(Math.Abs(resource.ExpirationDate.Subtract(DateTime.UtcNow).Days - subscription.ExpirationUnclaimedIntervalInDays) < 2);
         }
     }
 }
