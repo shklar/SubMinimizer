@@ -111,6 +111,7 @@
     <Compile Include="ADALTokenCache.cs" />
     <Compile Include="AzureADGraphAPIUtil.cs" />
     <Compile Include="AzureAuthUtils.cs" />
+    <Compile Include="ResourceOperationsUtil.cs" />
     <Compile Include="AzureResourceManagerUtil.cs" />
     <Compile Include="DataAccess.cs" />
     <Compile Include="Diagnostics.cs" />
