@@ -22,8 +22,15 @@ namespace CogsMinimizer.Shared
 {
     public static class AzureResourceManagerUtil
     {
-        private static Dictionary<string, IEnumerable<Provider>> providerList = new Dictionary<string, IEnumerable<Provider>>();
+        /// <summary>
+        /// Dictionary contains api version to use for operations  with definite resource type which is dictionary key. 
+        /// </summary>
+        private static Dictionary<string, List<string>> resourceTypeApiVersionDictionary = new Dictionary<string, List<string>>();
 
+        /// <summary>
+        ///  Gets list of currently logged user organizations
+        /// </summary>
+        /// <returns>List of currently logged user organizations</returns>
         public static List<Organization> GetUserOrganizations()
         {
             List<Organization> organizations = new List<Organization>();
@@ -43,6 +50,11 @@ namespace CogsMinimizer.Shared
             return organizations;
         }
 
+        /// <summary>
+        ///  Returns list of subscriptions for given organization (tenant) ID
+        /// </summary>
+        /// <param name="organizationId">Organization (tenant) ID</param>
+        /// <returns>List of subscriptions</returns>
         public static List<Subscription> GetUserSubscriptions(string organizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
@@ -97,50 +109,61 @@ namespace CogsMinimizer.Shared
             return subscriptions;
         }
 
-        public static ResourceOperationResult GetApiVersionSupportedForResource(ResourceManagementClient resourceManagementClient, string azureresourceId, ref string apiVersion)
+        /// <summary>
+        /// Get Api version supported for operations with given resource
+        /// </summary>
+        /// <param name="resourceManagementClient">Resource management client</param>
+        /// <param name="resource">resource</param>
+        /// <param name="apiVersionList">Api version list</param> 
+        /// <returns>Retrieval result</returns>
+        public static ResourceOperationResult GetApiVersionsSupportedForResource(ResourceManagementClient resourceManagementClient, Resource resource, ref List<string> apiVersionList)
         {
             Diagnostics.EnsureArgumentNotNull(() => resourceManagementClient);
-            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => azureresourceId);
+            Diagnostics.EnsureArgumentNotNull(() => resource);
+
+            if (apiVersionList == null)
+            {
+                apiVersionList = new List<string>();
+            }
+            else
+            {
+                apiVersionList.Clear();
+            }
 
             ResourceOperationResult result = new ResourceOperationResult();
-            ProviderResourceType resourceType = GetResourceType(resourceManagementClient, azureresourceId);
-            if (resourceType == null)
-            {
-                result.Result = ResourceOperationStatus.Failed;
-                result.FailureReason = FailureReason.UnknownError;
-                result.Message = "Unable to determine resource type";
-                return result;
-            }
+            ProviderResourceType resourceType = null;
 
-            // Let's try get resource by each of listed versions api. discovered that not all locations support all version listed
-            foreach (string apiTryVersion in resourceType.ApiVersions)
+            // if cached return cached value otherwise get resource type with list of api versions
+            if (resourceTypeApiVersionDictionary.ContainsKey(resource.Type))
             {
-                try
+                apiVersionList.AddRange(resourceTypeApiVersionDictionary[resource.Type]);
+            }
+            else
+            {
+                ResourceOperationResult getResourceTypeResult = GetResourceType(resourceManagementClient, resource, ref resourceType);
+
+                if (getResourceTypeResult.Result == ResourceOperationStatus.Succeeded)
                 {
-                    GenericResource resource = resourceManagementClient.Resources.GetById(azureresourceId, apiTryVersion);
-                    result.Result = ResourceOperationStatus.Succeeded;
-                    result.FailureReason = FailureReason.NoError;
-                    result.Message = string.Empty;
-                    apiVersion = apiTryVersion;
-                    return result;
+                    resourceTypeApiVersionDictionary[resource.Type] = new List<string>(resourceType.ApiVersions);
+                    apiVersionList.AddRange(resourceTypeApiVersionDictionary[resource.Type]);
                 }
-                catch (CloudException e)
+                else
                 {
-                    FailureReason failureReason = GetFailureReason(e.Response.Content);
                     result.Result = ResourceOperationStatus.Failed;
-                    result.FailureReason = failureReason;
-                    result.Message = e.Response.Content;
-                    if (failureReason == FailureReason.ResourceNotFound)
-                    {
-                        // If resource not found stop trying
-                        break;
-                    }
+                    result.FailureReason = getResourceTypeResult.FailureReason;
+                    result.Message = getResourceTypeResult.Message;
                 }
             }
 
-            return result;
+                return result;
         }
 
+        /// <summary>
+        ///  Check if user has access to subscription
+        /// </summary>
+        /// <param name="SubscriptionId">Subscription Id</param>
+        /// <param name="organizationId">Organization Id</param>
+        /// <return>True if user has access to specified subscription false otherwise</returns>
         public static bool UserCanManageAccessForSubscription(string subscriptionId, string organizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
@@ -216,7 +239,12 @@ namespace CogsMinimizer.Shared
         }
 
 
-
+        /// <summary>
+        /// Check if application has access to specified subscription
+        /// </summary>
+        /// <param name="SubscriptionId">Subscription Id</param>
+        /// <param name="organizationId">Organization Id</param>
+        /// <return>True if application has access to specified subscription false otherwise</returns>
         public static bool ServicePrincipalHasReadAccessToSubscription(string subscriptionId, string organizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
@@ -289,6 +317,11 @@ namespace CogsMinimizer.Shared
             return ret;
         }
 
+        /// <summary>
+        /// Get needed azure resource management role for the specified access
+        /// </summary>
+        /// <param name="level">Access level</param>
+        /// <returns>Needed role</returns>
         public static AzureResourceManagementRole GetNeededAzureResourceManagementRole(SubscriptionManagementLevel level)
         {
             if (level == SubscriptionManagementLevel.ReportOnly)
@@ -301,6 +334,13 @@ namespace CogsMinimizer.Shared
             }
         }
 
+        /// <summary>
+        /// Grant role to service principal on subscription
+        /// </summary>
+        /// <param name="objectId">application ID</param>
+        /// <param name="SubscriptionId">Subscription Id</param>
+        /// <param name="organizationId">Organization Id</param>
+        /// <param name="role">Role</param>
         public static void GrantRoleToServicePrincipalOnSubscription(string objectId, string subscriptionId,
             string organizationId, AzureResourceManagementRole role)
         {
@@ -401,51 +441,56 @@ namespace CogsMinimizer.Shared
             }
         }
 
-        public static ProviderResourceType GetResourceType(ResourceManagementClient resourceManagementClient, string azureresourceId)
+        /// <summary>
+        /// Get resource type of specified resource
+        /// </summary>
+        /// <param name="resourceManagementClient">Resource management client</param>
+        /// <param name="resource">Resource</param>
+        /// <returns>Resource type</returns>
+        public static ResourceOperationResult GetResourceType(ResourceManagementClient resourceManagementClient, Resource resource, ref ProviderResourceType resourceType)
         {
             Diagnostics.EnsureArgumentNotNull(() => resourceManagementClient);
-            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => azureresourceId);
+            Diagnostics.EnsureArgumentNotNull(() => resource);
 
-            string[] resourceIdProps = azureresourceId.Split(new char[] { '/' });
-            if (resourceIdProps.Count() < 3)
-            {
-                return null;
-            }
+            ResourceOperationResult result = new ResourceOperationResult();
+            resourceType = null;
 
-            string providerName = resourceIdProps[resourceIdProps.Count() - 3];
-            string resourceTypeName = resourceIdProps[resourceIdProps.Count() - 2];
-
+            string[] dbResourceTypeParts = resource.Type.Split(new char[] { '/' });
+            string dbResourceProvider = dbResourceTypeParts[0];
+            string dbResourceType = dbResourceTypeParts[1];
+            
             try
             {
-                IEnumerable<Provider> providerList = GetResourceProviderList(resourceManagementClient);
-                IEnumerable<ProviderResourceType> resourceTypes = from p in providerList where p.NamespaceProperty == providerName from t in p.ResourceTypes where t.ResourceType == resourceTypeName select t;
+                IEnumerable<Provider> providerList = resourceManagementClient.Providers.List();
+                IEnumerable<ProviderResourceType> resourceTypes = from p in providerList where p.NamespaceProperty == dbResourceProvider from t in p.ResourceTypes where t.ResourceType == dbResourceType select t;
                 if (resourceTypes.Count() > 0)
                 {
-                    return resourceTypes.First();
+                    resourceType = resourceTypes.First();
                 }
                 else
                 {
-                    return null;
+                    result.Result = ResourceOperationStatus.Failed;
+                    result.FailureReason = FailureReason.ResourceTypeNotFound;
+                    result.Message = "Resource type isn't found";
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return null;
-            }
-        }
-
-        public static IEnumerable<Provider> GetResourceProviderList(ResourceManagementClient resourceManagementClient)
-        {
-            Diagnostics.EnsureArgumentNotNull(() => resourceManagementClient);
-
-            if (!providerList.ContainsKey(resourceManagementClient.SubscriptionId))
-            {
-                providerList[resourceManagementClient.SubscriptionId] = resourceManagementClient.Providers.List();
+                result.Result = ResourceOperationStatus.Failed;
+                result.FailureReason = FailureReason.UnknownError;
+                result.Message = "Resource type retrieval error";
             }
 
-            return providerList[resourceManagementClient.SubscriptionId];
+            return result;
         }
 
+        /// <summary>
+        /// Get specified azure management role Id
+        /// </summary>
+        /// <param name="role">Role</param>
+        /// <param name="subscriptionId">Subscription Id</param>
+        /// <param name="organizationId">Organization Id</param>
+        /// <returns>Specified role</returns>
         public static string GetRoleId(AzureResourceManagementRole role, string subscriptionId, string organizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
@@ -503,6 +548,12 @@ namespace CogsMinimizer.Shared
             return roleId;
         }
 
+        /// <summary>
+        ///  Get resource list of specified group
+        /// </summary>
+        /// <param name="resourceClient">Resource Client</param>
+        /// <param name="groupName">Group name</param>
+        /// <returns>Resource list</returns>
         public static IEnumerable<GenericResource> GetResourceList(ResourceManagementClient resourceClient,
             string groupName)
         {
@@ -513,7 +564,11 @@ namespace CogsMinimizer.Shared
             return resourceList;
         }
 
-
+        /// <summary>
+        ///  Get resource groups
+        /// </summary>
+        /// <param name="resourceClient">Resource client</param>
+        /// <returns>Resource group list</returns>
         public static IEnumerable<ResourceGroup> GetResourceGroups(ResourceManagementClient resourceClient)
         {
             Diagnostics.EnsureArgumentNotNull(() => resourceClient);
@@ -522,6 +577,11 @@ namespace CogsMinimizer.Shared
             return resourceGroupsList;
         }
 
+        /// <summary>
+        /// Get subscription admins
+        /// </summary>
+        /// <param name="authClient">Authorization management client</param>
+        /// <returns>Administrators list</returns>
         public static IEnumerable<ClassicAdministrator> GetSubscriptionAdmins(
             AuthorizationManagementClient authClient)
         {
@@ -533,6 +593,12 @@ namespace CogsMinimizer.Shared
 
         #region Management Clients
 
+        /// <summary>
+        /// Get user resource management client
+        /// </summary>
+        /// <param name="SubscriptionId">Subscription Id</param>
+        /// <param name="organizationId">Organization Id</param>
+        /// <returns>Resource management client</returns>
         public static ResourceManagementClient GetUserResourceManagementClient(string subscriptionId, string organizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
@@ -545,6 +611,12 @@ namespace CogsMinimizer.Shared
             return resourceClient;
         }
 
+        /// <summary>
+        /// Get  application resource management client
+        /// </summary>
+        /// <param name="SubscriptionId">Subscription Id</param>
+        /// <param name="organizationId">Organization Id</param>
+        /// <returns>Resource management client</returns>
         public static ResourceManagementClient GetAppResourceManagementClient(string subscriptionId, string organizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
@@ -557,6 +629,12 @@ namespace CogsMinimizer.Shared
             return resourceClient;
         }
 
+        /// <summary>
+        /// Get user  authorization management client
+        /// </summary>
+        /// <param name="SubscriptionId">Subscription Id</param>
+        /// <param name="organizationId">Organization Id</param>
+        /// <returns>Authorization management client</returns>
         public static AuthorizationManagementClient GetUserAuthorizationManagementClient(string subscriptionId,
             string organizationId)
         {
@@ -573,6 +651,12 @@ namespace CogsMinimizer.Shared
             return authorizationManagementClient;
         }
 
+        /// <summary>
+        /// Get application authorization management client
+        /// </summary>
+        /// <param name="SubscriptionId">Subscription Id</param>
+        /// <param name="organizationId">Organization Id</param>
+        /// <returns>Authorization management client</returns>
         public static AuthorizationManagementClient GetAppAuthorizationManagementClient(string subscriptionId,
          string organizationId)
         {
@@ -589,6 +673,13 @@ namespace CogsMinimizer.Shared
             return authorizationManagementClient;
         }
 
+        /// <summary>
+        /// Get Azure resource
+        /// </summary>
+        /// <param name="resourceClient">Resource management client</param>
+        /// <param name="azureresourceid">Azure resource ID</param>
+        /// <param name="Event tracer</param>
+        /// <returns>Resource retrieved</returns>
         public static GenericResource GetAzureResource(ResourceManagementClient resourceClient, string azureresourceid, string apiVersion, ITracer tracer)
         {
             Diagnostics.EnsureArgumentNotNull(() => resourceClient);
@@ -610,60 +701,85 @@ namespace CogsMinimizer.Shared
             }
         }
 
-        public static ResourceOperationResult DeleteAzureResource(ResourceManagementClient resourceClient, string azureresourceid, ITracer tracer)
+        /// <summary>
+        /// Delete azure resource
+        /// </summary>
+        /// <param name="resourceClient">Resource management client</param>
+        /// <param name="resource">resource</param>
+        /// <param name="tracer">Event tracer</param>
+        /// <returns>Deleting result</returns>
+        public static ResourceOperationResult DeleteAzureResource(ResourceManagementClient resourceClient, Resource resource, ITracer tracer)
         {
-            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => azureresourceid);
+            Diagnostics.EnsureArgumentNotNull(() => resource);
             Diagnostics.EnsureArgumentNotNull(() => resourceClient);
             Diagnostics.EnsureArgumentNotNull(() => tracer);
 
-            string apiVersion = null;
+            List<string> apiVersionList = null;
             ResourceOperationResult result = new ResourceOperationResult();
             try
-            {
-                tracer.TraceVerbose($"Trying to delete the resource {azureresourceid}");
+            {                
+                tracer.TraceVerbose($"Trying to delete the resource {resource.AzureResourceIdentifier}");
 
-                ResourceOperationResult getApiResult = GetApiVersionSupportedForResource(resourceClient, azureresourceid, ref apiVersion);
+                ResourceOperationResult getApiResult = GetApiVersionsSupportedForResource(resourceClient, resource, ref apiVersionList);
                 if (getApiResult.Result == ResourceOperationStatus.Failed)
                 {
-                    if (getApiResult.FailureReason == FailureReason.ResourceNotFound)
-                    {
-                        // Resource most probably deleted manually, treat delete as succeeded
-                        tracer.TraceVerbose($"Deleting the resource {azureresourceid} skip, resource doesn't exist probably deleted manually");
-                        return result;
-                    }
-                    else
-                    {
-                        CloudException exception = new CloudException("No API to operate discovered");
-                        exception.Response = new HttpResponseMessageWrapper(new HttpResponseMessage(), getApiResult.Message);
-                        throw exception;
-                    }
-
+                    CloudException exception = new CloudException("Couldn't find proper API version to delete resource");
+                    exception.Response = new HttpResponseMessageWrapper(new HttpResponseMessage(), getApiResult.Message);
+                    throw exception;
                 }
 
-                GenericResource existingResource = GetAzureResource(resourceClient, azureresourceid, apiVersion, tracer);
-                // Check if resource exist probably it's deleted manually but still exist in our database
-                if (existingResource != null)
+                // Let's try delete resource by each of retrieved api versions
+                foreach (string apiVersion in apiVersionList)
                 {
-                    resourceClient.Resources.DeleteById(azureresourceid, apiVersion);
-                    tracer.TraceVerbose($"Deleted the resource {azureresourceid} with API version: {apiVersion}");
-                }
-                else
-                {
-                    tracer.TraceVerbose($"Deleting the resource {azureresourceid} with API version: {apiVersion} skip, resource doesn't exist probably deleted manually");
+                    try
+                    {
+                        resourceClient.Resources.DeleteById(resource.AzureResourceIdentifier, apiVersion);
+                        tracer.TraceVerbose($"Deleted the resource {resource.AzureResourceIdentifier} with API version: {apiVersion}");
+                        result.Result = ResourceOperationStatus.Succeeded;
+                        result.FailureReason = FailureReason.NoError;
+                        result.Message = string.Empty;
+                        break;
+                    }
+                    catch (CloudException e)
+                    {
+                        // If all delete efforts failed we return fail with parameters of last fail exception
+                        result.Result = ResourceOperationStatus.Failed;
+                        result.FailureReason = GetFailureReason(e.Response.Content);
+                        result.Message = e.Response.Content;
+
+                        // If resource not found don't try another versions
+                        if (result.FailureReason == FailureReason.ResourceNotFound)
+                        {
+                            break;
+                        }
+                    }
                 }
 
-                result.Result = ResourceOperationStatus.Succeeded;
             }
             catch (CloudException e)
             {                
-                tracer.TraceError($"Failed to delete the resource {azureresourceid} with API version: {apiVersion}, error: {e.Message},  response content: {e.Response.Content}");
+                tracer.TraceError($"Failed to delete the resource {resource.AzureResourceIdentifier}, error: {e.Message},  response content: {e.Response.Content}");
                 result.Result = ResourceOperationStatus.Failed;
                 result.FailureReason = GetFailureReason(e.Response.Content);
+                result.Message = e.Response.Content;
+            }
+
+            // If resource not found suppose it was deleted manually, return success result
+            if (result.Result == ResourceOperationStatus.Failed && result.FailureReason == FailureReason.ResourceNotFound)
+            {
+                result.Result = ResourceOperationStatus.Succeeded;
+                result.FailureReason = FailureReason.NoError;
+                result.Message = string.Empty;
             }
 
             return result;
         }
 
+        /// <summary>
+        /// Get failure reason extracting it from diagnostic message
+        /// </summary>
+        /// <param name="content">Diagnostic message</param>
+        /// <return>Failure reason</returns>
         public static FailureReason GetFailureReason(string content)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => content);

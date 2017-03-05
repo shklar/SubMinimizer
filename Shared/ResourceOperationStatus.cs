@@ -36,6 +36,7 @@ namespace CogsMinimizer.Shared
         WrongApiVersion,
         ResourceInUse,
         ResourceNotFound,
+        ResourceTypeNotFound,
         UnknownError
     }
 }

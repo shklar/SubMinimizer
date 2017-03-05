@@ -156,7 +156,7 @@ namespace CogsMinimizer.Shared
                 // We don't catch exceptions since method doesn't throw but catches all possible exceptions, trace them and 
                 // return  succeeded when succeeded deleting resource or resource doesn't exist (we suppose it is deleted manually by somebody
                 //  failed if deleting failed
-                ResourceOperationResult result = AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier, _tracer);
+                ResourceOperationResult result = AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource, _tracer);
                 if (result.Result == ResourceOperationStatus.Succeeded)
                 { 
                     m_Db.Resources.Remove(resource);
