@@ -6,9 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using SendGrid.Helpers.Mail;
 
-namespace OfflineSubscriptionManager
+namespace CogsMinimizer.Shared
 {
-    class SubMinimizerEmail
+    public class SubMinimizerEmail
     {
         public string Subject { get; set; }
         public string Content { get; set; }

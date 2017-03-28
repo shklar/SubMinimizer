@@ -1,18 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Configuration;
+using System.IO;
 using System.Linq;
+using System.Management.Automation;
+using System.Management.Automation.Runspaces;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using CogsMinimizer.Shared;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 
-namespace OfflineSubscriptionManager
+namespace CogsMinimizer.Shared
 {
-    class EmailUtils
+    public class EmailUtils
     {
-        internal static string CreateEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
+        public static string CreateEmailMessagePS(SubscriptionAnalysisResult analysisResult, Subscription sub)
+        {
+            using (PowerShell shell = PowerShell.Create())
+            {
+
+                Assembly assembly = Assembly.GetExecutingAssembly();
+
+                string scriptFile = Path.Combine(Path.GetDirectoryName(assembly.Location), "ResourceReport.ps1");
+
+                var outputs = shell
+                    .AddCommand("Set-ExecutionPolicy").AddArgument("Unrestricted")
+                    .AddCommand("Get-ExecutionPolicy")
+                    .AddCommand(scriptFile)
+                    .AddParameter("sub", sub).AddParameter("result", analysisResult)
+                    .Invoke();
+
+                StringBuilder mailContent = new StringBuilder();
+                foreach (var output in outputs)
+                {
+                    mailContent.Append(output.ToString());
+                }
+
+                return mailContent.ToString();
+            }
+        }
+
+
+        public static string CreateEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
         {
             Diagnostics.EnsureArgumentNotNull(() => sub);
             Diagnostics.EnsureArgumentNotNull(() => analysisResult);
@@ -30,7 +61,8 @@ namespace OfflineSubscriptionManager
                                     .courses-table .description{color: #505050;}
                                     .courses-table td{border: 1px solid #D1D1D1; background-color: #F3F3F3; padding: 0 10px;}
                                     .courses-table th{border: 1px solid #424242; color: #FFFFFF;text-align: left; padding: 0 10px;}
-                                    .tableheadercolor{background-color: #111111;}
+            
+                        .tableheadercolor{background-color: #111111;}
                                 </style>
                             </head>
                             <body>";
