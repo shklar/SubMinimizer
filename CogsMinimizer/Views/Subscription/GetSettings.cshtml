@@ -12,6 +12,12 @@
             Text = "Report only",
             Value = "0"
         });
+
+    string isDisabled = "true";
+    if (Model.ConnectedBy == User.Identity.Name)
+    {
+        isDisabled = "false";
+    }
 <!--
     managementLevelList.Add(
 new SelectListItem
@@ -24,8 +30,8 @@ new SelectListItem
     managementLevelList.Add(
 new SelectListItem
 {
-    Text = "Automatic delete",
-    Value = "2"
+Text = "Automatic delete",
+Value = "2"
 });
 }
 
@@ -52,7 +58,7 @@ new SelectListItem
     FormMethod.Post))
 {
     <h1>@ViewBag.Title</h1>
- 
+
     <!-- make 2 text boxes for some subscription data value and user ID. otherwise neither subscription data nor user ID  aren't given to submitting controller method -->
     <h4>@Html.TextBoxFor(m => m.DisplayName, new { contenteditable = "false", style = "display : none" })</h4>
     <h4>@Html.TextBoxFor(m => m.Id, new { contenteditable = "false", style = "display : none" })</h4>
@@ -78,7 +84,14 @@ new SelectListItem
                 <h4>Reserving resource extends its expiration to (days)</h4>
             </td>
             <td style="vertical-align:middle">
-                @Html.TextBoxFor(m => m.ReserveIntervalInDays)
+                @if (isDisabled == "true") 
+                {
+                    @Html.TextBoxFor(m => m.ReserveIntervalInDays, new { disabled = isDisabled })
+                }
+                else
+                {
+                    @Html.TextBoxFor(m => m.ReserveIntervalInDays)
+                }
             </td>
         </tr>
         <tr>
@@ -86,7 +99,14 @@ new SelectListItem
                 <h4>Claimed resources expire after (days)</h4>
             </td>
             <td style="vertical-align:middle">
-                @Html.TextBoxFor(m => m.ExpirationIntervalInDays)
+                @if (isDisabled == "true")
+                {
+                    @Html.TextBoxFor(m => m.ExpirationIntervalInDays, new { disabled = isDisabled })
+                }
+                else
+                {
+                    @Html.TextBoxFor(m => m.ExpirationIntervalInDays)
+                }
             </td>
         </tr>
         <tr>
@@ -94,7 +114,14 @@ new SelectListItem
                 <h4>Unclaimed resources expire after (days)</h4>
             </td>
             <td style="vertical-align:middle">
-                @Html.TextBoxFor(m => m.ExpirationUnclaimedIntervalInDays, null, new { @class = "spinnerTxt"})
+                @if (isDisabled == "true")
+                {
+                    @Html.TextBoxFor(m => m.ExpirationUnclaimedIntervalInDays, null, new { @class = "spinnerTxt", disabled = isDisabled })
+                }
+                else
+                {
+                    @Html.TextBoxFor(m => m.ExpirationUnclaimedIntervalInDays, null, new { @class = "spinnerTxt"})
+                }
             </td>
         </tr>
         <tr>
@@ -102,7 +129,14 @@ new SelectListItem
                 <h4>Delete expired resource after (days)</h4>
             </td>
             <td style="vertical-align:middle">
-                @Html.TextBoxFor(m => m.DeleteIntervalInDays)
+                @if (isDisabled == "true")
+                {
+                    @Html.TextBoxFor(m => m.DeleteIntervalInDays, new { disabled = isDisabled })
+                }
+                else
+                {
+                    @Html.TextBoxFor(m => m.DeleteIntervalInDays)
+                }
             </td>
         </tr>
        <tr>
@@ -110,7 +144,14 @@ new SelectListItem
                 <h4>Management level (action when resource expires)</h4>
             </td>
            <td style="vertical-align:middle">
-                @Html.DropDownListFor(m => m.ManagementLevel, managementLevelList)
+               @if (isDisabled == "true")
+               {
+                    @Html.DropDownListFor(m => m.ManagementLevel, managementLevelList, new { disabled = isDisabled })
+               }
+               else
+               {
+                    @Html.DropDownListFor(m => m.ManagementLevel, managementLevelList)
+               }
             </td>
         </tr>
         <tr>
@@ -121,7 +162,14 @@ new SelectListItem
                 <h4>Send mail only if invalid resources found</h4>
             </td>
             <td style="vertical-align:middle">
-                @Html.CheckBoxFor(m => m.SendEmailOnlyInvalidResources)
+                @if (isDisabled == "true")
+                {
+                    @Html.CheckBoxFor(m => m.SendEmailOnlyInvalidResources, new { disabled = isDisabled })
+                }
+                else
+                {
+                    @Html.CheckBoxFor(m => m.SendEmailOnlyInvalidResources)
+                }
             </td>
         </tr>
         <tr>
@@ -129,7 +177,14 @@ new SelectListItem
                 <h4>Send mail to co-admins</h4>
             </td>
             <td style="vertical-align:middle">
-                @Html.CheckBoxFor(m => m.SendEmailToCoadmins)
+                @if (isDisabled == "true")
+                {
+                    @Html.CheckBoxFor(m => m.SendEmailToCoadmins, new { disabled = isDisabled })
+                }
+                else
+                {
+                    @Html.CheckBoxFor(m => m.SendEmailToCoadmins)
+                }
             </td>
         </tr>
   </table>
