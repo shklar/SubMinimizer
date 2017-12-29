@@ -36,7 +36,7 @@ namespace OfflineSubscriptionManager
                             <body>";
 
 
-            string analyzeControllerLink = "http://subminimizer.azurewebsites.net/Subscription/Analyze/";
+            string analyzeControllerLink = "https://subminimizer.azurewebsites.net/Subscription/Analyze/";
             string headerLink = HTMLUtilities.CreateHTMLLink($"SubMinimizer report for subscription: {sub.DisplayName}",
                 $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");
 
@@ -45,6 +45,13 @@ namespace OfflineSubscriptionManager
             message += $"<H2>Subscription ID : {sub.Id} </H2>";
             message += $"<H2>Analysis Date : {GetShortDate(sub.LastAnalysisDate)}</H2>";
             message += "<br>";
+
+            if (!analysisResult.IsSubscriptionAccessible)
+            {
+                message += $"<h3>Subscription isn't available for application scanning. Please mail to eviten@microsoft.com for instructions how to enable access to your subscription for SubMinimizer application</h3>";
+                message += "</body></html>";
+                return message;
+            }
 
             if (analysisResult.DeletedResources.Count != 0)
             {

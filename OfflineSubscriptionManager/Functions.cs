@@ -94,7 +94,11 @@ namespace OfflineSubscriptionManager
             }
 
             //Add BCC recepients - dev team, as configured in the app config
-            bcc.AddRange(ConfigurationManager.AppSettings["DevTeam"].Split(';').Select(x=> new Email(x)));
+            string devTeam = ConfigurationManager.AppSettings["DevTeam"];
+            if (devTeam != null)
+            {
+                bcc.AddRange(devTeam.Split(';').Select(x => new Email(x)));
+            }
 
             var email = new SubMinimizerEmail(subject, message, to, cc, bcc );
 
