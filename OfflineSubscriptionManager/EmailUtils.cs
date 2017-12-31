@@ -52,7 +52,7 @@ namespace OfflineSubscriptionManager
                 //Add BCC recepients - dev team, as configured in the app config
                 string devTeam = ConfigurationManager.AppSettings["DevTeam"];
                 string person = "technical support";
-                if (string.IsNullOrEmpty(devTeam))
+                if (!string.IsNullOrEmpty(devTeam))
                 {
                   string[] persons = devTeam.Split(';');
                   person = persons[0];
