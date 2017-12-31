@@ -13,8 +13,6 @@ namespace CogsMinimizer
     public class MvcApplication : System.Web.HttpApplication
     {
 
-        private Uri _prevUri = null;
-
         protected void Application_Start()
         {
             AreaRegistration.RegisterAllAreas();
@@ -28,12 +26,7 @@ namespace CogsMinimizer
 
         protected void Application_BeginRequest(object sender, EventArgs args)
         {
-            if (Context.Request.Url.Scheme == "https")
-            {
-                return;
-            }
-
-            if (_prevUri != null && _prevUri.AbsoluteUri == Context.Request.Url.AbsoluteUri)
+            if (Context.Request.Url.Scheme.Equals("https", StringComparison.InvariantCultureIgnoreCase))
             {
                 return;
             }
@@ -51,8 +44,7 @@ namespace CogsMinimizer
                 uri.Port = -1;
             }
 
-            _prevUri = new Uri(uri.ToString());
-
+          
             Response.Redirect(uri.ToString(), true);
         }
     }

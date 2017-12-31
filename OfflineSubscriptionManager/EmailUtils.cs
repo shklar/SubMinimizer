@@ -48,7 +48,17 @@ namespace OfflineSubscriptionManager
 
             if (!analysisResult.IsSubscriptionAccessible)
             {
-                message += $"<h3>Subscription isn't available for application scanning. Please mail to eviten@microsoft.com for instructions how to enable access to your subscription for SubMinimizer application</h3>";
+                // let's get first person from configuration it's hot support responsible if person
+                //Add BCC recepients - dev team, as configured in the app config
+                string devTeam = ConfigurationManager.AppSettings["DevTeam"];
+                string person = "technical support";
+                if (string.IsNullOrEmpty(devTeam))
+                {
+                  string[] persons = devTeam.Split(';');
+                  person = persons[0];
+                }
+
+                message += string.Format("<h3>Subscription isn't available for application scanning. Please mail to {0} for instructions how to enable access to your subscription for SubMinimizer application</h3>", person);
                 message += "</body></html>";
                 return message;
             }
