@@ -86,6 +86,6 @@ namespace CogsMinimizer.Shared
         /// <summary>
         /// The list of coadmins of the subscription
         /// </summary>
-        public List<ClassicAdministrator> Admins { get; set; }
+        public List<string> Admins { get; set; }
     }
 }

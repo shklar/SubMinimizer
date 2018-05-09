@@ -34,7 +34,7 @@ namespace CogsMinimizer.Shared
 
         private AuthorizationManagementClient m_authorizationManagementClient;
 
-        private List<ClassicAdministrator> m_subscriptionAdmins;
+        private List<string> m_subscriptionAdmins;
 
         private ITracer _tracer;
 
@@ -178,10 +178,10 @@ namespace CogsMinimizer.Shared
         /// </summary>
         private void AnalyzeSubscriptionResources()
         {
-            m_subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(m_authorizationManagementClient).ToList();
+            m_subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins2(m_analyzedSubscription.Id, m_analyzedSubscription.OrganizationId);
             m_analysisResult.Admins = m_subscriptionAdmins;
 
-            var emails = GetEmails(m_subscriptionAdmins);
+            var emails = m_subscriptionAdmins;
             var adminEmails = emails.ToList();
 
             var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(m_resourceManagementClient);
@@ -338,12 +338,6 @@ namespace CogsMinimizer.Shared
         {
             var alias = email.Substring(0, email.IndexOf('@'));
             return alias;
-        }
-
-        private static IEnumerable<string> GetEmails(IEnumerable<ClassicAdministrator> admins)
-        {
-            var emails = admins.Select(x => x.Properties.EmailAddress);
-            return emails;
         }
 
         private static string FindOwner(string resourceName, string groupName, List<string> emails)

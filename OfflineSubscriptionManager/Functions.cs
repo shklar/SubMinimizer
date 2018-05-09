@@ -90,11 +90,15 @@ namespace OfflineSubscriptionManager
             //Add CC recepients - the subscription coadmins if so selected by the admin in the settings
             if (sub.SendEmailToCoadmins)
             {
-                cc.AddRange(analysisResult.Admins.Select(x=>new Email(x.Properties.EmailAddress, x.Name)));         
+                cc.AddRange(analysisResult.Admins.Select(x=>new Email(x)));         
             }
 
             //Add BCC recepients - dev team, as configured in the app config
-            bcc.AddRange(ConfigurationManager.AppSettings["DevTeam"].Split(';').Select(x=> new Email(x)));
+            string devTeam = ConfigurationManager.AppSettings["DevTeam"];
+            if (devTeam != null)
+            {
+                bcc.AddRange(devTeam.Split(';').Select(x => new Email(x)));
+            }
 
             var email = new SubMinimizerEmail(subject, message, to, cc, bcc );
 

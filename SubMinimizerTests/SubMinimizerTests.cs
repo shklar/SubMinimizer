@@ -7,6 +7,11 @@ using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
+using Microsoft.Azure.Common;
+using Microsoft.Azure.Management.Authorization;
+using Microsoft.Azure.Management.Authorization.Models;
+using Microsoft.Azure.Management.ResourceManager;
+using Microsoft.Azure.Subscriptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using CogsMinimizer.Shared;
@@ -65,7 +70,7 @@ namespace SubMinimizerTests
             resource.SubscriptionId = subscription.Id;
 
             DateTime newExpirationDate = ResourceOperationsUtil.GetNewExpirationDate(subscription, resource);
-            
+
             // Expect received expiration date greater than current date
             // Expect received expiration date difference with current data is about to established by subscription properties claimed resources expiration interval
             Assert.IsTrue(newExpirationDate > DateTime.UtcNow);
@@ -151,6 +156,25 @@ namespace SubMinimizerTests
             // Expect received expiration date difference with current data is about to established by subscription properties for unclaimed resources expiration interval
             Assert.IsTrue(resource.ExpirationDate > DateTime.UtcNow);
             Assert.IsTrue(Math.Abs(resource.ExpirationDate.Subtract(DateTime.UtcNow).Days - subscription.ExpirationUnclaimedIntervalInDays) < 2);
+        }
+
+        [TestMethod]
+        public void TestGetSubscriptionAdministrators()
+        {
+
+            var organizations = AzureResourceManagerUtil.GetUserOrganizations();
+
+            foreach (Organization org in organizations)
+            {
+                var subscriptions = AzureResourceManagerUtil.GetUserSubscriptions(org.Id);
+
+                foreach (Subscription sub in subscriptions)
+                {
+                    List<string> admins = AzureResourceManagerUtil.GetSubscriptionAdmins2(sub.Id, org.Id);
+                    Assert.IsNotNull(admins);
+                    Assert.IsTrue(admins.Count > 0);
+                }
+            }
         }
     }
 }
