@@ -58,7 +58,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
 
                 string requestUrl = string.Format("https://management.azure.com/subscriptions/{0}/providers/{1}?api-version={2}",
                     subscriptionId,
@@ -77,44 +77,7 @@ namespace CogsMinimizer.Shared
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = response.Content.ReadAsStringAsync().Result;
-                    JObject jObject = JObject.Parse(responseContent);
-                    System.Web.Helpers.DynamicJsonObject providerResult = Json.Decode(responseContent);
-                    JArray jresourceTypes = (JArray)jObject["resourceTypes"];
-
-                    List<ProviderResourceType> resourceTypes = new List<ProviderResourceType>();
-                    foreach (JObject jresourceType in jresourceTypes)
-                    {
-                        ProviderResourceType resourceType = new ProviderResourceType();
-                        resourceType.ResourceType = (string)jresourceType["resourceType"];
-                        resourceTypes.Add(resourceType);
-
-                        List<string> resourceTypeApiVersions = new List<string>();
-                        foreach (var japiVersion in (JArray)(jresourceType["apiVersions"]))
-                        {
-                            resourceTypeApiVersions.Add((string)japiVersion);
-                        }
-
-                        resourceTypeApiVersions.Sort(delegate(string v1, string v2)
-                        {
-                            try
-                            {
-                                DateTime d1 = DateTime.Parse(v1.Replace("-preview", ""));
-                                DateTime d2 = DateTime.Parse(v2.Replace("-preview", ""));
-                                return d1 > d2 ? 1 : 0;
-                            }
-                            catch (Exception)
-                            {
-                                // Some value parsing to date failed.
-                                return 0;
-                            }
-                        });
-
-                        resourceType.ApiVersions = resourceTypeApiVersions;
-                    }
-
-                    Provider provider = new Provider((string)jObject["id"], (string)jObject["namespace"], null, resourceTypes);
-
-                    return provider;
+                    return AzureDataUtils.CreateProvider(responseContent);
                 }
                 else
                 {
@@ -142,7 +105,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
 
                 admins = new List<string>();
 
