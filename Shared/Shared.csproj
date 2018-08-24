@@ -111,6 +111,12 @@
     <Compile Include="ADALTokenCache.cs" />
     <Compile Include="AzureADGraphAPIUtil.cs" />
     <Compile Include="AzureAuthUtils.cs" />
+    <Compile Include="AzureDataUtils.cs" />
+    <Compile Include="AnalyzeRecord.cs" />
+    <Compile Include="Migrations\201807310113005_AddAnalyzeStat.cs" />
+    <Compile Include="Migrations\201807310113005_AddAnalyzeStat.Designer.cs">
+      <DependentUpon>201807310113005_AddAnalyzeStat.cs</DependentUpon>
+    </Compile>
     <Compile Include="ResourceOperationsUtil.cs" />
     <Compile Include="AzureResourceManagerUtil.cs" />
     <Compile Include="DataAccess.cs" />
@@ -160,6 +166,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201612150032583_AddResourceDescription.resx">
       <DependentUpon>201612150032583_AddResourceDescription.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201807310113005_AddAnalyzeStat.resx">
+      <DependentUpon>201807310113005_AddAnalyzeStat.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

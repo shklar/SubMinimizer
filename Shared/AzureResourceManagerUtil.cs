@@ -2,12 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Web.Helpers;
 using CogsMinimizer.Shared;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using Microsoft.Azure.Management.Authorization;
 using Microsoft.Azure.Management.Authorization.Models;
 using Microsoft.Azure.Management.ResourceManager;
@@ -37,6 +41,117 @@ namespace CogsMinimizer.Shared
             });
 
             return organizations;
+        }
+
+        /// <summary>
+        ///  Get provider by name
+        /// </summary>
+        /// <param name="subscriptionId">Subscription ID</param>
+        /// <param name="organizationId">Organization ID</param>
+        /// <param name="providerName">Provider name</param>
+        /// <returns>Provider</returns>
+        public static Provider GetProvider(string subscriptionId, string organizationId, string providerName)
+        {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => providerName);
+
+            try
+            {
+                AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
+
+                string requestUrl = string.Format("https://management.azure.com/subscriptions/{0}/providers/{1}?api-version={2}",
+                    subscriptionId,
+                    providerName,
+                    ConfigurationManager.AppSettings["ida:AzureResourceManagerAPIVersion"]);
+
+                // Make the GET request
+                HttpClient client = new HttpClient();
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+                HttpResponseMessage response = client.SendAsync(request).Result;
+
+                // Endpoint returns JSON with an provider description
+
+                // add unsuccessful response handling
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = response.Content.ReadAsStringAsync().Result;
+                    return AzureDataUtils.CreateProvider(responseContent);
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+        }
+
+        /// <summary>
+        /// Get subscription administrators
+        /// </summary>
+        /// <param name="subscriptionId">Subscription ID</param>
+        /// <param name="organizationId">Organization ID</param>
+        /// <returns>Administrator list</returns>
+        public static List<string> GetSubscriptionAdmins2(string subscriptionId, string organizationId)
+        {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
+
+            List<string> admins = null;
+
+            try
+            {
+                AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
+
+                admins = new List<string>();
+
+                // let's determine api version to use
+                Provider provider = AzureResourceManagerUtil.GetProvider(subscriptionId, organizationId, "Microsoft.Authorization");
+                ProviderResourceType resourceType = provider.ResourceTypes.SingleOrDefault(r => r.ResourceType == "classicAdministrators");
+                if (resourceType == null)
+                {
+                    throw new ApplicationException("Classic administrators resource type isn't found");
+                }
+
+                string apiVersion = resourceType.ApiVersions.Count > 0 ? resourceType.ApiVersions[0] : null;
+                if (apiVersion == null)
+                {
+                    throw new ApplicationException("Api version for classic administrators operation isn't found");
+                }
+
+                 string requestUrl = string.Format("https://management.azure.com/subscriptions/{0}/providers/Microsoft.Authorization/classicAdministrators?api-version={1}",
+                                    subscriptionId,
+                                    apiVersion);
+
+                // Make the GET request
+                HttpClient client = new HttpClient();
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
+                HttpResponseMessage response = client.SendAsync(request).Result;
+
+                // add unsuccessful response handling
+                if (response.IsSuccessStatusCode)
+                {
+                    string responseContent = response.Content.ReadAsStringAsync().Result;
+                    JObject jAdministratorsResult = (JObject)JObject.Parse(responseContent);
+                    JArray jAdministratorsArrayResult = (JArray)jAdministratorsResult["value"];
+
+                    foreach (JObject jAdmin in jAdministratorsArrayResult.Children<JObject>())
+                    {
+                        admins.Add((string)jAdmin["properties"]["emailAddress"]);
+                    }
+                 }
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+
+            return admins;
         }
 
         public static List<Subscription> GetUserSubscriptions(string organizationId)
