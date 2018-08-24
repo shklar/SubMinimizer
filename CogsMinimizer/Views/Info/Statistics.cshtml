@@ -1,0 +1,157 @@
+﻿@using CogsMinimizer.Shared
+@model CogsMinimizer.Models.InfoStatisticsViewModel
+@{
+    ViewBag.Title = "Analyze Statistics";
+}
+
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+<script src="~/Scripts/colResizable-1.6.js"></script>
+<script src="~/Scripts/bootstrap-sortable.js"></script>
+<script>
+
+
+    $(document).ready(function () {
+
+        initialBodyCursor = $('body').first().css('cursor');
+        initialBtnCursor = $('.btn').first().css('cursor');
+
+        // In addition to calling controller action buttons click will cause setting cursor to wait while being over body and buttons
+        $('.wait-crs').on('click', function () { SetCursor('wait', 'wait'); });
+
+    });
+
+    $("#recordTable").colResizable({
+        liveDrag: true,
+        gripInnerHtml: "<div class='grip'></div>",
+        draggingClass: "dragging",
+        resizeMode: 'fit'
+    });
+
+    function GetDate(colNum, value) {
+        var dateAsString = $(value.elm).find("td").eq(colNum).html();
+        var dateParts = dateAsString.split('/');
+        var date = new Date(dateParts[2], dateParts[0], dateParts[1]);
+        return date;
+    }
+
+    function SortRecords(th) {
+
+        if ($('#recordTable tbody tr').length == 0) {
+            return;
+        }
+
+        var order = "asc";
+        if ($(th).hasClass("down")) {
+            order = "desc";
+        }
+
+        var colNum = $(th).index();
+        var selector = "td:nth-child(" + (colNum + 1) + ")";
+
+        var sortKind = "Text";
+        if ($(th).attr("data-defaultsign") == "month") {
+            sortKind = "Date";
+        }
+        else if ($(th).attr("data-defaultsign") == "bool") {
+            sortKind = "bool";
+        }
+
+        if (sortKind == "Date") {
+            tinysort($('#recordTable tbody tr'), {
+                order: order, selector: selector, sortFunction: function (a, b) {
+                    return GetDate(colNum, a) - GetDate(colNum, b);
+                }
+            });
+        }
+        else if (sortKind == "bool") {
+            tinysort($('#recordTable tbody tr'), {
+                order: order, selector: selector, sortFunction: function (a, b) {
+                    return GetBool(colNum, a) - GetBool(colNum, b);
+                }
+            });
+        }
+        else {
+            tinysort($('#recordTable tbody tr'), { order: order, selector: selector });
+        }
+
+    }
+
+</script>
+
+<h2>Analyze statistics</h2>
+<br />
+<h2>Monitored subscriptions</h2>
+<br />
+<table class="table table-hover table-bordered table-striped table-condensed sortable resizable" id="recordTable">
+    <thead>
+        <tr>
+            <th data-defaultsign="month" onclick="SortRecords(this)">
+                Scan Date
+            </th>
+            <th id="nameColumn" data-defaultsign="AZ" onclick="SortRecords(this)">
+                Subscription Name
+            </th>
+            <th id="nameColumn" data-defaultsign="AZ" onclick="SortRecords(this)">
+                Total resources
+            </th>
+            <th id="nameColumn" data-defaultsign="AZ" onclick="SortRecords(this)">
+                Valid resources
+            </th>
+            <th id="nameColumn" data-defaultsign="AZ" onclick="SortRecords(this)">
+                New resources
+            </th>
+            <th id="nameColumn" data-defaultsign="AZ" onclick="SortRecords(this)">
+                Not found resources
+            </th>
+            <th id="nameColumn" data-defaultsign="AZ" onclick="SortRecords(this)">
+                Near expired resources
+            </th>
+            <th id="nameColumn" data-defaultsign="AZ" onclick="SortRecords(this)">
+                Deleted resources
+            </th>
+            <th id="nameColumn" data-defaultsign="AZ" onclick="SortRecords(this)">
+                Valid resources
+            </th>
+            <th id="nameColumn" data-defaultsign="AZ" onclick="SortRecords(this)">
+                Failed to delete resources
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.AnalyzeRecords)
+        {
+            <tr data-resource-id="@item.SubscriptionId">
+                <td title="@item.AnalyzeDate" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.AnalyzeDate)
+                </td>
+                <td title="@item.SubscriptionName" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.SubscriptionName)
+                </td>
+                <td title="@item.TotalResources" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.TotalResources)
+                </td>
+                <td title="@item.ValidResources" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.ValidResources)
+                </td>
+                <td title="@item.NewResources" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.NewResources)
+                </td>
+                <td title="@item.NotFoundResources" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.NotFoundResources)
+                </td>
+                <td title="@item.NearExpiredResources" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.NearExpiredResources)
+                </td>
+                <td title="@item.DeletedResources" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.DeletedResources)
+                </td>
+                <td title="@item.ExpiredResources" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.ExpiredResources)
+                </td>
+                <td title="@item.FailedDeleteResources" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.FailedDeleteResources)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

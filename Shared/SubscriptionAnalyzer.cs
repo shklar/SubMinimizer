@@ -34,7 +34,7 @@ namespace CogsMinimizer.Shared
 
         private AuthorizationManagementClient m_authorizationManagementClient;
 
-        private List<ClassicAdministrator> m_subscriptionAdmins;
+        private List<string> m_subscriptionAdmins;
 
         private ITracer _tracer;
 
@@ -134,6 +134,25 @@ namespace CogsMinimizer.Shared
             //Record the end time of the analysis
             m_analysisResult.AnalysisEndTime = DateTime.UtcNow;
 
+            // Save analyze statistics
+            AnalyzeRecord analyzeRecord = new AnalyzeRecord();
+            analyzeRecord.ID = Guid.NewGuid().ToString();
+            analyzeRecord.AnalyzeDate = m_analysisResult.AnalysisEndTime;
+            analyzeRecord.Owner = m_analyzedSubscription.ConnectedBy;
+            analyzeRecord.SubscriptionId = m_analyzedSubscription.Id;
+            analyzeRecord.SubscriptionName = m_analyzedSubscription.DisplayName;
+            analyzeRecord.TotalResources = m_Db.Resources.Where(r => r.SubscriptionId == analyzeRecord.SubscriptionId).Count();
+            analyzeRecord.ValidResources = m_analysisResult.ValidResources.Count();
+            analyzeRecord.ExpiredResources = m_analysisResult.ExpiredResources.Count();
+            analyzeRecord.DeletedResources = m_analysisResult.DeletedResources.Count();
+            analyzeRecord.FailedDeleteResources = m_analysisResult.FailedDeleteResources.Count();
+            analyzeRecord.NotFoundResources = m_analysisResult.NotFoundResources.Count();
+            analyzeRecord.NewResources = m_analysisResult.NewResources.Count();
+            analyzeRecord.NearExpiredResources = m_analysisResult.NearExpiredResources.Count();
+            m_Db.AnalyzeRecords.AddOrUpdate(analyzeRecord);
+
+            m_Db.SaveChanges();
+
             _tracer.Flush();
             return m_analysisResult;
         }
@@ -178,10 +197,10 @@ namespace CogsMinimizer.Shared
         /// </summary>
         private void AnalyzeSubscriptionResources()
         {
-            m_subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins(m_authorizationManagementClient).ToList();
+            m_subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins2(m_analyzedSubscription.Id, m_analyzedSubscription.OrganizationId);
             m_analysisResult.Admins = m_subscriptionAdmins;
 
-            var emails = GetEmails(m_subscriptionAdmins);
+            var emails = m_subscriptionAdmins;
             var adminEmails = emails.ToList();
 
             var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(m_resourceManagementClient);
@@ -338,12 +357,6 @@ namespace CogsMinimizer.Shared
         {
             var alias = email.Substring(0, email.IndexOf('@'));
             return alias;
-        }
-
-        private static IEnumerable<string> GetEmails(IEnumerable<ClassicAdministrator> admins)
-        {
-            var emails = admins.Select(x => x.Properties.EmailAddress);
-            return emails;
         }
 
         private static string FindOwner(string resourceName, string groupName, List<string> emails)
