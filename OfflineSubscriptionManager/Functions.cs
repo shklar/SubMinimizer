@@ -37,7 +37,7 @@ namespace OfflineSubscriptionManager
         /// </summary>
         private static void ProcessSubscriptions(ITracer tracer)
         {
-            using (var db = new DataAccess())
+            using (var db = new DataAccessModel())
             {
                 tracer.TraceInformation("DB access created");
 
@@ -88,7 +88,7 @@ namespace OfflineSubscriptionManager
             to.AddRange(analysisResult.ExpiredResources.Where(x=> ! string.IsNullOrWhiteSpace(x.Owner)).Select(x=> new Email(x.Owner)));
 
             //Add CC recepients - the subscription coadmins if so selected by the admin in the settings
-            if (sub.SendEmailToCoadmins)
+            if (sub.SendEmailToCoAdmins)
             {
                 cc.AddRange(analysisResult.Admins.Select(x=>new Email(x)));         
             }

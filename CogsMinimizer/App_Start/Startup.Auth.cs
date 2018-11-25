@@ -15,7 +15,7 @@ namespace CogsMinimizer
 {
     public partial class Startup
     {
-        private DataAccess db = new DataAccess();
+        private DataAccessModel db = new DataAccessModel();
         public void ConfigureAuth(IAppBuilder app)
         {
             System.Web.Helpers.AntiForgeryConfig.UniqueClaimTypeIdentifier = ClaimTypes.NameIdentifier;

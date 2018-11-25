@@ -20,7 +20,7 @@ namespace CogsMinimizer.Shared
 {
     public class ADALTokenCache : TokenCache
     {
-        private DataAccess db = new DataAccess();
+        private DataAccessModel db = new DataAccessModel();
         string User;
         PerUserTokenCache Cache;
 
@@ -35,7 +35,7 @@ namespace CogsMinimizer.Shared
             this.BeforeWrite = BeforeWriteNotification;
 
             // look up the entry in the DB
-            Cache = db.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+            Cache = db.PerUserTokenCaches.FirstOrDefault(c => c.webUserUniqueId == User);
 
             // place the entry in memory
             this.Deserialize((Cache == null) ? null : Cache.cacheBits);
@@ -45,8 +45,8 @@ namespace CogsMinimizer.Shared
         public override void Clear()
         {
             base.Clear();
-            foreach (var cacheEntry in db.PerUserTokenCacheList)
-                db.PerUserTokenCacheList.Remove(cacheEntry);
+            foreach (var cacheEntry in db.PerUserTokenCaches)
+                db.PerUserTokenCaches.Remove(cacheEntry);
             db.SaveChanges();
         }
 
@@ -57,11 +57,11 @@ namespace CogsMinimizer.Shared
             if (Cache == null)
             {
                 // first time access
-                Cache = db.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+                Cache = db.PerUserTokenCaches.FirstOrDefault(c => c.webUserUniqueId == User);
             }
             else
             {   // retrieve last write from the DB
-                var status = from e in db.PerUserTokenCacheList
+                var status = from e in db.PerUserTokenCaches
                              where (e.webUserUniqueId == User)
                              select new
                              {
@@ -71,7 +71,7 @@ namespace CogsMinimizer.Shared
                 if (status.Count() > 0 && status.First().LastWrite > Cache.LastWrite)
                 //// read from from storage, update in-memory copy
                 {
-                    Cache = db.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+                    Cache = db.PerUserTokenCaches.FirstOrDefault(c => c.webUserUniqueId == User);
                 }
             }
             this.Deserialize((Cache == null) ? null : Cache.cacheBits);
@@ -80,19 +80,25 @@ namespace CogsMinimizer.Shared
         // If the HasStateChanged flag is set, ADAL changed the content of the cache
         void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
+            string newId = null;
+
             // if state changed
             if (this.HasStateChanged)
             {
                 // check for an existing entry
-                Cache = db.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+                Cache = db.PerUserTokenCaches.FirstOrDefault(c => c.webUserUniqueId == User);
                 Cache = null;
                 if (Cache == null)
                 {
                     // if no existing entry for that user, create a new one
                     Cache = new PerUserTokenCache
                     {
+                        Id = Guid.NewGuid().ToString(),
                         webUserUniqueId = User,
                     };
+
+                    newId = Cache.Id;
+                             
                 }
 
                 // update the cache contents and the last write timestamp
@@ -100,7 +106,7 @@ namespace CogsMinimizer.Shared
                 Cache.LastWrite = DateTime.Now;
 
                 // update the DB with modification or new entry
-                db.Entry(Cache).State = Cache.Id == 0 ? EntityState.Added : EntityState.Modified;
+                db.Entry(Cache).State = Cache.Id == newId ? EntityState.Added : EntityState.Modified;
                 db.SaveChanges();
                 this.HasStateChanged = false;
             }

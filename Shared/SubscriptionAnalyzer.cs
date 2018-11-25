@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Migrations;
 using System.Diagnostics;
 using System.Linq;
@@ -19,7 +20,7 @@ namespace CogsMinimizer.Shared
         /// <summary>
         /// The DB instance against which all updates and queries are made
         /// </summary>
-        private DataAccess m_Db;
+        private DataAccessModel m_Db;
 
         /// <summary>
         /// The subscription that needs to be analyzed
@@ -45,7 +46,7 @@ namespace CogsMinimizer.Shared
         /// <param name="sub"></param>
         /// <param name="isOfflineMode">Indicates whether the analysis is run offline or with user interaction
         /// </param>
-        public SubscriptionAnalyzer(DataAccess dbAccess, Subscription sub, bool isOfflineMode, ITracer tracer)
+        public SubscriptionAnalyzer(DataAccessModel dbAccess, Subscription sub, bool isOfflineMode, ITracer tracer)
         {
             Diagnostics.EnsureArgumentNotNull(() => sub);
             Diagnostics.EnsureArgumentNotNull(() => tracer);
@@ -185,7 +186,6 @@ namespace CogsMinimizer.Shared
             var adminEmails = emails.ToList();
 
             var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(m_resourceManagementClient);
-
             //Go over all the resource groups
             foreach (var group in resourceGroups)
             {
@@ -195,7 +195,7 @@ namespace CogsMinimizer.Shared
                 foreach (var genericResource in resourceList)
                 {
                     //Skip any resources that appear although we have successfully deleted them
-                    if (m_analysisResult.DeletedResources.Any(x=>x.AzureResourceIdentifier.Equals(genericResource.Id)))
+                    if (m_analysisResult.DeletedResources.Any(x => x.AzureResourceIdentifier.Equals(genericResource.Id)))
                     {
                         _tracer.TraceVerbose($"Found and skipping a resource which was just deleted: {genericResource.Name}");
                         continue;
@@ -217,7 +217,7 @@ namespace CogsMinimizer.Shared
                     {
                         _tracer.TraceVerbose($"Found known resource: {genericResource.Name}");
                         UpdateKnownResource(resourceEntryFromDb, adminEmails);
-                    }              
+                    }
                 }
             }
 

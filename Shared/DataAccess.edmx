@@ -1,0 +1,208 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="DataAccess.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2012.Azure" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityContainer Name="DataAccessStoreContainer">
+    <EntitySet Name="Resources" EntityType="DataAccess.Store.Resources" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="Subscriptions" EntityType="DataAccess.Store.Subscriptions" store:Type="Tables" Schema="dbo" />
+    <EntitySet Name="PerUserTokenCaches" EntityType="DataAccess.Store.PerUserTokenCaches" store:Type="Tables" Schema="dbo" />
+  </EntityContainer>
+  <EntityType Name="Resources">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="Id" Type="nvarchar" Nullable="false" MaxLength="256" />
+    <Property Name="Name" Type="nvarchar(max)" Nullable="false" />
+    <Property Name="Type" Type="nvarchar(max)" Nullable="false" />
+    <Property Name="ConfirmedOwner" Type="bit" Nullable="false" />
+    <Property Name="ResourceGroup" Type="nvarchar(max)" Nullable="false" />
+    <Property Name="Description" Type="nvarchar(max)" Nullable="true" />
+    <Property Name="FirstFoundDate" Type="datetime" Nullable="false" />
+    <Property Name="ExpirationDate" Type="datetime" Nullable="false" />
+    <Property Name="LastVisitedDate" Type="datetime" Nullable="false" />
+    <Property Name="AzureResourceIdentifier" Type="nvarchar(max)" Nullable="false" />
+    <Property Name="SubscriptionId" Type="nvarchar(max)" Nullable="false" />
+    <Property Name="Status" Type="int" Nullable="false" />
+    <Property Name="Expired" Type="bit" Nullable="false" DefaultValue="false" />
+    <Property Name="Owner" Type="nvarchar(max)" Nullable="true" />
+  </EntityType>
+  <EntityType Name="Subscriptions">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="IsConnected" Type="bit" Nullable="false" />
+    <Property Name="DisplayName" Type="nvarchar(max)" Nullable="false" />
+    <Property Name="Id" Type="nvarchar" Nullable="false" MaxLength="256" />
+    <Property Name="OrganizationId" Type="nvarchar(max)" Nullable="false" />
+    <Property Name="ConnectedOn" Type="datetime" Nullable="false" />
+    <Property Name="ConnectedBy" Type="nvarchar(max)" Nullable="false" />
+    <Property Name="AzureAccessNeedsToBeRepaired" Type="bit" Nullable="false" />
+    <Property Name="LastAnalysisDate" Type="datetime" Nullable="false" />
+    <Property Name="ReserveIntervalInDays" Type="int" Nullable="false" />
+    <Property Name="ExpirationIntervalInDays" Type="int" Nullable="false" />
+    <Property Name="ExpirationUnclaimedIntervalInDays" Type="int" Nullable="false" />
+    <Property Name="DeleteIntervalInDays" Type="int" Nullable="false" />
+    <Property Name="ManagementLevel" Type="int" Nullable="false" />
+    <Property Name="SendEmailToCoAdmins" Type="bit" Nullable="false" />
+    <Property Name="SendEmailOnlyInvalidResources" Type="bit" Nullable="false" />
+  </EntityType>
+  <EntityType Name="PerUserTokenCaches">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="Id" Type="nvarchar" Nullable="false" MaxLength="256" />
+    <Property Name="webUserUniqueId" Type="nvarchar(max)" Nullable="false" />
+    <Property Name="cacheBits" Type="varbinary(max)" Nullable="false" />
+    <Property Name="LastWrite" Type="datetime" Nullable="false" />
+  </EntityType>
+</Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" xmlns:cg="http://schemas.microsoft.com/ado/2006/04/codegeneration" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" Namespace="DataAccess" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" annotation:UseStrongSpatialTypes="false">
+        <EntityContainer Name="DataAccessModel" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Resources" EntityType="DataAccess.Resource" />
+          <EntitySet Name="Subscriptions" EntityType="DataAccess.Subscription" />
+          <EntitySet Name="PerUserTokenCaches" EntityType="DataAccess.PerUserTokenCache" />
+        </EntityContainer>
+        <EntityType Name="Resource">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="String" Nullable="false" annotation:StoreGeneratedPattern="None" MaxLength="256" />
+          <Property Name="Name" Type="String" Nullable="false" />
+          <Property Name="Type" Type="String" Nullable="false" />
+          <Property Name="ConfirmedOwner" Type="Boolean" Nullable="false" />
+          <Property Name="ResourceGroup" Type="String" Nullable="false" />
+          <Property Name="Description" Type="String" Nullable="true" />
+          <Property Name="FirstFoundDate" Type="DateTime" Nullable="false" />
+          <Property Name="ExpirationDate" Type="DateTime" Nullable="false" />
+          <Property Name="LastVisitedDate" Type="DateTime" Nullable="false" />
+          <Property Name="AzureResourceIdentifier" Type="String" Nullable="false" />
+          <Property Name="SubscriptionId" Type="String" Nullable="false" />
+          <Property Name="Status" Type="DataAccess.ResourceStatus" Nullable="false" />
+          <Property Name="Expired" Type="Boolean" Nullable="false" annotation:StoreGeneratedPattern="None" DefaultValue="False" />
+          <Property Name="Owner" Type="String" Nullable="true" />
+        </EntityType>
+        <EntityType Name="Subscription">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="IsConnected" Type="Boolean" Nullable="false" />
+          <Property Name="DisplayName" Type="String" Nullable="false" />
+          <Property Name="Id" Type="String" Nullable="false" annotation:StoreGeneratedPattern="None" xmlns="http://schemas.microsoft.com/ado/2009/11/edm" MaxLength="256" />
+          <Property Name="OrganizationId" Type="String" Nullable="false" />
+          <Property Name="ConnectedOn" Type="DateTime" Nullable="false" />
+          <Property Name="ConnectedBy" Type="String" Nullable="false" />
+          <Property Name="AzureAccessNeedsToBeRepaired" Type="Boolean" Nullable="false" />
+          <Property Name="LastAnalysisDate" Type="DateTime" Nullable="false" />
+          <Property Name="ReserveIntervalInDays" Type="Int32" Nullable="false" DefaultValue="180" />
+          <Property Name="ExpirationIntervalInDays" Type="Int32" Nullable="false" DefaultValue="30" />
+          <Property Name="ExpirationUnclaimedIntervalInDays" Type="Int32" Nullable="false" DefaultValue="10" />
+          <Property Name="DeleteIntervalInDays" Type="Int32" Nullable="false" DefaultValue="7" />
+          <Property Name="ManagementLevel" Type="DataAccess.SubscriptionManagementLevel" Nullable="false" />
+          <Property Name="SendEmailToCoAdmins" Type="Boolean" Nullable="false" DefaultValue="True" />
+          <Property Name="SendEmailOnlyInvalidResources" Type="Boolean" Nullable="false" DefaultValue="True" />
+        </EntityType>
+        <EnumType Name="SubscriptionManagementLevel">
+          <Member Name="ReportOnly" />
+          <Member Name="AutomaticDelete" />
+          <Member Name="ManualDelete" />
+        </EnumType>
+        <EntityType Name="PerUserTokenCache">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="String" Nullable="false" annotation:StoreGeneratedPattern="None" MaxLength="256" />
+          <Property Name="webUserUniqueId" Type="String" Nullable="false" />
+          <Property Name="cacheBits" Type="Binary" Nullable="false" />
+          <Property Name="LastWrite" Type="DateTime" Nullable="false" />
+        </EntityType>
+        <EnumType Name="ResourceStatus">
+          <Member Name="Valid" />
+          <Member Name="Expired" />
+          <Member Name="MarkedForDeletion" />
+        </EnumType>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+    <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="DataAccessStoreContainer" CdmEntityContainer="DataAccessModel">
+    <EntitySetMapping Name="Resources">
+      <EntityTypeMapping TypeName="IsTypeOf(DataAccess.Resource)">
+        <MappingFragment StoreEntitySet="Resources">
+          <ScalarProperty Name="Id" ColumnName="Id" />
+          <ScalarProperty Name="Name" ColumnName="Name" />
+          <ScalarProperty Name="Type" ColumnName="Type" />
+          <ScalarProperty Name="ConfirmedOwner" ColumnName="ConfirmedOwner" />
+          <ScalarProperty Name="ResourceGroup" ColumnName="ResourceGroup" />
+          <ScalarProperty Name="Description" ColumnName="Description" />
+          <ScalarProperty Name="FirstFoundDate" ColumnName="FirstFoundDate" />
+          <ScalarProperty Name="ExpirationDate" ColumnName="ExpirationDate" />
+          <ScalarProperty Name="LastVisitedDate" ColumnName="LastVisitedDate" />
+          <ScalarProperty Name="AzureResourceIdentifier" ColumnName="AzureResourceIdentifier" />
+          <ScalarProperty Name="SubscriptionId" ColumnName="SubscriptionId" />
+          <ScalarProperty Name="Status" ColumnName="Status" />
+          <ScalarProperty Name="Expired" ColumnName="Expired" />
+          <ScalarProperty Name="Owner" ColumnName="Owner" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="Subscriptions">
+      <EntityTypeMapping TypeName="IsTypeOf(DataAccess.Subscription)">
+        <MappingFragment StoreEntitySet="Subscriptions">
+          <ScalarProperty Name="Id" ColumnName="Id" />
+          <ScalarProperty Name="IsConnected" ColumnName="IsConnected" />
+          <ScalarProperty Name="DisplayName" ColumnName="DisplayName" />
+          <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+          <ScalarProperty Name="ConnectedOn" ColumnName="ConnectedOn" />
+          <ScalarProperty Name="ConnectedBy" ColumnName="ConnectedBy" />
+          <ScalarProperty Name="AzureAccessNeedsToBeRepaired" ColumnName="AzureAccessNeedsToBeRepaired" />
+          <ScalarProperty Name="LastAnalysisDate" ColumnName="LastAnalysisDate" />
+          <ScalarProperty Name="ReserveIntervalInDays" ColumnName="ReserveIntervalInDays" />
+          <ScalarProperty Name="ExpirationIntervalInDays" ColumnName="ExpirationIntervalInDays" />
+          <ScalarProperty Name="ExpirationUnclaimedIntervalInDays" ColumnName="ExpirationUnclaimedIntervalInDays" />
+          <ScalarProperty Name="DeleteIntervalInDays" ColumnName="DeleteIntervalInDays" />
+          <ScalarProperty Name="ManagementLevel" ColumnName="ManagementLevel" />
+          <ScalarProperty Name="SendEmailToCoAdmins" ColumnName="SendEmailToCoAdmins" />
+          <ScalarProperty Name="SendEmailOnlyInvalidResources" ColumnName="SendEmailOnlyInvalidResources" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+    <EntitySetMapping Name="PerUserTokenCaches">
+      <EntityTypeMapping TypeName="IsTypeOf(DataAccess.PerUserTokenCache)">
+        <MappingFragment StoreEntitySet="PerUserTokenCaches">
+          <ScalarProperty Name="Id" ColumnName="Id" />
+          <ScalarProperty Name="webUserUniqueId" ColumnName="webUserUniqueId" />
+          <ScalarProperty Name="cacheBits" ColumnName="cacheBits" />
+          <ScalarProperty Name="LastWrite" ColumnName="LastWrite" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+  </EntityContainerMapping>
+</Mapping></edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <edmx:Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </edmx:Connection>
+    <edmx:Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="False" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+        <DesignerProperty Name="UseLegacyProvider" Value="False" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="True" />
+      </DesignerInfoPropertySet>
+    </edmx:Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

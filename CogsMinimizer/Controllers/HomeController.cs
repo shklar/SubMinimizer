@@ -12,7 +12,7 @@ namespace CogsMinimizer.Controllers
 {
     public class HomeController : SubMinimizerController
     {
-        private DataAccess db = new DataAccess();
+        private DataAccessModel db = new DataAccessModel();
 
         public ActionResult Index()
         {
@@ -57,7 +57,7 @@ namespace CogsMinimizer.Controllers
                                 subscription.ExpirationIntervalInDays = s.ExpirationIntervalInDays;
                                 subscription.ExpirationUnclaimedIntervalInDays = s.ExpirationUnclaimedIntervalInDays;
                                 subscription.ManagementLevel = s.ManagementLevel;
-                                subscription.SendEmailToCoadmins = s.SendEmailToCoadmins;
+                                subscription.SendEmailToCoAdmins = s.SendEmailToCoAdmins;
                                 subscription.SendEmailOnlyInvalidResources = s.SendEmailOnlyInvalidResources;
                                 //subscription.AzureAccessNeedsToBeRepaired = !AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, org.Id);
                                 subscription.AzureAccessNeedsToBeRepaired = false;
