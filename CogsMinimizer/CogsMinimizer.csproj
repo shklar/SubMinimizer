@@ -323,9 +323,6 @@
     <None Include="Properties\PublishProfiles\subminimizer - Web Deploy.pubxml" />
     <Content Include="Properties\webjobs-list.json" />
     <None Include="Properties\PublishProfiles\SubMinimizer - Web Deploy1.pubxml" />
-    <Content Include="Pwd.config">
-      <SubType>Designer</SubType>
-    </Content>
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\colResizable-1.6.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
