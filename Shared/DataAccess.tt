@@ -38,6 +38,14 @@ foreach (var entity in typeMapper.GetItemsToGenerate<EntityType>(itemCollection)
     public <#=code.Escape(entity)#>()
     {
 <#
+   if (entity.Name == "Subscription")
+   {
+#>
+        this.ManagementLevel = SubscriptionManagementLevel.ReportOnly;
+<#
+    }
+#>
+<#
         foreach (var edmProperty in propertiesWithDefaultValues)
         {
 #>

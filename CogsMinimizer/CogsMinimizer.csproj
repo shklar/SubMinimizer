@@ -314,13 +314,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="App.Secrets.config" />
+    <Content Include="App.Secrets.config">
+      <SubType>Designer</SubType>
+    </Content>
     <None Include="Properties\PublishProfiles\CogsMinimizer20181115090650 - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\SubMinimizer - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\SubMinimizer - FTP1.pubxml" />
     <None Include="Properties\PublishProfiles\subminimizer - Web Deploy.pubxml" />
     <Content Include="Properties\webjobs-list.json" />
     <None Include="Properties\PublishProfiles\SubMinimizer - Web Deploy1.pubxml" />
+    <Content Include="Pwd.config">
+      <SubType>Designer</SubType>
+    </Content>
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\colResizable-1.6.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />

@@ -17,6 +17,7 @@ namespace CogsMinimizer.Shared
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Subscription()
         {
+            this.ManagementLevel = SubscriptionManagementLevel.ReportOnly;
             this.ReserveIntervalInDays = 180;
             this.ExpirationIntervalInDays = 30;
             this.ExpirationUnclaimedIntervalInDays = 10;

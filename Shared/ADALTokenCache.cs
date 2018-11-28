@@ -76,18 +76,17 @@ namespace CogsMinimizer.Shared
             }
             this.Deserialize((Cache == null) ? null : Cache.cacheBits);
         }
+
         // Notification raised after ADAL accessed the cache.
         // If the HasStateChanged flag is set, ADAL changed the content of the cache
         void AfterAccessNotification(TokenCacheNotificationArgs args)
         {
-            string newId = null;
-
             // if state changed
             if (this.HasStateChanged)
             {
+                string newId = null;
                 // check for an existing entry
                 Cache = db.PerUserTokenCaches.FirstOrDefault(c => c.webUserUniqueId == User);
-                Cache = null;
                 if (Cache == null)
                 {
                     // if no existing entry for that user, create a new one

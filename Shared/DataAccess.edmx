@@ -107,9 +107,9 @@
           <Property Name="SendEmailOnlyInvalidResources" Type="Boolean" Nullable="false" DefaultValue="True" />
         </EntityType>
         <EnumType Name="SubscriptionManagementLevel">
-          <Member Name="ReportOnly" />
-          <Member Name="AutomaticDelete" />
-          <Member Name="ManualDelete" />
+          <Member Name="ReportOnly" Value="0" />
+          <Member Name="AutomaticDelete" Value="2" />
+          <Member Name="ManualDelete" Value="1" />
         </EnumType>
         <EntityType Name="PerUserTokenCache">
           <Key>
@@ -121,9 +121,9 @@
           <Property Name="LastWrite" Type="DateTime" Nullable="false" />
         </EntityType>
         <EnumType Name="ResourceStatus">
-          <Member Name="Valid" />
-          <Member Name="Expired" />
-          <Member Name="MarkedForDeletion" />
+          <Member Name="Valid" Value="0" />
+          <Member Name="Expired" Value="1" />
+          <Member Name="MarkedForDeletion" Value="2" />
         </EnumType>
       </Schema>
     </edmx:ConceptualModels>

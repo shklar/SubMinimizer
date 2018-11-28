@@ -14,7 +14,7 @@ namespace CogsMinimizer.Shared
     public enum SubscriptionManagementLevel : int
     {
         ReportOnly = 0,
-        AutomaticDelete = 1,
-        ManualDelete = 2
+        AutomaticDelete = 2,
+        ManualDelete = 1
     }
 }
