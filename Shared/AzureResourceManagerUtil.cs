@@ -31,7 +31,7 @@ namespace CogsMinimizer.Shared
 
             string objectIdOfCloudSenseServicePrincipal =
                 AzureADGraphAPIUtil.GetObjectIdOfServicePrincipalInOrganization(microsoftAADID,
-                    ConfigurationManager.AppSettings["ida:ClientID"]);
+                    AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid"));
 
             organizations.Add(new Organization()
             {
@@ -81,6 +81,7 @@ namespace CogsMinimizer.Shared
                 }
                 else
                 {
+                    // Most probably it isn't Microsoft tenant
                     return null;
                 }
             }
@@ -108,9 +109,17 @@ namespace CogsMinimizer.Shared
                 AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
 
                 admins = new List<string>();
-
+                
                 // let's determine api version to use
                 Provider provider = AzureResourceManagerUtil.GetProvider(subscriptionId, organizationId, "Microsoft.Authorization");
+                if (provider == null)
+                {
+                    // Microsoft.Authorization provider isn't found most probably subscription doesn't belong to Microsoft tenant
+                    // Meanwhile the only consequence is mail list for sending reports isn't determined correct
+                    // Return empty list, connected by person will be added after discovery list is empty.
+                    return admins;
+                }
+
                 ProviderResourceType resourceType = provider.ResourceTypes.SingleOrDefault(r => r.ResourceType == "classicAdministrators");
                 if (resourceType == null)
                 {

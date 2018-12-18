@@ -17,6 +17,9 @@ using Microsoft.Azure.Management.Authorization.Models;
 using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Azure.Management.ResourceManager.Models;
 using Microsoft.Rest;
+using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.Azure.KeyVault;
+using System.Threading.Tasks;
 
 namespace CogsMinimizer.Shared
 {
@@ -62,6 +65,22 @@ namespace CogsMinimizer.Shared
             Provider provider = new Provider((string)jObject["id"], (string)jObject["namespace"], null, resourceTypes);
             return provider;
 
+        }
+
+        public static string GetKeyVaultSecret(string keyVaultName, string secretName)
+        {
+            AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
+            var keyVaultClient = new KeyVaultClient(new Microsoft.Azure.KeyVault.KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+            Task<Microsoft.Azure.KeyVault.Models.SecretBundle> task = keyVaultClient.GetSecretAsync(
+                string.Format("https://{0}.vault.azure.net/secrets/{1}", keyVaultName, secretName));
+            task.Wait();
+
+            return task.Result.Value;
+        }
+
+        public static string GetDataAccesConnectionString()
+        {
+            return GetKeyVaultSecret("subminimizer", "DataAccessCs");
         }
     }
 }

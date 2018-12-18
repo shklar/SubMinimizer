@@ -133,10 +133,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="App.Secrets.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
     </None>
-    <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\subminimizer - Web Deploy.pubxml">
       <SubType>Designer</SubType>
     </None>

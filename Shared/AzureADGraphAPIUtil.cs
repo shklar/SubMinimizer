@@ -3,10 +3,12 @@ using System.Configuration;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using System.Web.Helpers;
 using CogsMinimizer.Shared;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
+using CogsMinimizer.Shared;
 
 namespace CogsMinimizer
 {
@@ -23,13 +25,18 @@ namespace CogsMinimizer
             try
             {
                 // Aquire Access Token to call Azure AD Graph API
-                ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
-                    ConfigurationManager.AppSettings["ida:Password"]);
+                string appClientId = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid");
+                string appPassword = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregpassword");
+                ClientCredential credential = new ClientCredential(appClientId, appPassword);
+
                 // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
                 AuthenticationContext authContext = new AuthenticationContext(
                     string.Format(ConfigurationManager.AppSettings["ida:Authority"], organizationId), new ADALTokenCache(signedInUserUniqueName));
-                AuthenticationResult result = authContext.AcquireTokenSilent(ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], credential,
+                Task<AuthenticationResult> resultTask = authContext.AcquireTokenSilentAsync(ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], credential,
                     new UserIdentifier(signedInUserUniqueName, UserIdentifierType.RequiredDisplayableId));
+                resultTask.Wait();
+
+                AuthenticationResult result = resultTask.Result;
 
                 // Get a list of Organizations of which the user is a member
                 string requestUrl = string.Format("{0}{1}/tenantDetails?api-version={2}", ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"],
@@ -73,12 +80,15 @@ namespace CogsMinimizer
 
             try
             {
-                // Aquire App Only Access Token to call Azure Resource Manager - Client Credential OAuth Flow
-                ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
-                    ConfigurationManager.AppSettings["ida:Password"]);
+                string appClientId = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid");
+                string appPassword = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregpassword");
+                ClientCredential credential = new ClientCredential(appClientId, appPassword);
+
                 // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
                 AuthenticationContext authContext = new AuthenticationContext(string.Format(ConfigurationManager.AppSettings["ida:Authority"], organizationId));
-                AuthenticationResult result = authContext.AcquireToken(ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], credential);
+                Task<AuthenticationResult> resultTask = authContext.AcquireTokenAsync(ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], credential);
+                resultTask.Wait();
+                AuthenticationResult result = resultTask.Result;
 
                 // Get a list of Organizations of which the user is a member
                 string requestUrl = string.Format("{0}{1}/servicePrincipals?api-version={2}&$filter=appId eq '{3}'",
@@ -118,14 +128,17 @@ namespace CogsMinimizer
             string signedInUserUniqueName = ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value.Split('#')[ClaimsPrincipal.Current.FindFirst(ClaimTypes.Name).Value.Split('#').Length - 1];
 
             // Aquire Access Token to call Azure AD Graph API
-            ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
-                ConfigurationManager.AppSettings["ida:Password"]);
+            string appClientId = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid");
+            string appPassword = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregpassword");
+            ClientCredential credential = new ClientCredential(appClientId, appPassword);
+
             // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
             AuthenticationContext authContext = new AuthenticationContext(
                 string.Format(ConfigurationManager.AppSettings["ida:Authority"], organizationId), new ADALTokenCache(signedInUserUniqueName));
-            AuthenticationResult result = authContext.AcquireTokenSilent(ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], credential,
+            Task<AuthenticationResult> resultTask = authContext.AcquireTokenSilentAsync(ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], credential,
                 new UserIdentifier(signedInUserUniqueName, UserIdentifierType.RequiredDisplayableId));
-
+            AuthenticationResult result = resultTask.Result;
+            
             HttpClient client = new HttpClient();
 
             string doQueryUrl = string.Format("{0}{1}/directoryObjects/{2}?api-version={3}",

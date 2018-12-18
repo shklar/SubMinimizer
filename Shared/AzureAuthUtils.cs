@@ -5,6 +5,8 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Azure.KeyVault;
+using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace CogsMinimizer.Shared
@@ -18,18 +20,24 @@ namespace CogsMinimizer.Shared
 
             // Get user name
             string signedInUserUniqueName = GetSignedInUserUniqueName();
+            signedInUserUniqueName = "eviten@microsoft.com";
 
             // Aquire Access Token to call Azure Resource Manager
-            ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
-                ConfigurationManager.AppSettings["ida:Password"]);
+            string appClientId = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid");
+            string appPassword = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregpassword");
+            ClientCredential credential = new ClientCredential(appClientId, appPassword);
+
             // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
             AuthenticationContext authContext = new AuthenticationContext(
                 string.Format(ConfigurationManager.AppSettings["ida:Authority"], organizationId),
                 new ADALTokenCache(signedInUserUniqueName));
-            AuthenticationResult result =
-                authContext.AcquireTokenSilent(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"],
+            Task<AuthenticationResult> resultTask =
+                authContext.AcquireTokenSilentAsync(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"],
                     credential,
                     new UserIdentifier(signedInUserUniqueName, UserIdentifierType.RequiredDisplayableId));
+            resultTask.Wait();
+            AuthenticationResult result = resultTask.Result;
+
             return result;
         }
 
@@ -39,15 +47,19 @@ namespace CogsMinimizer.Shared
 
 
             // Aquire App Only Access Token to call Azure Resource Manager - Client Credential OAuth Flow
-            ClientCredential credential = new ClientCredential(ConfigurationManager.AppSettings["ida:ClientID"],
-                ConfigurationManager.AppSettings["ida:Password"]);
+            string appClientId = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid");
+            string appPassword = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregpassword");
+            ClientCredential credential = new ClientCredential(appClientId, appPassword);
+
             // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
             AuthenticationContext authContext =
                 new AuthenticationContext(string.Format(ConfigurationManager.AppSettings["ida:Authority"], organizationId));
-            AuthenticationResult result =
-                authContext.AcquireToken(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"],
+            Task<AuthenticationResult> resultTask =
+                authContext.AcquireTokenAsync(ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"],
                     credential);
-            return result;
+            resultTask.Wait();
+
+            return resultTask.Result;
         }
 
 

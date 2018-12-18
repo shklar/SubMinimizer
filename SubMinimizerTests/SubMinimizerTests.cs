@@ -161,7 +161,6 @@ namespace SubMinimizerTests
         [TestMethod]
         public void TestGetSubscriptionAdministrators()
         {
-
             var organizations = AzureResourceManagerUtil.GetUserOrganizations();
 
             foreach (Organization org in organizations)
@@ -169,10 +168,9 @@ namespace SubMinimizerTests
                 var subscriptions = AzureResourceManagerUtil.GetUserSubscriptions(org.Id);
 
                 foreach (Subscription sub in subscriptions)
-                {
+                { 
                     List<string> admins = AzureResourceManagerUtil.GetSubscriptionAdmins2(sub.Id, org.Id);
                     Assert.IsNotNull(admins);
-                    Assert.IsTrue(admins.Count > 0);
                 }
             }
         }
