@@ -16,7 +16,19 @@ namespace OfflineSubscriptionManager
         // AzureWebJobsDashboard and AzureWebJobsStorage
         static void Main()
         {
-            var host = new JobHost();
+            var cfg = new JobHostConfiguration();
+
+            if(cfg.IsDevelopment)
+            {
+                cfg.UseDevelopmentSettings();
+            }
+            else
+            {
+                cfg.DashboardConnectionString = AzureDataUtils.GetKeyVaultSecret("subminimizer", "WJDashboardCs");
+                cfg.StorageConnectionString = AzureDataUtils.GetKeyVaultSecret("subminimizer", "WJStorageCs");
+            }
+
+            var host = new JobHost(cfg);
 
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<DataAccess,
                CogsMinimizer.Migrations.Configuration>());

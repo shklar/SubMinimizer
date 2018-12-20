@@ -315,6 +315,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
+    <None Include="Properties\PublishProfiles\CogsMinimizer20181115090650 - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\SubMinimizer - FTP.pubxml" />
     <None Include="Properties\PublishProfiles\SubMinimizer - FTP1.pubxml" />
     <None Include="Properties\PublishProfiles\subminimizer - Web Deploy.pubxml" />
