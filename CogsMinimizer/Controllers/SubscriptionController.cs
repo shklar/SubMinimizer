@@ -25,7 +25,7 @@ namespace CogsMinimizer.Controllers
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
 
             List<object> resultList = new List<object>();
-            using (DataAccess db = new DataAccess())
+            using (DataAccessModel db = new DataAccessModel())
             {
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
 
@@ -72,7 +72,7 @@ namespace CogsMinimizer.Controllers
         {
             Diagnostics.EnsureArgumentNotNull(() => subscription);
 
-            using (DataAccess dataAccess = new DataAccess())
+            using (DataAccessModel dataAccess = new DataAccessModel())
             { 
                 Subscription existingSubscription =
                     dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
@@ -115,7 +115,7 @@ namespace CogsMinimizer.Controllers
         {
             Diagnostics.EnsureArgumentNotNull(() => subscription);
 
-            using (DataAccess dataAccess = new DataAccess())
+            using (DataAccessModel dataAccess = new DataAccessModel())
             {
                 Subscription existingSubscription =
                     dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
@@ -158,7 +158,7 @@ namespace CogsMinimizer.Controllers
                 existingSubscription.ExpirationUnclaimedIntervalInDays = subscription.ExpirationUnclaimedIntervalInDays;
                 existingSubscription.DeleteIntervalInDays = subscription.DeleteIntervalInDays;
                 existingSubscription.ManagementLevel = subscription.ManagementLevel;
-                existingSubscription.SendEmailToCoadmins = subscription.SendEmailToCoadmins;
+                existingSubscription.SendEmailToCoAdmins = subscription.SendEmailToCoAdmins;
                 existingSubscription.SendEmailOnlyInvalidResources = subscription.SendEmailOnlyInvalidResources;
                 dataAccess.Subscriptions.AddOrUpdate<Subscription>(existingSubscription);
 
@@ -198,7 +198,7 @@ namespace CogsMinimizer.Controllers
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
 
             JsonResult result = new JsonResult();
-            using (var db = new DataAccess())
+            using (var db = new DataAccessModel())
             {
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
@@ -234,7 +234,7 @@ namespace CogsMinimizer.Controllers
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
 
             JsonResult result = new JsonResult();
-            using (var db = new DataAccess())
+            using (var db = new DataAccessModel())
             {
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
@@ -268,7 +268,7 @@ namespace CogsMinimizer.Controllers
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
 
             JsonResult result = new JsonResult();
-            using (var db = new DataAccess())
+            using (var db = new DataAccessModel())
             {
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
@@ -310,7 +310,7 @@ namespace CogsMinimizer.Controllers
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
 
             JsonResult result = new JsonResult();
-            using (var db = new DataAccess())
+            using (var db = new DataAccessModel())
             {
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(SubscriptionId) && x.Id.Equals(ResourceId));
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
@@ -344,7 +344,7 @@ namespace CogsMinimizer.Controllers
             var resources = new List<Resource>();
 
             Subscription subscription = null;
-            using (var db = new DataAccess())
+            using (var db = new DataAccessModel())
             {
                 subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
           
@@ -380,7 +380,7 @@ namespace CogsMinimizer.Controllers
         /// <returns></returns>
         private ActionResult Delete(string subscriptionId, string resourceId)
         {
-            using (var db = new DataAccess())
+            using (var db = new DataAccessModel())
             {
                 var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(subscriptionId) && x.Id.Equals(resourceId));
 
@@ -408,7 +408,7 @@ namespace CogsMinimizer.Controllers
         /// <returns></returns>
         private ActionResult DeleteExpired(string subscriptionId)
         {
-            using (var db = new DataAccess())
+            using (var db = new DataAccessModel())
             {
                 var subResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId)).ToList();
                 var expiredResources = subResources.Where(r => ResourceOperationsUtil.HasExpired(r));
@@ -433,7 +433,7 @@ namespace CogsMinimizer.Controllers
         /// <returns></returns>
         private ActionResult ExtendExpired(string subscriptionId)
         {
-            using (var db = new DataAccess())
+            using (var db = new DataAccessModel())
             {
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(subscriptionId));
                 if (subscription == null)
@@ -460,7 +460,7 @@ namespace CogsMinimizer.Controllers
 
 
 
-        private DataAccess db = new DataAccess();
+        private DataAccessModel db = new DataAccessModel();
 
         public ActionResult Connect([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string servicePrincipalObjectId)
         {
