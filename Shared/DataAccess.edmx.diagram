@@ -5,7 +5,7 @@
     <!-- Diagram content (shape and connector positions) -->
     <edmx:Diagrams>
       <Diagram DiagramId="601064dfffb94b38b6bb69aa79fb97e1" Name="Diagram1" >
-        <EntityTypeShape EntityType="DataAccess.Resource" Width="1.5" PointX="4.875" PointY="1.5" />
+        <EntityTypeShape EntityType="DataAccess.Resource" Width="1.5" PointX="5.625" PointY="1.5" />
         <EntityTypeShape EntityType="DataAccess.Subscription" Width="1.5" PointX="3" PointY="5.125" />
         <EntityTypeShape EntityType="DataAccess.PerUserTokenCache" Width="1.5" PointX="1.875" PointY="11.375" />
       </Diagram>
