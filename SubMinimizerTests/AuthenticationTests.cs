@@ -62,6 +62,91 @@ namespace SubMinimizerTests
             }
         }
 
+        [TestMethod]
+        public void TestAuthenticateSilent()
+        {
+            //  test get token by call to our utility class
+            // Test getting application token access to Azure resource manager as resource for resource manipulation
+
+            // Let's check access to some subscription through request just for checking validity of token received
+            // Get permissions of the app on the subscription
+
+            string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
+            string appToken = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], true).AccessToken;
+
+            string subscriptionId = "bcbd775a-813c-46e8-afe5-1a66912e0f03";
+            string requestUrl =
+                string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
+                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
+                    ConfigurationManager.AppSettings["ida:ARMAuthorizationPermissionsAPIVersion"]);
+
+            // Make the GET request
+            HttpClient client = new HttpClient();
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", appToken);
+            HttpResponseMessage response = client.SendAsync(request).Result;
+
+            // Endpoint returns JSON with an array of Actions and NotActions
+            // actions  notActions
+            // -------  ----------
+            // {*}      {Microsoft.Authorization/*/Write, Microsoft.Authorization/*/Delete}
+            // {*/read} {}
+
+            // add unsuccessful response handling
+            if (response.IsSuccessStatusCode)
+            {
+                string responseContent = response.Content.ReadAsStringAsync().Result;
+                var permissionsResult = Json.Decode(responseContent).value;
+            }
+            else
+            {
+                Assert.Fail();
+            }
+        }
+
+
+        [TestMethod]
+        public void TestAuthenticate()
+        {
+            //  test get token by call to our utility class
+            // Test getting application token access to Azure resource manager as resource for resource manipulation
+
+            // Let's check access to some subscription through request just for checking validity of token received
+            // Get permissions of the app on the subscription
+
+            string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
+            string appToken = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], false).AccessToken;
+
+            string subscriptionId = "bcbd775a-813c-46e8-afe5-1a66912e0f03";
+            string requestUrl =
+                string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
+                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
+                    ConfigurationManager.AppSettings["ida:ARMAuthorizationPermissionsAPIVersion"]);
+
+            // Make the GET request
+            HttpClient client = new HttpClient();
+            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", appToken);
+            HttpResponseMessage response = client.SendAsync(request).Result;
+
+            // Endpoint returns JSON with an array of Actions and NotActions
+            // actions  notActions
+            // -------  ----------
+            // {*}      {Microsoft.Authorization/*/Write, Microsoft.Authorization/*/Delete}
+            // {*/read} {}
+
+            // add unsuccessful response handling
+            if (response.IsSuccessStatusCode)
+            {
+                string responseContent = response.Content.ReadAsStringAsync().Result;
+                var permissionsResult = Json.Decode(responseContent).value;
+            }
+            else
+            {
+                Assert.Fail();
+            }
+        }
+
 
         [TestMethod]
         public void TestGetAppTokenAdal()
@@ -192,11 +277,8 @@ namespace SubMinimizerTests
             // Get user name
             string signedInUserUniqueName = AzureAuthUtils.GetSignedInUserUniqueName();
             signedInUserUniqueName = "eviten@microsoft.com";
-
             // Aquire Access Token to call Azure Resource Manager
-            string appClientId = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid");
-            string appPassword = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregpassword");
-            ClientCredential credential = new ClientCredential(appClientId, appPassword);
+            ClientCredential credential = AzureAuthUtils.GetAppClientCredential();
 
             // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
             AuthenticationContext authContext = new AuthenticationContext(
@@ -219,11 +301,9 @@ namespace SubMinimizerTests
             // Aquire App Only Access Token to call Azure Resource Manager - Client Credential OAuth Flow
             string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
 
-            string appClientId = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid");
-            string appPassword = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregpassword");
-            ClientCredential credential = new ClientCredential(appClientId, appPassword);
-
-            // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
+            ClientCredential credential = AzureAuthUtils.GetAppClientCredential();
+        
+            // Initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
             AuthenticationContext authContext =
                 new AuthenticationContext(string.Format(ConfigurationManager.AppSettings["ida:Authority"], organizationId));
             Task<AuthenticationResult> resultTask =

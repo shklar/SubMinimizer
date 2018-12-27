@@ -5,7 +5,7 @@ namespace CogsMinimizer.Shared
 {
     public class DataAccess : DbContext
     {
-        public DataAccess() : base(AzureDataUtils.GetDataAccesConnectionString()) {}
+        public DataAccess() : base(Settings.Instance.DataAccessConnectionString) {}
         public DbSet<Subscription> Subscriptions { get; set; }
         public DbSet<PerUserTokenCache> PerUserTokenCacheList { get; set; }
         public DbSet<Resource> Resources { get; set; }

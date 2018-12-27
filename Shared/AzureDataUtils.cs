@@ -72,15 +72,11 @@ namespace CogsMinimizer.Shared
             AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
             var keyVaultClient = new KeyVaultClient(new Microsoft.Azure.KeyVault.KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
             Task<Microsoft.Azure.KeyVault.Models.SecretBundle> task = keyVaultClient.GetSecretAsync(
-                string.Format("https://{0}.vault.azure.net/secrets/{1}", keyVaultName, secretName));
+                $"https://{keyVaultName}.vault.azure.net/secrets/{secretName}");
             task.Wait();
 
             return task.Result.Value;
         }
 
-        public static string GetDataAccesConnectionString()
-        {
-            return GetKeyVaultSecret("subminimizer", "DataAccessCs");
-        }
     }
 }

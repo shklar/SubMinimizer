@@ -145,7 +145,7 @@ namespace OfflineSubscriptionManager
             Diagnostics.EnsureArgumentNotNull(() => email);
             Diagnostics.EnsureArgumentNotNull(() => tracer);
 
-            string apiKey = AzureDataUtils.GetKeyVaultSecret("subminimizer", "apikey");
+            string apiKey = Settings.Instance.ApiKey;
             dynamic sg = new SendGridAPIClient(apiKey);
 
             Email from = new Email("noreply@subminimizer.com");

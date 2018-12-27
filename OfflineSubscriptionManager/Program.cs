@@ -18,20 +18,19 @@ namespace OfflineSubscriptionManager
         {
             var cfg = new JobHostConfiguration();
 
-            if(cfg.IsDevelopment)
+            if (cfg.IsDevelopment)
             {
                 cfg.UseDevelopmentSettings();
             }
             else
             {
-                cfg.DashboardConnectionString = AzureDataUtils.GetKeyVaultSecret("subminimizer", "WJDashboardCs");
-                cfg.StorageConnectionString = AzureDataUtils.GetKeyVaultSecret("subminimizer", "WJStorageCs");
+                cfg.DashboardConnectionString = Settings.Instance.WebJobDashboardConnectionString;
+                cfg.StorageConnectionString = Settings.Instance.WebJobStorageConnectionString;
             }
 
             var host = new JobHost(cfg);
 
-            Database.SetInitializer(new MigrateDatabaseToLatestVersion<DataAccess,
-               CogsMinimizer.Migrations.Configuration>());
+            Database.SetInitializer(new MigrateDatabaseToLatestVersion<DataAccess, CogsMinimizer.Migrations.Configuration>());
 
             // The following code will invoke a function called ManualTrigger and 
             // pass in data (value in this case) to the function

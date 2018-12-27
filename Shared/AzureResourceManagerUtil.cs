@@ -31,7 +31,7 @@ namespace CogsMinimizer.Shared
 
             string objectIdOfCloudSenseServicePrincipal =
                 AzureADGraphAPIUtil.GetObjectIdOfServicePrincipalInOrganization(microsoftAADID,
-                    AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid"));
+                    Settings.Instance.AppClientId);
 
             organizations.Add(new Organization()
             {
@@ -114,7 +114,8 @@ namespace CogsMinimizer.Shared
                 Provider provider = AzureResourceManagerUtil.GetProvider(subscriptionId, organizationId, "Microsoft.Authorization");
                 if (provider == null)
                 {
-                    // Microsoft.Authorization provider isn't found most probably subscription doesn't belong to Microsoft tenant
+                    // Search provided failed
+                    // Most probably subscription doesn't belong to Microsoft tenant
                     // Meanwhile the only consequence is mail list for sending reports isn't determined correct
                     // Return empty list, connected by person will be added after discovery list is empty.
                     return admins;
@@ -540,7 +541,7 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureArgumentNotNull(() => resourceClient);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => groupName);
 
-            var resourceList = resourceClient.ResourceGroups.ListResources(groupName);
+            var resourceList = resourceClient.Resources.ListByResourceGroup(groupName);
             return resourceList;
         }
 

@@ -20,8 +20,8 @@ namespace CogsMinimizer
         {
             System.Web.Helpers.AntiForgeryConfig.UniqueClaimTypeIdentifier = ClaimTypes.NameIdentifier;
 
-            string appClientId = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid");
-            string appPassword = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregpassword");
+            string appClientId = Settings.Instance.AppClientId;
+            string appPassword = Settings.Instance.AppPassword;
             string Authority = string.Format(ConfigurationManager.AppSettings["ida:Authority"], "common");
             string GraphAPIIdentifier = ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"];
             string AzureResourceManagerIdentifier = ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"];
