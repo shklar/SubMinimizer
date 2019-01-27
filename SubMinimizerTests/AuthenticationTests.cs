@@ -14,6 +14,8 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using CogsMinimizer.Shared;
+using Microsoft.Azure;
+using Microsoft.Azure.Management.Authorization;
 
 namespace SubMinimizerTests
 {
@@ -272,11 +274,32 @@ namespace SubMinimizerTests
             Assert.AreEqual("Testcontent", value);
         }
 
+        [TestMethod]
+        public void TestAuthorizationManagementClient()
+        {
+            // Get subscriptions to which the user has some kind of access
+            string subscriptionId = "f168ad75-c916-40ee-8d26-fa5344d0a101";
+            string subscriptionUri =
+                string.Format(
+                    "{0}/subscriptions/{1}",
+                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId);
+
+            string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
+            string appToken = AzureAuthUtils.AcquireAppToken(organizationId).AccessToken;
+            var credentials = new TokenCloudCredentials(appToken);
+
+            HttpClient client = new HttpClient();
+            client.DefaultRequestHeaders.Add("api-version", "2018-11-01");
+
+//            var a = AzureResourceManagerUtil.GetSubscriptionAdmins2(subscriptionId, organizationId);
+            AuthorizationManagementClient authorizationManagementClient = new AuthorizationManagementClient(credentials, new Uri(subscriptionUri), client);
+            var admins = authorizationManagementClient.ClassicAdministrators.List();
+        }
+
         private AuthenticationResult GetAppTokenSilentAdal(string organizationId)
         {
             // Get user name
             string signedInUserUniqueName = AzureAuthUtils.GetSignedInUserUniqueName();
-            signedInUserUniqueName = "eviten@microsoft.com";
             // Aquire Access Token to call Azure Resource Manager
             ClientCredential credential = AzureAuthUtils.GetAppClientCredential();
 
@@ -298,7 +321,7 @@ namespace SubMinimizerTests
             // test getting application token access to Azure resource manager as resource for resource manipulation
             // use application credentials for getting token
 
-            // Aquire App Only Access Token to call Azure Resource Manager - Client Credential OAuth Flow
+            // Aquire App Only Access Token to call Azure Revsource Manager - Client Credential OAuth Flow
             string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
 
             ClientCredential credential = AzureAuthUtils.GetAppClientCredential();

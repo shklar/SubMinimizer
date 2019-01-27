@@ -1,5 +1,4 @@
-﻿using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
@@ -12,6 +11,8 @@ using CogsMinimizer.Shared;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Azure;
 using Microsoft.Azure.Management.Authorization;
 using Microsoft.Azure.Management.Authorization.Models;
 using Microsoft.Azure.Management.ResourceManager;
@@ -136,6 +137,7 @@ namespace CogsMinimizer.Shared
                  string requestUrl = string.Format("https://management.azure.com/subscriptions/{0}/providers/Microsoft.Authorization/classicAdministrators?api-version={1}",
                                     subscriptionId,
                                     apiVersion);
+                apiVersion = "2015-06-01";
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -559,8 +561,8 @@ namespace CogsMinimizer.Shared
         {
             Diagnostics.EnsureArgumentNotNull(() => authClient);
 
-            var admins = authClient.ClassicAdministrators.List("2015-06-01");
-            return admins;
+            var admins = authClient.ClassicAdministrators.List();
+            return admins.ClassicAdministrators;
         }
 
         #region Management Clients
@@ -597,11 +599,11 @@ namespace CogsMinimizer.Shared
 
             AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
 
-            var credentials = new TokenCredentials(result.AccessToken);
-            var authorizationManagementClient = new AuthorizationManagementClient(credentials)
-            {
-                SubscriptionId = subscriptionId
-            };
+            string subscriptionUri = string.Format("{0}/subscriptions/{1}",
+             ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId);
+
+            var credentials = new TokenCloudCredentials(result.AccessToken);
+            var authorizationManagementClient = new AuthorizationManagementClient(credentials, new Uri(subscriptionUri));
             return authorizationManagementClient;
         }
 
@@ -612,12 +614,11 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
 
             AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
+            string subscriptionUri = string.Format("{0}/subscriptions/{1}",
+             ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId);
 
-            var credentials = new TokenCredentials(result.AccessToken);
-            var authorizationManagementClient = new AuthorizationManagementClient(credentials)
-            {
-                SubscriptionId = subscriptionId
-            };
+            var credentials = new TokenCloudCredentials(result.AccessToken);
+            var authorizationManagementClient = new AuthorizationManagementClient(credentials, new Uri(subscriptionUri));
             return authorizationManagementClient;
         }
 

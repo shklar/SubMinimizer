@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SubMinimizerTests", "SubMinimizerTests\SubMinimizerTests.csproj", "{BDFE6EC6-9F62-4AEF-A70E-20481A626331}"
 EndProject
+Project("{F5034706-568F-408A-B7B3-4D38C6DB8A32}") = "SecretCheck", "SecretCheck\SecretCheck.pssproj", "{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{BDFE6EC6-9F62-4AEF-A70E-20481A626331}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BDFE6EC6-9F62-4AEF-A70E-20481A626331}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BDFE6EC6-9F62-4AEF-A70E-20481A626331}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CAFC0C6-A428-4D30-A9F9-700E829FEA51}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

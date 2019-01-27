@@ -25,7 +25,6 @@ namespace CogsMinimizer.Shared
             {
                 // Get user name
                 string signedInUserUniqueName = GetSignedInUserUniqueName();
-                signedInUserUniqueName = "eviten@microsoft.com";
 
                 // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
                 AuthenticationContext authContext = new AuthenticationContext(

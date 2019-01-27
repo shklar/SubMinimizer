@@ -12,7 +12,8 @@ echo -e "Pre-commit-hook\n\n"
 err="0"
 
 echo "Check hard coded user name"
-mail=$(grep -h -r --include "*.cs" "eviten@microsoft.com"  ../..)
+mail=$(grep -r --include "*.cs" "eviten@microsoft.com"  .)
+echo "$mail"
 maillen=${#mail}
 if [[ $maillen -ge 15 ]]
 then
@@ -23,8 +24,8 @@ else
 fi
 
 echo  -e "\nCheck app id"
-appid=$(grep -h -r --include "*.config" --include "*.cs" "ida:ClientID"  ../..)
-#echo "$appid"
+appid=$(grep -r --include "*.config" --include "*.cs" "ida:ClientID"  .)
+echo "$appid"
 appidlen=${#appid}
 if [[ $appidlen -ge 10 ]]
 then
@@ -35,8 +36,8 @@ else
 fi
 
 echo  -e "\nCheck app password"
-apppwd=$(grep -h -r --include "*.config" --include "*.cs" "ida:Password"  ../..)
-#echo "$apppwd"
+apppwd=$(grep -r --include "*.config" --include "*.cs" "ida:Password"  .)
+echo "$apppwd"
 apppwdlen=${#apppwd}
 if [[ $apppwdlen -ge 10 ]]
 then
@@ -47,8 +48,8 @@ else
 fi
 
 echo -e "\nCheck connection string"
-datacs=$(grep -h -r --include "*.config" "add name=.DataAccess"  ../..)
-#echo "$datacs"
+datacs=$(grep -r --include "*.config" "add name=.DataAccess"  .)
+echo "$datacs"
 datacslen=${#datacs}
 if [[ $datacslen -ge 10 ]]
 then
@@ -59,8 +60,8 @@ else
 fi
 
 echo -e "\nCheck web job connection string"
-wjcs=$(grep -h -r --include "*.config" "WebJobsDash"  ../..)
-#echo "$wjcs"
+wjcs=$(grep -r --include "*.config" "WebJobsDash"  .)
+echo "$wjcs"
 wjcslen=${#wjcs}
 if [[ $wjcslen -ge 10 ]]
 then
@@ -71,8 +72,8 @@ else
 fi
 
 echo -e "\nCheck web job connection string 2"
-wjcs2=$(grep -h -r --include "*.config" "WebJobsStorage"  ../..)
-#echo "$wjcs2"
+wjcs2=$(grep -r --include "*.config" "WebJobsStorage"  .)
+echo "$wjcs2"
 wjcslen2=${#wjcs2}
 if [[ $wjcslen2 -ge 10 ]]
 then
@@ -82,8 +83,29 @@ else
 	echo "Web job connection string 2 not found"
 fi
 
+chk_beta="0"
+if [[chk_beta -eq "0"]]
+then
+	echo -e "\nWarning!!! Check preview and beta version of packages skipped."
+else
+	echo -e "\nCheck preview and beta version of packages."
+	beta=$(grep -r --include "packages.config" "preview"  .)
+	echo "$beta"
+	betalen=${#beta}
+	if [[ $betalen -ge 10 ]]
+	then
+		echo "Preview version found!!!"
+		err="1"
+	else
+		echo "Preview version not found"
+	fi
+fi
 
 
+if [[chk_beta -eq "0"]]
+then
+	echo -e "\nWarning!!! Check preview and beta version of packages skipped."
+fi
 
 if [[ $err -ne "0" ]]
 then
