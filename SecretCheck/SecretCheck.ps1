@@ -1,6 +1,6 @@
 ﻿$branch_name = 'tst1'
 
-cd ('C:\projects\chk_secrets\\tst2')
+cd ('C:\\projects\\chk_secrets\\tst2')
 #cd ('C:\projects\chk_secrets\\' + $branch_name + '\\SubMinimizer')
 
 GetCommitsToProceed
@@ -15,13 +15,6 @@ function GetCommitsToProceed()
 
    # getting commits to all branch after current branch creating from master
    $revToSearch = GetSearchCommitsAll($branch_name)
-
-   Write-Host '---Branch Commits---'
-#   $branchHistory = Git --no-pager log  $branch_name
-#   $branchHistory
-#   Write-Host '---Master Commits---'
-#   $masterHistory = Git --no-pager log  'master'
-#   $masterHistory
 
    Write-Host '---Commits---'
    $revToSearch
@@ -77,7 +70,7 @@ function GetSearchCommits($branch)
       return $revsToSearch        
  }
 
-function SplitChildrenCommits($commit)
+function SplitCommits($commit)
 {
    $children = @()
    $from = $commit
@@ -99,6 +92,11 @@ function SplitChildrenCommits($commit)
 
 function GetCommitParentCommits($c)
 {
+   if ($c.indexOf(' ') -ne -1)
+   {
+      Write-Host "Wrong commit ID"
+   }
+
    $parent = Git show --pretty=%P $c
    $parentId = $parent[0].ToString()
 
@@ -108,12 +106,34 @@ function GetCommitParentCommits($c)
    }
    
    $allParents = @()
-   $allParents += $parentId
-
-   $parents = GetCommitParentCommits($parentId)
-   if ($parents -ne $null)
+   
+   if ($parentId.indexOf(' ') -ne -1)
    {
-      $allParents += $parents
+      $pars = SplitCommits($parentId)
+      foreach($p in $pars)
+      {
+         # sometimes commit itself included into parents don't call get parents again for same commit
+         if ($p -eq $c)
+         {
+            continue
+         }
+
+         $parents = GetCommitParentCommits($p)
+         if ($parents -ne $null)
+         {
+            $allParents += $parents
+         }         
+      }
+   }
+   else
+   {
+      $allParents += $parentId
+
+      $parents = GetCommitParentCommits($parentId)
+      if ($parents -ne $null)
+      {
+         $allParents += $parents
+      }
    }
 
    return $allParents
@@ -145,7 +165,7 @@ function GetChildrenCommits($commits)
          $childString = $child.ToString()
          if ($childString.indexOf(" ") -ne -1)
          {
-            $spl = SplitChildrenCommits($childString)
+            $spl = SplitCommits($childString)
             $allChildren += $spl
          }
          else
