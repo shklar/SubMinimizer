@@ -20,7 +20,25 @@ function GetCommitsToProceed()
    $revToSearch
 
    Write-Host '---Searching mail---'
-   Git grep -e 'eviten@microsoft' $revToSearch
+   Git grep  -e 'eviten@microsoft'  $revToSearch
+   
+   Write-Host '---Searching app id---'
+   Git grep -e  'ida:ClientID'  $revToSearch
+ 
+   Write-Host '---Searching password---'
+   Git grep -e  'ida:Password'  $revToSearch
+
+   Write-Host '---Searching data connection string---'
+   Git grep -e  '<add name=[^ ]*DataAccess'  $revToSearch
+
+   Write-Host '---Searching web job data connection string---'
+   Git grep -e  'WebJobsDash'  $revToSearch
+
+   Write-Host '---Searching web job data connection string 2---'
+   Git grep -e  'WebJobs'  $revToSearch
+
+   Write-Host '---Searching beta packages---'
+   Git grep -e  'preview'  $revToSearch
 }
 
 function GetSearchCommits($branch)
