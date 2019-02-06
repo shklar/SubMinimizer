@@ -59,7 +59,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireArmAppToken(organizationId);
 
                 string requestUrl = string.Format("https://management.azure.com/subscriptions/{0}/providers/{1}?api-version={2}",
                     subscriptionId,
@@ -107,7 +107,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireArmAppToken(organizationId);
 
                 admins = new List<string>();
                 
@@ -305,7 +305,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireArmAppToken(organizationId);
 
                 // Get permissions of the app on the subscription
                 string requestUrl =
@@ -584,7 +584,7 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
 
-            AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
+            AuthenticationResult result = AzureAuthUtils.AcquireArmAppToken(organizationId);
 
             var credentials = new TokenCredentials(result.AccessToken);
             var resourceClient = new ResourceManagementClient(credentials) { SubscriptionId = subscriptionId };
@@ -613,7 +613,7 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
 
-            AuthenticationResult result = AzureAuthUtils.AcquireAppToken(organizationId);
+            AuthenticationResult result = AzureAuthUtils.AcquireArmAppToken(organizationId);
             string subscriptionUri = string.Format("{0}/subscriptions/{1}",
              ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId);
 

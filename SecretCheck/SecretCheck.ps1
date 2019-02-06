@@ -1,7 +1,7 @@
-﻿$branch_name = 'tst1'
-
-cd ('C:\\projects\\chk_secrets\\tst2')
-#cd ('C:\projects\chk_secrets\\' + $branch_name + '\\SubMinimizer')
+﻿# this script must be run manually at any folder containing repository for check
+# change lines for appropriate folder getting and branch for check
+$branch_name = 'mov_secr_az'
+cd ('C:\projects\Sub_prd')
 
 GetCommitsToProceed
 #RemoveSecrets

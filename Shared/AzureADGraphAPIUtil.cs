@@ -20,7 +20,7 @@ namespace CogsMinimizer
             string displayName = null;
             try
             {
-                AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], true);
+                AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], TokenKind.User, true);
 
                 // Get a list of Organizations of which the user is a member
                 string requestUrl = string.Format("{0}{1}/tenantDetails?api-version={2}", ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"],
@@ -64,8 +64,9 @@ namespace CogsMinimizer
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], false);
 
+                AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], TokenKind.Application, false);
+                
                 // Get a list of Organizations of which the user is a member
                 string requestUrl = string.Format("{0}{1}/servicePrincipals?api-version={2}&$filter=appId eq '{3}'",
                     ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], organizationId, ConfigurationManager.AppSettings["ida:GraphAPIVersion"], applicationId);
@@ -101,7 +102,7 @@ namespace CogsMinimizer
             string objectDisplayName = null;
 
             // Aquire Access Token to call Azure AD Graph API
-            AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], false);
+            AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], TokenKind.User, true);
 
             HttpClient client = new HttpClient();
 

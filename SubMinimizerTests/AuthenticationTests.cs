@@ -32,7 +32,7 @@ namespace SubMinimizerTests
             // Get permissions of the app on the subscription
 
             string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
-            string appToken = AzureAuthUtils.AcquireAppToken(organizationId).AccessToken;
+            string appToken = AzureAuthUtils.AcquireArmAppToken(organizationId).AccessToken;
 
             string subscriptionId = "bcbd775a-813c-46e8-afe5-1a66912e0f03";
             string requestUrl =
@@ -74,7 +74,7 @@ namespace SubMinimizerTests
             // Get permissions of the app on the subscription
 
             string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
-            string appToken = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], true).AccessToken;
+            string appToken = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], TokenKind.User, true).AccessToken;
 
             string subscriptionId = "bcbd775a-813c-46e8-afe5-1a66912e0f03";
             string requestUrl =
@@ -117,7 +117,7 @@ namespace SubMinimizerTests
             // Get permissions of the app on the subscription
 
             string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
-            string appToken = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], false).AccessToken;
+            string appToken = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], TokenKind.Application, false).AccessToken;
 
             string subscriptionId = "bcbd775a-813c-46e8-afe5-1a66912e0f03";
             string requestUrl =
@@ -285,7 +285,7 @@ namespace SubMinimizerTests
                     ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId);
 
             string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
-            string appToken = AzureAuthUtils.AcquireAppToken(organizationId).AccessToken;
+            string appToken = AzureAuthUtils.AcquireArmAppToken(organizationId).AccessToken;
             var credentials = new TokenCloudCredentials(appToken);
 
             HttpClient client = new HttpClient();
