@@ -17,6 +17,9 @@ using Microsoft.Azure.Management.Authorization.Models;
 using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Azure.Management.ResourceManager.Models;
 using Microsoft.Rest;
+using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.Azure.KeyVault;
+using System.Threading.Tasks;
 
 namespace CogsMinimizer.Shared
 {
@@ -63,5 +66,17 @@ namespace CogsMinimizer.Shared
             return provider;
 
         }
+
+        public static string GetKeyVaultSecret(string keyVaultName, string secretName)
+        {
+            AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
+            var keyVaultClient = new KeyVaultClient(new Microsoft.Azure.KeyVault.KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+            Task<Microsoft.Azure.KeyVault.Models.SecretBundle> task = keyVaultClient.GetSecretAsync(
+                $"https://{keyVaultName}.vault.azure.net/secrets/{secretName}");
+            task.Wait();
+
+            return task.Result.Value;
+        }
+
     }
 }

@@ -20,8 +20,8 @@ namespace CogsMinimizer
         {
             System.Web.Helpers.AntiForgeryConfig.UniqueClaimTypeIdentifier = ClaimTypes.NameIdentifier;
 
-            string ClientId = ConfigurationManager.AppSettings["ida:ClientID"];
-            string Password = ConfigurationManager.AppSettings["ida:Password"];
+            string appClientId = Settings.Instance.AppClientId;
+            string appPassword = Settings.Instance.AppPassword;
             string Authority = string.Format(ConfigurationManager.AppSettings["ida:Authority"], "common");
             string GraphAPIIdentifier = ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"];
             string AzureResourceManagerIdentifier = ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"];
@@ -31,7 +31,7 @@ namespace CogsMinimizer
             app.UseOpenIdConnectAuthentication(
                 new OpenIdConnectAuthenticationOptions
                 {
-                    ClientId = ClientId,
+                    ClientId = appClientId,
                     Authority = Authority,
                     TokenValidationParameters = new System.IdentityModel.Tokens.TokenValidationParameters
                     {
@@ -56,6 +56,7 @@ namespace CogsMinimizer
                                     context.ProtocolMessage.IssuerAddress = authority;
                                 }
                             }
+
                             if (context.OwinContext.Environment.TryGetValue("DomainHint", out obj))
                             {
                                 string domainHint = obj as string;
@@ -64,6 +65,7 @@ namespace CogsMinimizer
                                     context.ProtocolMessage.SetParameter("domain_hint", domainHint);
                                 }
                             }
+
                             context.ProtocolMessage.RedirectUri = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path);
                             context.ProtocolMessage.PostLogoutRedirectUri = new UrlHelper(HttpContext.Current.Request.RequestContext).Action
                                 ("Index", "Home", null, HttpContext.Current.Request.Url.Scheme);
@@ -73,7 +75,7 @@ namespace CogsMinimizer
                         },
                         AuthorizationCodeReceived = (context) =>
                         {
-                            ClientCredential credential = new ClientCredential(ClientId, Password);
+                            ClientCredential credential = new ClientCredential(appClientId, appPassword);
                             string tenantID = context.AuthenticationTicket.Identity.FindFirst("http://schemas.microsoft.com/identity/claims/tenantid").Value;
                             string signedInUserUniqueName = context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.Name).Value.Split('#')[context.AuthenticationTicket.Identity.FindFirst(ClaimTypes.Name).Value.Split('#').Length - 1];
 
@@ -84,8 +86,10 @@ namespace CogsMinimizer
 
                             //var items = authContext.TokenCache.ReadItems().ToList();
 
-                            AuthenticationResult result1 = authContext.AcquireTokenByAuthorizationCode(
+                            Task<AuthenticationResult> resultTask1 = authContext.AcquireTokenByAuthorizationCodeAsync(
                                 context.Code, new Uri(HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path)), credential);
+                            resultTask1.Wait();
+                            AuthenticationResult result1 = resultTask1.Result;
 
                             //items = authContext.TokenCache.ReadItems().ToList();
 

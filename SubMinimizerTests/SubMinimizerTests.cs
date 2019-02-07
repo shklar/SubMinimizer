@@ -5,14 +5,13 @@ using System.Data;
 using System.Data.Common;
 using System.Data.Entity;
 using System.Data.SqlClient;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Linq;
 using System.Threading;
 using Microsoft.Azure.Common;
 using Microsoft.Azure.Management.Authorization;
 using Microsoft.Azure.Management.Authorization.Models;
 using Microsoft.Azure.Management.ResourceManager;
-using Microsoft.Azure.Subscriptions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using CogsMinimizer.Shared;
 
@@ -159,9 +158,9 @@ namespace SubMinimizerTests
         }
 
         [TestMethod]
+
         public void TestGetSubscriptionAdministrators()
         {
-
             var organizations = AzureResourceManagerUtil.GetUserOrganizations();
 
             foreach (Organization org in organizations)
@@ -169,10 +168,9 @@ namespace SubMinimizerTests
                 var subscriptions = AzureResourceManagerUtil.GetUserSubscriptions(org.Id);
 
                 foreach (Subscription sub in subscriptions)
-                {
+                { 
                     List<string> admins = AzureResourceManagerUtil.GetSubscriptionAdmins2(sub.Id, org.Id);
                     Assert.IsNotNull(admins);
-                    Assert.IsTrue(admins.Count > 0);
                 }
             }
         }

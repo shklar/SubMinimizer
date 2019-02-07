@@ -179,6 +179,11 @@ namespace CogsMinimizer.Shared
         private void AnalyzeSubscriptionResources()
         {
             m_subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins2(m_analyzedSubscription.Id, m_analyzedSubscription.OrganizationId);
+            if (m_subscriptionAdmins.Count == 0)
+            {
+                m_subscriptionAdmins.Add(m_analyzedSubscription.ConnectedBy);
+            }
+
             m_analysisResult.Admins = m_subscriptionAdmins;
 
             var emails = m_subscriptionAdmins;
