@@ -315,11 +315,9 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="App.Secrets.config" />
-    <None Include="Properties\PublishProfiles\SubMinimizer - FTP.pubxml" />
-    <None Include="Properties\PublishProfiles\SubMinimizer - FTP1.pubxml" />
-    <None Include="Properties\PublishProfiles\subminimizer - Web Deploy.pubxml" />
     <Content Include="Properties\webjobs-list.json" />
-    <None Include="Properties\PublishProfiles\SubMinimizer - Web Deploy1.pubxml" />
+    <None Include="Properties\PublishProfiles\subminimizer - Web Deploy.pubxml" />
+    <None Include="Properties\PublishProfiles\SubMinimizerPPE - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\colResizable-1.6.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
