@@ -247,3 +247,4 @@ ModelManifest.xml
 .fake/
 /OfflineSubscriptionManager/App.Secrets.config
 /CogsMinimizer/App.Secrets.config
+/SubMinimizerTests/App.Secrets.config

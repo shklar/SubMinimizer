@@ -115,7 +115,7 @@ namespace CogsMinimizer.Shared
                         $"Subscription marked for deletion : name: {m_analyzedSubscription.DisplayName} management level: {m_analyzedSubscription.ManagementLevel}");
 
                     //Check whether the feature switch for deleting resources is enabled
-                    if (ConfigurationManager.AppSettings["AllowWebJobDelete"].Equals("True"))
+                    if (ConfigurationManager.AppSettings["AllowWebJobDelete"].Equals("True", StringComparison.OrdinalIgnoreCase))
                     {
                         _tracer.TraceInformation("AllowWebJobDelete switch is Enabled.");
 

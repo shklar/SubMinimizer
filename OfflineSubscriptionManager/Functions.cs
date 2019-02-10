@@ -29,7 +29,7 @@ namespace OfflineSubscriptionManager
             tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["TelemetryInstrumentationKey"]}");
 
             //Top level feature switch to allow easy disabling
-            if (ConfigurationManager.AppSettings["EnableWebJob"].Equals("True"))
+            if (ConfigurationManager.AppSettings["EnableWebJob"].Equals("True", StringComparison.OrdinalIgnoreCase))
             {
                 tracer.TraceInformation("EnableWebJob switch is Enabled.");
                 ProcessSubscriptions(tracer);
@@ -62,7 +62,7 @@ namespace OfflineSubscriptionManager
                     //Persist analysis results to DB
                     db.SaveChanges();
 
-                    if (ConfigurationManager.AppSettings["AllowWebJobEmail"].Equals("True"))
+                    if (ConfigurationManager.AppSettings["AllowWebJobEmail"].Equals("True", StringComparison.OrdinalIgnoreCase))
                     {
                         tracer.TraceInformation("AllowWebJobEmail switch is Enabled.");
 
