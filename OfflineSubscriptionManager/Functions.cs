@@ -27,7 +27,18 @@ namespace OfflineSubscriptionManager
             ITracer tracer = TracerFactory.CreateTracer(logger);
             tracer.TraceInformation("OfflineSubscriptionManager web job started!");
             tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["TelemetryInstrumentationKey"]}");
-            ProcessSubscriptions(tracer);
+
+            //Top level feature switch to allow easy disabling
+            if (ConfigurationManager.AppSettings["EnableWebJob"].Equals("True", StringComparison.OrdinalIgnoreCase))
+            {
+                tracer.TraceInformation("EnableWebJob switch is Enabled.");
+                ProcessSubscriptions(tracer);
+            }
+            else
+            {
+                tracer.TraceWarning("EnableWebJob switch is disabled. Exiting.");
+            }
+
             tracer.Flush();
         }
 
@@ -51,15 +62,23 @@ namespace OfflineSubscriptionManager
                     //Persist analysis results to DB
                     db.SaveChanges();
 
-                    //Report the outcome of the analysis
-                    ReportSubscriptionAnalysisResult(analysisResult, tracer);
+                    if (ConfigurationManager.AppSettings["AllowWebJobEmail"].Equals("True", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tracer.TraceInformation("AllowWebJobEmail switch is Enabled.");
+
+                        //Send email with the outcome of the analysis
+                        EmailSubscriptionAnalysisResult(analysisResult, tracer);
+                    }
+                    else
+                    {
+                        tracer.TraceWarning("AllowWebJobEmail switch is disabled. Skipping sending email.");
+                    }
                 }
             }
         }
 
-        private static void ReportSubscriptionAnalysisResult(SubscriptionAnalysisResult analysisResult, ITracer tracer)
+        private static void EmailSubscriptionAnalysisResult(SubscriptionAnalysisResult analysisResult, ITracer tracer)
         {
-            //Email to = new Email("maximsh@microsoft.com");
             Subscription sub = analysisResult.AnalyzedSubscription;
             string subject = $"SubMinimizer: Subscription Analysis report for {sub.DisplayName}";
 
