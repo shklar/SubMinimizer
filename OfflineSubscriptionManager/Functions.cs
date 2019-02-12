@@ -80,7 +80,13 @@ namespace OfflineSubscriptionManager
         private static void EmailSubscriptionAnalysisResult(SubscriptionAnalysisResult analysisResult, ITracer tracer)
         {
             Subscription sub = analysisResult.AnalyzedSubscription;
-            string subject = $"SubMinimizer: Subscription Analysis report for {sub.DisplayName}";
+            string envDisplayName = ConfigurationManager.AppSettings["ENV_DISPLAY_NAME"];
+            if (! string.IsNullOrWhiteSpace(envDisplayName))
+            {
+                envDisplayName = $" [{envDisplayName}]";
+            }
+
+            string subject = $"SubMinimizer{envDisplayName}: Subscription Analysis report for {sub.DisplayName}";
 
             // Don't send mail if all resources are valid if subscription setting set appropriately
             if (sub.SendEmailOnlyInvalidResources)
