@@ -4,7 +4,6 @@ $branch_name = 'mov_secr_az'
 cd ('C:\projects\Sub_prd')
 
 GetCommitsToProceed
-#RemoveSecrets
 
 function GetCommitsToProceed()
 {
