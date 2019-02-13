@@ -35,8 +35,8 @@ namespace OfflineSubscriptionManager
                             </head>
                             <body>";
 
-
-            string analyzeControllerLink = "http://subminimizer.azurewebsites.net/Subscription/Analyze/";
+            string serviceURL = ConfigurationManager.AppSettings["ServiceURL"]; ;
+            string analyzeControllerLink = $"{serviceURL}/Subscription/Analyze/";
             string headerLink = HTMLUtilities.CreateHTMLLink($"SubMinimizer report for subscription: {sub.DisplayName}",
                 $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");
 
