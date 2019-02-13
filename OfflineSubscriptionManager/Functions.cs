@@ -26,7 +26,7 @@ namespace OfflineSubscriptionManager
 
             ITracer tracer = TracerFactory.CreateTracer(logger);
             tracer.TraceInformation("OfflineSubscriptionManager web job started!");
-            tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["TelemetryInstrumentationKey"]}");
+            tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["env:TelemetryInstrumentationKey"]}");
             ProcessSubscriptions(tracer);
             tracer.Flush();
         }
