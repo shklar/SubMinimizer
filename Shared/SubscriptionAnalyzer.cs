@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Data.Entity.Migrations;
 using System.Diagnostics;
 using System.Linq;
@@ -113,8 +114,20 @@ namespace CogsMinimizer.Shared
                     _tracer.TraceVerbose(
                         $"Subscription marked for deletion : name: {m_analyzedSubscription.DisplayName} management level: {m_analyzedSubscription.ManagementLevel}");
 
-                    // If automatic resources deletion allowed delete marked for deletion resources
-                    DeleteMarkedResources();
+                    //Check whether the feature switch for deleting resources is enabled
+                    if (ConfigurationManager.AppSettings["AllowWebJobDelete"].Equals("True", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _tracer.TraceInformation("AllowWebJobDelete switch is Enabled.");
+
+                        // If automatic resources deletion allowed delete marked for deletion resources
+                        DeleteMarkedResources();
+                    }
+                    else
+                    {
+                        _tracer.TraceWarning("AllowWebJobDelete switch is disabled. Skipping deleting resources.");
+                    }
+
+                   
                     if (m_analysisResult.DeletedResources.Any())
                     {
                         //The purpose of this sleep is to allow Azure to update its status for the deleted resources
