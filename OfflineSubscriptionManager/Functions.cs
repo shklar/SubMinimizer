@@ -26,10 +26,10 @@ namespace OfflineSubscriptionManager
 
             ITracer tracer = TracerFactory.CreateTracer(logger);
             tracer.TraceInformation("OfflineSubscriptionManager web job started!");
-            tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["TelemetryInstrumentationKey"]}");
+            tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["env:TelemetryInstrumentationKey"]}");
 
             //Top level feature switch to allow easy disabling
-            if (ConfigurationManager.AppSettings["EnableWebJob"].Equals("True", StringComparison.OrdinalIgnoreCase))
+            if (ConfigurationManager.AppSettings["env:EnableWebJob"].Equals("True", StringComparison.OrdinalIgnoreCase))
             {
                 tracer.TraceInformation("EnableWebJob switch is Enabled.");
                 ProcessSubscriptions(tracer);
@@ -62,7 +62,7 @@ namespace OfflineSubscriptionManager
                     //Persist analysis results to DB
                     db.SaveChanges();
 
-                    if (ConfigurationManager.AppSettings["AllowWebJobEmail"].Equals("True", StringComparison.OrdinalIgnoreCase))
+                    if (ConfigurationManager.AppSettings["env:AllowWebJobEmail"].Equals("True", StringComparison.OrdinalIgnoreCase))
                     {
                         tracer.TraceInformation("AllowWebJobEmail switch is Enabled.");
 
@@ -80,7 +80,7 @@ namespace OfflineSubscriptionManager
         private static void EmailSubscriptionAnalysisResult(SubscriptionAnalysisResult analysisResult, ITracer tracer)
         {
             Subscription sub = analysisResult.AnalyzedSubscription;
-            string envDisplayName = ConfigurationManager.AppSettings["ENV_DISPLAY_NAME"];
+            string envDisplayName = ConfigurationManager.AppSettings["env:EnvDisplayName"];
             if (! string.IsNullOrWhiteSpace(envDisplayName))
             {
                 envDisplayName = $" [{envDisplayName}]";
@@ -119,7 +119,7 @@ namespace OfflineSubscriptionManager
             }
 
             //Add BCC recepients - dev team, as configured in the app config
-            string devTeam = ConfigurationManager.AppSettings["DevTeam"];
+            string devTeam = ConfigurationManager.AppSettings["env:DevTeam"];
             if (devTeam != null)
             {
                 bcc.AddRange(devTeam.Split(';').Select(x => new Email(x)));
