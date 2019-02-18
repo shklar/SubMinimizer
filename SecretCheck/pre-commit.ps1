@@ -10,6 +10,38 @@ function PreCommit
    $err = $false
    $curDir = Get-Location
    
+   Write-Host "`nCheck unnecessary changes in application insights configuration`n"
+
+   $chgs = GetMod 'ApplicationInsights.config'
+   $aiModified = $chgs[0]
+   $filepath = $chgs[1]
+
+   if ($aiModified)
+   {
+         Write-Host "`nChanges in application insights configuration discovered`n"
+         Write-Host "Please revert changes in ApplicationInsights.config if they are not intentional. If intentional please stage them manually"
+         Write-Host "`Otherwise your commit will be forbidden`n"
+         $err = $true
+   }
+   else
+   {
+         Write-Host "`nNo changes in application insights configuration discovered`n"
+   }
+
+   Write-Host "`nCheck unnecessary changes in configuration files`n"
+
+   $files = Get-ChildItem -path $curDir -recurse | where {$_.Name -eq 'Web.config'} 
+   $chFound = CheckContent $files 'TelemetryCorrelationHttpModule'
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (TelemetryCorrelationHttpModule). Are all them intentional?'
+      $err = $true
+   }
+   else
+   {
+      Write-Host 'Changes at Web.config (TelemetryCorrelationHttpModule) not found.'
+   }
+
    Write-Host "`nCheck hard coded user name`n"
 
    $files = Get-ChildItem -path $curDir -recurse | where {$_.extension -eq '.cs'} 
@@ -24,6 +56,20 @@ function PreCommit
       Write-Host 'Hard coded user name not found'
    }
 
+   Write-Host "`nCheck NuGetPackageImportStamp`n"
+
+   $files = Get-ChildItem -path $curDir -recurse | where {$_.extension -eq '.csproj'} 
+   $nugImpFound = CheckContent $files 'NuGetPackageImportStamp'
+   if ($nugImpFound)
+   {
+      Write-Host 'NuGetPackageImportStamp found'
+      $err = $true
+   }
+   else
+   {
+      Write-Host 'NuGetPackageImportStamp not found'
+   }   
+   
    Write-Host "`nCheck hard coded application ID`n"
    
    $files = Get-ChildItem -path $curDir -recurse | where {($_.extension -eq '.cs') -or ($_.extension -eq '.config')} 
@@ -107,6 +153,7 @@ function PreCommit
    }
 
    Write-Host "`nCheck beta usage`n"
+   Write-Host "`nAttention! Using by partial projects different package versions isn't checked meanwhile`n"
 
    # check version info existence and ask run version info existence script running if info absent
    $verInfo = GetVersionInfo
@@ -137,6 +184,34 @@ function PreCommit
    }
 }
 
+function GetMod($file)
+{
+   $chgs = Git status
+   $staged = $true
+   foreach ($c in $chgs)
+   {
+      if ($c -match 'not staged')
+      {
+         $staged = $false
+      }
+
+      $cs = $c.ToString()
+      if ($cs -match $file)
+      {
+         if (-not $staged)
+         {
+            $true
+            $m = $cs -match '[^ ]+ ([^ ]+)'
+            $matches[1]
+            return 
+          }
+      }
+   }
+
+   $false
+   $null
+}
+
 function GetVersionInfo
 {
    $verInfoDirectory = Join-Path $PsScriptRoot -childPath "bin\data"
@@ -160,7 +235,7 @@ function GetVersionInfo
 
    $minInfoGetTime = (Get-Date).AddDays(-2)
    $verInfoTime = (Get-Item -Path $verInfoPath).LastWriteTime
-
+   
    if ($verInfoTime -gt $minInfoGetTime)
    {
       $infos = @()

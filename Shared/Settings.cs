@@ -26,12 +26,12 @@ namespace CogsMinimizer.Shared
 
         private Settings()
         {
-            DataAccessConnectionString = AzureDataUtils.GetKeyVaultSecret("subminimizer", "DataAccessCs");
-            ApiKey = AzureDataUtils.GetKeyVaultSecret("subminimizer", "apikey");
-            WebJobDashboardConnectionString = AzureDataUtils.GetKeyVaultSecret("subminimizer", "WJDashboardCs");
-            WebJobStorageConnectionString = AzureDataUtils.GetKeyVaultSecret("subminimizer", "WJStorageCs");
-            AppClientId = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregid");
-            AppPassword = AzureDataUtils.GetKeyVaultSecret("subminimizer", "appregpassword");
+            DataAccessConnectionString = Utilities.GetKeyVaultSecret("subminimizer", "DataAccessCs");
+            ApiKey = Utilities.GetKeyVaultSecret("subminimizer", "apikey");
+            WebJobDashboardConnectionString = Utilities.GetKeyVaultSecret("subminimizer", "WJDashboardCs");
+            WebJobStorageConnectionString = Utilities.GetKeyVaultSecret("subminimizer", "WJStorageCs");
+            AppClientId = Utilities.GetKeyVaultSecret("subminimizer", "appregid");
+            AppPassword = Utilities.GetKeyVaultSecret("subminimizer", "appregpassword");
         }
 
         public string ApiKey { get; set; }
@@ -45,5 +45,18 @@ namespace CogsMinimizer.Shared
         public string WebJobDashboardConnectionString { get; set; }
         
         public string WebJobStorageConnectionString { get; set; }
+
+        public static bool Initialize()
+        {
+            try
+            {
+                Settings settings = Instance;
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
     }
 }

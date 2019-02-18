@@ -78,7 +78,7 @@ namespace CogsMinimizer.Shared
                 if (response.IsSuccessStatusCode)
                 {
                     string responseContent = response.Content.ReadAsStringAsync().Result;
-                    return AzureDataUtils.CreateProvider(responseContent);
+                    return Utilities.CreateProvider(responseContent);
                 }
                 else
                 {

@@ -20,6 +20,11 @@ namespace CogsMinimizer
         {
             System.Web.Helpers.AntiForgeryConfig.UniqueClaimTypeIdentifier = ClaimTypes.NameIdentifier;
 
+            if (!Settings.Initialize())
+            {
+                throw new ApplicationException("Unable get settings");
+            }
+
             string appClientId = Settings.Instance.AppClientId;
             string appPassword = Settings.Instance.AppPassword;
             string Authority = string.Format(ConfigurationManager.AppSettings["ida:Authority"], "common");

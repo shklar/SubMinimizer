@@ -18,6 +18,10 @@ function GetCommitsToProceed()
    Write-Host '---Commits---'
    $revToSearch
 
+
+   Write-Host "`nSorry filtering by file types isn't supported meanwhile`n"
+   
+
    Write-Host '---Searching mail---'
    Git grep  -e 'eviten@microsoft'  $revToSearch
    

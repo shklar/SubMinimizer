@@ -23,7 +23,7 @@ namespace SubMinimizerTests
     public class AuthenticationTests
     {
         [TestMethod]
-        public void TestGetAppToken()
+        public void TestAccessArmWithAppToken()
         {
             //  test get token by call to our utility class
             // Test getting application token access to Azure resource manager as resource for resource manipulation
@@ -65,7 +65,7 @@ namespace SubMinimizerTests
         }
 
         [TestMethod]
-        public void TestAuthenticateSilent()
+        public void TestArmAccessWithUserToken()
         {
             //  test get token by call to our utility class
             // Test getting application token access to Azure resource manager as resource for resource manipulation
@@ -74,7 +74,7 @@ namespace SubMinimizerTests
             // Get permissions of the app on the subscription
 
             string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
-            string appToken = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], TokenKind.User, true).AccessToken;
+            string userToken = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], TokenKind.User, true).AccessToken;
 
             string subscriptionId = "bcbd775a-813c-46e8-afe5-1a66912e0f03";
             string requestUrl =
@@ -85,7 +85,7 @@ namespace SubMinimizerTests
             // Make the GET request
             HttpClient client = new HttpClient();
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, requestUrl);
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", appToken);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", userToken);
             HttpResponseMessage response = client.SendAsync(request).Result;
 
             // Endpoint returns JSON with an array of Actions and NotActions
@@ -108,7 +108,7 @@ namespace SubMinimizerTests
 
 
         [TestMethod]
-        public void TestAuthenticate()
+        public void TestAccessArbitraryResourceWithAppToken()
         {
             //  test get token by call to our utility class
             // Test getting application token access to Azure resource manager as resource for resource manipulation
@@ -151,7 +151,7 @@ namespace SubMinimizerTests
 
 
         [TestMethod]
-        public void TestGetAppTokenAdal()
+        public void TestArmAccessWithAdalDirectCallAppToken()
         {
             //  test get token by direct call to ADAL
 
@@ -192,7 +192,7 @@ namespace SubMinimizerTests
         }
         
         [TestMethod]
-        public void TestGetTokenSilentAdal()
+        public void TestArmAccessWithAdalDirectCallUserToken()
         {
             //  test get token silently by direct call to ADAL
             string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
@@ -230,7 +230,7 @@ namespace SubMinimizerTests
         }
 
         [TestMethod]
-        public void TestGetTokenSilent()
+        public void TestAcquireUserTokenMethod()
         {
             // test get token silent implementation  at our utility class
             string organizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
@@ -256,7 +256,7 @@ namespace SubMinimizerTests
             // /subscriptions/e91d47c4-76f3-4271-a796-21b4ecfe3624 e91d47c4-76f3-4271-a796-21b4ecfe3624 Development Enabled
 
             // add unsuccessful response handling
-            if (response.IsSuccessStatusCode)
+          if (response.IsSuccessStatusCode)
             {
                 string responseContent = response.Content.ReadAsStringAsync().Result;
 
@@ -270,12 +270,12 @@ namespace SubMinimizerTests
         [TestMethod]
         public void TestGetKeyVaultSecret()
         {
-            string value = AzureDataUtils.GetKeyVaultSecret("subminimizer", "testsecret");
+            string value = Utilities.GetKeyVaultSecret("subminimizer", "testsecret");
             Assert.AreEqual("Testcontent", value);
         }
 
         [TestMethod]
-        public void TestAuthorizationManagementClient()
+        public void TestGetAuthorizationManagementClient()
         {
             // Get subscriptions to which the user has some kind of access
             string subscriptionId = "f168ad75-c916-40ee-8d26-fa5344d0a101";

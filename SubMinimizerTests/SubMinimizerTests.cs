@@ -44,7 +44,7 @@ namespace SubMinimizerTests
 
 
         [TestMethod]
-        public void TestIsExpiredResource()
+        public void TestGetSuccessExpirationResource()
         {
             // Let's create resource and subscription to test
             Resource resource = CreateResource();

@@ -23,8 +23,13 @@ using System.Threading.Tasks;
 
 namespace CogsMinimizer.Shared
 {
-    public static class AzureDataUtils
+    public static class Utilities
     {
+        /// <summary>
+        /// Create Azure provider from given encoded content
+        /// </summary>
+        /// <param name="content">Content</param>
+        /// <returns>Provider</returns>
         public static Provider CreateProvider(string content)
         {
             JObject jObject = JObject.Parse(content);
@@ -67,6 +72,12 @@ namespace CogsMinimizer.Shared
 
         }
 
+        /// <summary>
+        ///  Gets key vault contained secret with given name
+        /// </summary>
+        /// <param name="keyVaultName">Key vault name</param>
+        /// <param name="secretName">Secret name</param>
+        /// <returns>Value</returns>
         public static string GetKeyVaultSecret(string keyVaultName, string secretName)
         {
             AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
