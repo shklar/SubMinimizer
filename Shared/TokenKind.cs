@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 namespace CogsMinimizer.Shared
 {
+
+    // identifies token kind to retrieve (application or user)
     public enum TokenKind
     {
         User,
