@@ -35,8 +35,8 @@ namespace OfflineSubscriptionManager
                             </head>
                             <body>";
 
-
-            string analyzeControllerLink = "http://subminimizer.azurewebsites.net/Subscription/Analyze/";
+            string serviceURL = ConfigurationManager.AppSettings["env:ServiceURL"];
+            string analyzeControllerLink = $"{serviceURL}/Subscription/Analyze/";
             string headerLink = HTMLUtilities.CreateHTMLLink($"SubMinimizer report for subscription: {sub.DisplayName}",
                 $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");
 
@@ -144,8 +144,10 @@ namespace OfflineSubscriptionManager
         {
             Diagnostics.EnsureArgumentNotNull(() => email);
             Diagnostics.EnsureArgumentNotNull(() => tracer);
-
+            
             string apiKey = Settings.Instance.ApiKey;
+            tracer.TraceInformation($"API_KEY length: {apiKey.Length}");
+      
             dynamic sg = new SendGridAPIClient(apiKey);
 
             Email from = new Email("noreply@subminimizer.com");
@@ -167,12 +169,14 @@ namespace OfflineSubscriptionManager
                 mail.Personalization[0].Bccs = email.BCC.ToList();
             }
 
-            tracer.TraceInformation($"Sending email To: { string.Join(";", mail.Personalization[0].Tos)} Subject: {email.Subject} " +
-                                    $"Cc: { string.Join(";", email.CC)} " +
-                                    $"Bcc: { string.Join(";", email.BCC)}");
+            tracer.TraceInformation($"Sending email To: { string.Join(";", mail.Personalization[0].Tos.Select(item=>item.Address))} " +
+                $"Subject: {email.Subject} " +
+                $"Cc: { string.Join(";", email.CC.Select(item=> item.Address))} " +
+                                    $"Bcc: { string.Join(";", email.BCC.Select(item => item.Address))}");
 
             dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
             tracer.TraceInformation($"Email was sent for {email.Subject}");
+            tracer.TraceInformation($"SendGrid response: {response.StatusCode}");
         }
     }
 }
