@@ -93,7 +93,7 @@ namespace CogsMinimizer.Shared
                         webUserUniqueId = User,
                     };
 
-                    //Add to memory cache for later use
+                    // Add to memory cache for later use
                     memoryCache.PerUserTokenCacheList.Add(Cache);
                 }
 
@@ -101,7 +101,7 @@ namespace CogsMinimizer.Shared
                 Cache.cacheBits = this.Serialize();
                 Cache.LastWrite = DateTime.UtcNow;
 
-                //Cache change has been recorded. Resetting the flag.
+                // Cache change has been recorded. Resetting the flag.
                 this.HasStateChanged = false;
             }
         }
