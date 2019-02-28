@@ -62,7 +62,7 @@
         var expirationDateColumn = 9;
 
         function SetCursor(bodyCursor, btnCursor) {
-        $('body').css('cursor', bodyCursor); 
+        $('body').css('cursor', bodyCursor);
         $('.btn').css('cursor', btnCursor);
     }
 
@@ -82,7 +82,7 @@
 
             $('.btn-status').each(
                 function(index, btn)
-                { 
+                {
                     if ($(btn).attr('data-status').length != 0) { SetStatusIcon(btn, $(btn).attr('data-status')); }
                 });
         });
@@ -144,12 +144,12 @@
 
     function GetDate(colNum, value)
     {
-        var dateAsString = $(value.elm).find("td").eq(colNum).html(); 
+        var dateAsString = $(value.elm).find("td").eq(colNum).html();
         var dateParts = dateAsString.split('/');
         var date = new Date(dateParts[2], dateParts[0], dateParts[1]);
         return date;
     }
-        
+
     function SortResources(th) {
 
         if ($('#resourcesTable tbody tr').length == 0)
@@ -318,7 +318,8 @@
                 type: "POST",
                 dataType: "json",
                 data: JSON.stringify({
-                    SubscriptionId: '@Model.SubscriptionData.Id'
+                    SubscriptionId: '@Model.SubscriptionData.Id',
+                    OrganizationId: '@Model.SubscriptionData.OrganizationId'
                 }),
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
@@ -380,7 +381,8 @@
                 data: JSON.stringify({
                     SubscriptionId: '@Model.SubscriptionData.Id',
                     ResourceId: resourceId,
-                    Description: resourceDescription
+                    Description: resourceDescription,
+                    OrganizationId: '@Model.SubscriptionData.OrganizationId'
                 }),
                 contentType: "application/json; charset=utf-8",
                 success: function (data) {
@@ -388,7 +390,7 @@
                     var rowSelector = "#resourcesTable tr[data-resource-id='" + resourceId + "']";
                     var resourceRow = $(rowSelector).first();
                     if (resourceRow != null) {
-     
+
                        $(resourceRow).find('td').eq(descriptionColumn).html(data.Description);
                        $(resourceRow).find('td').eq(descriptionColumn).attr("title", data.Description);
                     }
@@ -411,7 +413,8 @@
             dataType: "json",
             data: JSON.stringify({
                 ResourceId: resID,
-                SubscriptionId: subscrID
+                SubscriptionId: subscrID,
+                OrganizationId: '@Model.SubscriptionData.OrganizationId'
             }),
             contentType: "application/json; charset=utf-8",
             success: function (data) {
@@ -450,7 +453,8 @@
             dataType: "json",
             data: JSON.stringify({
                 ResourceId: resID,
-                SubscriptionId: subscrID
+                SubscriptionId: subscrID,
+                OrganizationId: '@Model.SubscriptionData.OrganizationId'
             }),
             contentType: "application/json; charset=utf-8",
             success: function(data) {
@@ -491,7 +495,8 @@
             dataType: "json",
             data: JSON.stringify({
                 ResourceId: resID,
-                SubscriptionId: subscrID
+                SubscriptionId: subscrID,
+                OrganizationId: '@Model.SubscriptionData.OrganizationId'
             }),
             contentType: "application/json; charset=utf-8",
             success: function(data) {

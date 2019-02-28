@@ -208,7 +208,7 @@ namespace CogsMinimizer.Shared
             return subscriptions;
         }
 
-        public static bool UserCanManageAccessForSubscription(string subscriptionId, string organizationId)
+        public static bool LoggedInUserHasWritePermissionOnSubscription(string subscriptionId, string organizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
