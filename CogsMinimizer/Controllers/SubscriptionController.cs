@@ -24,6 +24,7 @@ namespace CogsMinimizer.Controllers
         public ActionResult ResetResources(string SubscriptionId, string OrganizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => OrganizationId);
 
             bool userHasWritePermission = AzureResourceManagerUtil.LoggedInUserHasWritePermissionOnSubscription(SubscriptionId, OrganizationId);
 
@@ -126,7 +127,7 @@ namespace CogsMinimizer.Controllers
             }
         }
 
-        ///Save settings - can only be done by the subscription owner
+        /// Save settings - can only be done by the subscription owner
         [HttpPost]
         public ActionResult SaveSettings(string ServicePrincipalObjectId, Subscription subscription)
         {
