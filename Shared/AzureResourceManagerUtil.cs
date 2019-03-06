@@ -28,7 +28,7 @@ namespace CogsMinimizer.Shared
         public static List<Organization> GetUserOrganizations()
         {
             List<Organization> organizations = new List<Organization>();
-            string microsoftAADID = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
+            string microsoftAADID = Settings.Instance.GetSetting("ida:MicrosoftAADID");
 
             string objectIdOfCloudSenseServicePrincipal =
                 AzureADGraphAPIUtil.GetObjectIdOfServicePrincipalInOrganization(microsoftAADID,
@@ -38,7 +38,7 @@ namespace CogsMinimizer.Shared
             {
                 Id = microsoftAADID,
                 objectIdOfCloudSenseServicePrincipal = objectIdOfCloudSenseServicePrincipal
-                //DisplayName = AzureADGraphAPIUtil.GetOrganizationDisplayName(organization.tenantId),
+                // DisplayName = AzureADGraphAPIUtil.GetOrganizationDisplayName(organization.tenantId),
             });
 
             return organizations;
@@ -64,7 +64,7 @@ namespace CogsMinimizer.Shared
                 string requestUrl = string.Format("https://management.azure.com/subscriptions/{0}/providers/{1}?api-version={2}",
                     subscriptionId,
                     providerName,
-                    ConfigurationManager.AppSettings["ida:AzureResourceManagerAPIVersion"]);
+                    Settings.Instance.GetSetting("ida:AzureResourceManagerAPIVersion"));
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -175,14 +175,14 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireArmUserToken(organizationId);
 
                 subscriptions = new List<Subscription>();
 
                 // Get subscriptions to which the user has some kind of access
                 string requestUrl = string.Format("{0}/subscriptions?api-version={1}",
-                    ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"],
-                    ConfigurationManager.AppSettings["ida:AzureResourceManagerAPIVersion"]);
+                     Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"),
+                    Settings.Instance.GetSetting("ida:AzureResourceManagerAPIVersion"));
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -229,14 +229,14 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireArmUserToken(organizationId);
 
 
                 // Get permissions of the user on the subscription
                 string requestUrl =
                     string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
-                        ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
-                        ConfigurationManager.AppSettings["ida:ARMAuthorizationPermissionsAPIVersion"]);
+                        Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId,
+                        Settings.Instance.GetSetting("ida:ARMAuthorizationPermissionsAPIVersion"));
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -306,12 +306,12 @@ namespace CogsMinimizer.Shared
             try
             {
                 AuthenticationResult result = AzureAuthUtils.AcquireArmAppToken(organizationId);
-
+          
                 // Get permissions of the app on the subscription
                 string requestUrl =
                     string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
-                        ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
-                        ConfigurationManager.AppSettings["ida:ARMAuthorizationPermissionsAPIVersion"]);
+                        Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId,
+                         Settings.Instance.GetSetting("ida:ARMAuthorizationPermissionsAPIVersion"));
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -389,7 +389,7 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireArmUserToken(organizationId);
 
                 // Create role assignment for application on the subscription
                 string roleAssignmentId = Guid.NewGuid().ToString();
@@ -400,9 +400,9 @@ namespace CogsMinimizer.Shared
                 string requestUrl =
                     string.Format(
                         "{0}/subscriptions/{1}/providers/microsoft.authorization/roleassignments/{2}?api-version={3}",
-                        ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
+                        Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId,
                         roleAssignmentId,
-                        ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleAssignmentsAPIVersion"]);
+                        Settings.Instance.GetSetting("ida:ARMAuthorizationRoleAssignmentsAPIVersion"));
 
                 HttpClient client = new HttpClient();
                 HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, requestUrl);
@@ -435,14 +435,14 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireArmUserToken(organizationId);
 
                 // Get rolesAssignments to application on the subscription
                 string requestUrl =
                     string.Format(
                         "{0}/subscriptions/{1}/providers/microsoft.authorization/roleassignments?api-version={2}&$filter=principalId eq '{3}'",
-                        ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
-                        ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleAssignmentsAPIVersion"], objectId);
+                        Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId,
+                        Settings.Instance.GetSetting("ida:ARMAuthorizationRoleAssignmentsAPIVersion"), objectId);
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -460,12 +460,12 @@ namespace CogsMinimizer.Shared
                     string responseContent = response.Content.ReadAsStringAsync().Result;
                     var roleAssignmentsResult = (Json.Decode(responseContent)).value;
 
-                    //remove all role assignments
+                    // remove all role assignments
                     foreach (var roleAssignment in roleAssignmentsResult)
                     {
                         requestUrl = string.Format("{0}{1}?api-version={2}",
-                            ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], roleAssignment.id,
-                            ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleAssignmentsAPIVersion"]);
+                            Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), roleAssignment.id,
+                            Settings.Instance.GetSetting("ida:ARMAuthorizationRoleAssignmentsAPIVersion"));
                         request = new HttpRequestMessage(HttpMethod.Delete, requestUrl);
                         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);
                         // add unsuccessful response handling
@@ -491,14 +491,14 @@ namespace CogsMinimizer.Shared
 
             try
             {
-                AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
+                AuthenticationResult result = AzureAuthUtils.AcquireArmUserToken(organizationId);
 
                 // Get subscriptions to which the user has some kind of access
                 string requestUrl =
                     string.Format(
                         "{0}/subscriptions/{1}/providers/Microsoft.Authorization/roleDefinitions?api-version={2}",
-                        ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId,
-                        ConfigurationManager.AppSettings["ida:ARMAuthorizationRoleDefinitionsAPIVersion"]);
+                        Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId,
+                        Settings.Instance.GetSetting("ida:ARMAuthorizationRoleDefinitionsAPIVersion"));
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -572,7 +572,7 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
 
-            AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
+            AuthenticationResult result = AzureAuthUtils.AcquireArmUserToken(organizationId);
 
             var credentials = new TokenCredentials(result.AccessToken);
             var resourceClient = new ResourceManagementClient(credentials) {SubscriptionId = subscriptionId};
@@ -597,10 +597,10 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => subscriptionId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
 
-            AuthenticationResult result = AzureAuthUtils.AcquireUserToken(organizationId);
+            AuthenticationResult result = AzureAuthUtils.AcquireArmUserToken(organizationId);
 
             string subscriptionUri = string.Format("{0}/subscriptions/{1}",
-             ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId);
+             Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId);
 
             var credentials = new TokenCloudCredentials(result.AccessToken);
             var authorizationManagementClient = new AuthorizationManagementClient(credentials, new Uri(subscriptionUri));
@@ -615,7 +615,7 @@ namespace CogsMinimizer.Shared
 
             AuthenticationResult result = AzureAuthUtils.AcquireArmAppToken(organizationId);
             string subscriptionUri = string.Format("{0}/subscriptions/{1}",
-             ConfigurationManager.AppSettings["ida:AzureResourceManagerUrl"], subscriptionId);
+             Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId);
 
             var credentials = new TokenCloudCredentials(result.AccessToken);
             var authorizationManagementClient = new AuthorizationManagementClient(credentials, new Uri(subscriptionUri));
@@ -642,7 +642,7 @@ namespace CogsMinimizer.Shared
                     tracer.TraceVerbose($"Trying to delete the resource {azureresourceid} with API version: {apiVersion[i]}");
                     resourceClient.Resources.DeleteById(azureresourceid, apiVersion[i]);
 
-                    //If successfully deleted the resource no need to continue
+                    // If successfully deleted the resource no need to continue
                     tracer.TraceVerbose($"Deleted the resource {azureresourceid} with API version: {apiVersion[i]}");
                     return;
                 }

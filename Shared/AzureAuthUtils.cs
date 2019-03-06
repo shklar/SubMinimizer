@@ -28,7 +28,7 @@ namespace CogsMinimizer.Shared
 
             ClientCredential credential = AzureAuthUtils.GetAppClientCredential();
             Task<AuthenticationResult> resultTask = null;
-            string authority = ConfigurationManager.AppSettings["ida:Authority"];
+            string authority = Settings.Instance.GetSetting("ida:Authority");
 
             if (tokenKind == TokenKind.User)
             {
@@ -72,12 +72,12 @@ namespace CogsMinimizer.Shared
         /// </summary>
         /// <param name="organizationId">Organization ID</param>
         /// <returns>User token</returns>
-        public static AuthenticationResult AcquireUserToken(string organizationId)
+        public static AuthenticationResult AcquireArmUserToken(string organizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
 
 
-            return Authenticate(organizationId, ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"], TokenKind.User, true);
+            return Authenticate(organizationId, Settings.Instance.GetSetting("ida:AzureResourceManagerIdentifier"), TokenKind.User, true);
         }
 
 
@@ -91,7 +91,7 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
 
 
-            return Authenticate(organizationId, ConfigurationManager.AppSettings["ida:AzureResourceManagerIdentifier"], TokenKind.Application, false);
+            return Authenticate(organizationId, Settings.Instance.GetSetting("ida:AzureResourceManagerIdentifier"), TokenKind.Application, false);
         }
 
 

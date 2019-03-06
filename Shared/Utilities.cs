@@ -80,13 +80,24 @@ namespace CogsMinimizer.Shared
         /// <returns>Value</returns>
         public static string GetKeyVaultSecret(string keyVaultName, string secretName)
         {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => keyVaultName);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => secretName);
+
             AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
             var keyVaultClient = new KeyVaultClient(new Microsoft.Azure.KeyVault.KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
             Task<Microsoft.Azure.KeyVault.Models.SecretBundle> task = keyVaultClient.GetSecretAsync(
                 $"https://{keyVaultName}.vault.azure.net/secrets/{secretName}");
             task.Wait();
 
-            return task.Result.Value;
+            if (task.IsFaulted)
+            {
+                System.Diagnostics.Trace.TraceInformation($"Unable get Value for secret {secretName} in App.config isn't defined");
+                return null;
+            }
+            else
+            {
+                return task.Result.Value;
+            }
         }
 
     }

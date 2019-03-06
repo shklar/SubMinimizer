@@ -20,11 +20,11 @@ namespace CogsMinimizer
             string displayName = null;
             try
             {
-                AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], TokenKind.User, true);
+                AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, Settings.Instance.GetSetting("ida:GraphAPIIdentifier"), TokenKind.User, true);
 
                 // Get a list of Organizations of which the user is a member
-                string requestUrl = string.Format("{0}{1}/tenantDetails?api-version={2}", ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"],
-                    organizationId, ConfigurationManager.AppSettings["ida:GraphAPIVersion"]);
+                string requestUrl = string.Format("{0}{1}/tenantDetails?api-version={2}", Settings.Instance.GetSetting("ida:GraphAPIIdentifier"),
+                    organizationId, Settings.Instance.GetSetting("ida:GraphAPIVersion"));
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -65,11 +65,11 @@ namespace CogsMinimizer
             try
             {
 
-                AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], TokenKind.Application, false);
+                AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, Settings.Instance.GetSetting("ida:GraphAPIIdentifier"), TokenKind.Application, false);
                 
                 // Get a list of Organizations of which the user is a member
                 string requestUrl = string.Format("{0}{1}/servicePrincipals?api-version={2}&$filter=appId eq '{3}'",
-                    ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], organizationId, ConfigurationManager.AppSettings["ida:GraphAPIVersion"], applicationId);
+                    Settings.Instance.GetSetting("ida:GraphAPIIdentifier"), organizationId, Settings.Instance.GetSetting("ida:GraphAPIVersion"), applicationId);
 
                 // Make the GET request
                 HttpClient client = new HttpClient();
@@ -102,13 +102,13 @@ namespace CogsMinimizer
             string objectDisplayName = null;
 
             // Aquire Access Token to call Azure AD Graph API
-            AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], TokenKind.User, true);
+            AuthenticationResult result = AzureAuthUtils.Authenticate(organizationId, Settings.Instance.GetSetting("ida:GraphAPIIdentifier"), TokenKind.User, true);
 
             HttpClient client = new HttpClient();
 
             string doQueryUrl = string.Format("{0}{1}/directoryObjects/{2}?api-version={3}",
-                ConfigurationManager.AppSettings["ida:GraphAPIIdentifier"], organizationId,
-                objectId, ConfigurationManager.AppSettings["ida:GraphAPIVersion"]);
+                Settings.Instance.GetSetting("ida:GraphAPIIdentifier"), organizationId,
+                objectId, Settings.Instance.GetSetting("ida:GraphAPIVersion"));
 
             HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, doQueryUrl);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", result.AccessToken);

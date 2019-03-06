@@ -8,8 +8,121 @@ function PreCommit
 {
 
    $err = $false
-   $curDir = Get-Location
    
+   Write-Host "`nCheck comments without space after //`n"
+   
+   $files = GetFiles('.cs')
+   $chFound = CheckComments $files
+   if ($chFound)
+   {
+
+      Write-Host 'Less readable comments found.'
+      $err = $true
+   }
+
+   Write-Host "`nCheck from neutral values changes in application configuration`n"
+
+   $files = GetFiles('.config')
+   
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:WebJobDashboardCs\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (WebJobDashboardCs is changed from neutral).'
+      $err = $true
+   }
+
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:WebJobStorageCs\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (WebJobStorageCs is changed from neutral).'
+      $err = $true
+   }
+
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:ApiKey\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (ApiKey is changed from neutral).'
+      $err = $true
+   }
+
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:AppRegId\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (AppRegId is changed from neutral).'
+      $err = $true
+   }
+
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:AppRegPassword\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (AppRegPassword is changed from neutral).'
+      $err = $true
+   }
+   
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:KeyVault\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (KeyVault is changed from neutral).'
+      $err = $true
+   }
+   
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:DataAccess\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (DataAccess is changed from neutral).'
+      $err = $true
+   }
+
+
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:EnableWebJob\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (EnableWebJob is changed from neutral).'
+      $err = $true
+   }
+
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:\AllowWebJobDelete" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (AllowWebJobDelete is changed from neutral).'
+      $err = $true
+   }
+
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:AllowWebJobEmail\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (AllowWebJobEmail is changed from neutral).'
+      $err = $true
+   }
+
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:DevTeam\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (DevTeam is changed from neutral).'
+      $err = $true
+   }
+   
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:EnvDisplayName\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (EnvDisplayName is changed from neutral).'
+      $err = $true
+   }
+   
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:ServiceURL\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (ServiceURL is changed from neutral).'
+      $err = $true
+   }
+
+   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:TelemetryInstrumentationKey\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+   if ($chFound)
+   {
+      Write-Host 'Changes at Web.config found (TelemetryInstrumentationKey is changed from neutral).'
+      $err = $true
+   }
+
    Write-Host "`nCheck unnecessary changes in application insights configuration`n"
 
    $chgs = GetMod 'ApplicationInsights.config'
@@ -30,7 +143,8 @@ function PreCommit
 
    Write-Host "`nCheck unnecessary changes in configuration files`n"
 
-   $files = Get-ChildItem -path $curDir -recurse | where {$_.Name -eq 'Web.config'} 
+   $files = GetFiles '.config' 'Web'
+
    $chFound = CheckContent $files 'TelemetryCorrelationHttpModule'
    if ($chFound)
    {
@@ -44,7 +158,7 @@ function PreCommit
 
    Write-Host "`nCheck hard coded user name`n"
 
-   $files = Get-ChildItem -path $curDir -recurse | where {$_.extension -eq '.cs'} 
+   $files = GetFiles('.cs')
    $mailFound = CheckContent $files 'eviten@microsoft.com'
    if ($mailFound)
    {
@@ -58,7 +172,7 @@ function PreCommit
 
    Write-Host "`nCheck NuGetPackageImportStamp`n"
 
-   $files = Get-ChildItem -path $curDir -recurse | where {$_.extension -eq '.csproj'} 
+   $files = GetFiles('.csproj')
    $nugImpFound = CheckContent $files 'NuGetPackageImportStamp'
    if ($nugImpFound)
    {
@@ -72,7 +186,8 @@ function PreCommit
    
    Write-Host "`nCheck hard coded application ID`n"
    
-   $files = Get-ChildItem -path $curDir -recurse | where {($_.extension -eq '.cs') -or ($_.extension -eq '.config')} 
+   $files = GetFiles('.config') 
+   $files += GetFiles('.cs')
    $appIdFound = CheckContent $files 'ida:ClientID'
    if ($appIdFound)
    {
@@ -86,7 +201,8 @@ function PreCommit
 
    Write-Host "`nCheck hard coded application password`n"
    
-   $files = Get-ChildItem -path $curDir -recurse | where {($_.extension -eq '.cs') -or ($_.extension -eq '.config')} 
+   $files = GetFiles('.config') 
+   $files += GetFiles('.cs')
    $pwdFound = CheckContent $files 'ida:Password'
    if ($pwdFound)
    {
@@ -100,7 +216,7 @@ function PreCommit
 
    Write-Host "`nCheck hard coded  database connection string`n"
    
-   $files = Get-ChildItem -path $curDir -recurse | where {($_.extension -eq '.config')} 
+   $files = GetFiles('.config')
    $connFound = CheckContent $files 'add name=\"DataAccess'
    if ($connFound)
    {
@@ -114,7 +230,7 @@ function PreCommit
 
    Write-Host "`nCheck hard coded web job connection string`n"
    
-   $files = Get-ChildItem -path $curDir -recurse | where {($_.extension -eq '.config')} 
+   $files = GetFiles('.config')
    $connFound1 = CheckContent $files 'WebJobsDash'
    if ($connFound1)
    {
@@ -126,7 +242,7 @@ function PreCommit
       Write-Host 'Hard coded web job connection string not found'
    }
 
-   $files = Get-ChildItem -path $curDir -recurse | where {($_.extension -eq '.config')} 
+   $files = GetFiles('.config')
    $connFound2 = CheckContent $files 'WebJobsStorage'
    if ($connFound2)
    {
@@ -140,7 +256,7 @@ function PreCommit
 
    Write-Host "`nCheck  publishing profile reference`n"
 
-   $files = Get-ChildItem -path $curDir -recurse | where {($_.extension -eq '.csproj')} 
+   $files = GetFiles('.csproj')
    $pubFound = CheckContent $files 'pubxml'
    if ($pubFound)
    {
@@ -179,8 +295,35 @@ function PreCommit
 
    if ($err -eq $true)
    {
-      Write-Host 'Errors found'
+      Write-Host "`n`nErrors found"
       exit 1
+   }
+   else
+   {
+      Write-Host "`n`nNo errors found"
+   }
+}
+
+function GetFiles
+{
+   param
+   (
+      [Parameter(Mandatory=$true, Position=0)]
+      [string] $ext,
+      [Parameter(Mandatory=$false, Position=1)]
+      [string] $name
+   )
+
+   $curDir = Get-Location
+
+   $fs = Get-ChildItem -path $curDir -recurse | where {$_.extension -eq $ext -and $_.Directory.FullName.IndexOf('obj') -eq -1 -and $_.Directory.FullName.IndexOf('bin') -eq -1 }
+   if ($name -ne $null -and $name -ne '')
+   {
+      return $fs | where {$_.BaseName -eq $name}
+   }
+   else
+   {
+      return $fs
    }
 }
 
@@ -404,26 +547,97 @@ function CheckBetaContent($fs, $versionInfo)
    return $found
 }
 
-function CheckContent($fs, $pattern)
+function CheckComments($fs)
 {
+
    $found = $false
 
-   foreach ($f in $files)
+   foreach ($f in $fs)
    {
       $txt = Get-Content -Path $f.FullName
       foreach ($str in $txt)
       {
          $strTxt = $str.ToString()
-         if ($strTxt -match $pattern)
+         if ($strTxt -match '([^/]*)([/]+)[^"^ ^/]')
          {
-            Write-Host '-- File --' + $f.FullName
-            Write-Host $strTxt
+            $prev = $Matches[1]
+            if ($prev -match 'http:$' -or $prev -match 'https:$')
+            {
+               continue
+            }
 
+            $slashes = $matches[2]
+
+            if ($slashes -ne '//')
+            {
+               continue
+            }
+          
+            Write-Host '-- File --' + $f.FullName
+            Write-Host 'Less readable comment found. please add space after slashes'
+            Write-Host $strTxt
             $found = $true
          }
-       }
+      }
    }
 
+   return $found
+}
+
+function CheckContent()
+{
+   param
+   (
+      [Parameter(Mandatory=$true, Position=0)]
+      [Array] $fs,
+      [Parameter(Mandatory=$true, Position=1)]
+      [string] $pattern,
+      [Parameter(Mandatory=$false, Position=2)]
+      [Array] $vals
+   )
+
+   $found = $false
+
+   foreach ($f in $fs)
+   {
+      $txt = Get-Content -Path $f.FullName
+      foreach ($str in $txt)
+      {
+         $strTxt = $str.ToString()
+
+         if ($strTxt -match $pattern)
+         {
+            if ($vals -ne $null)
+            {
+               $m = $matches[1]
+               $foundValidInString = $false
+               
+               foreach ($v in $vals)
+               {
+                  $m = $m.ToString()
+                  if ($m -eq $v)
+                  {
+                     $foundValidInString = $true
+                  }
+               }
+
+               if (-not $foundValidInString)
+               {
+                   Write-Host '-- File --' + $f.FullName
+                   Write-Host $strTxt
+                   $found = $true
+               }
+             }
+             else
+             {
+                  Write-Host '-- File --' + $f.FullName
+                  Write-Host $strTxt
+                  $found = $true
+              }
+           }
+         }
+    }
+   
    return $found
 }
 
