@@ -17,12 +17,21 @@ namespace CogsMinimizer.Controllers
     public class SubscriptionController : SubMinimizerController
     {
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
+        private DataAccess db = new DataAccess();
 
         // Reset the duration of all subscription resources ( removes it's confirmed owner and sets its expiration date to today + unclaimed resources expiration date)
         [HttpPost]
-        public ActionResult ResetResources(string SubscriptionId)
+        public ActionResult ResetResources(string SubscriptionId, string OrganizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => OrganizationId);
+
+            bool userHasWritePermission = AzureResourceManagerUtil.LoggedInUserHasWritePermissionOnSubscription(SubscriptionId, OrganizationId);
+
+            if (!userHasWritePermission)
+            {
+                throw new ArgumentException("Unauthorized access");
+            }
 
             List<object> resultList = new List<object>();
             using (DataAccess db = new DataAccess())
@@ -68,9 +77,17 @@ namespace CogsMinimizer.Controllers
         }
 
         // GET: Subscription
+        // Can only be called by someone with write access rights to the subscription
         public ActionResult GetSettings([Bind(Include = "Id, OrganizationId, DisplayName")] string ServicePrincipalObjectId, Subscription subscription)
         {
             Diagnostics.EnsureArgumentNotNull(() => subscription);
+
+            bool userHasWritePermission = AzureResourceManagerUtil.LoggedInUserHasWritePermissionOnSubscription(subscription.Id, subscription.OrganizationId);
+
+            if (!userHasWritePermission)
+            {
+                throw new ArgumentException("Unauthorized access");
+            }
 
             using (DataAccess dataAccess = new DataAccess())
             { 
@@ -110,6 +127,7 @@ namespace CogsMinimizer.Controllers
             }
         }
 
+        /// Save settings - can only be done by the subscription owner
         [HttpPost]
         public ActionResult SaveSettings(string ServicePrincipalObjectId, Subscription subscription)
         {
@@ -128,6 +146,14 @@ namespace CogsMinimizer.Controllers
                 if (currentUser != existingSubscription.ConnectedBy)
                 {
                     throw new ArgumentException("You are not authorized to edit the subscription settings.Please contact the subscription owner");
+                }
+
+                //Make sure the registered owner still has Write permissions to the subscription
+                bool userHasWritePermission = AzureResourceManagerUtil.LoggedInUserHasWritePermissionOnSubscription(subscription.Id, subscription.OrganizationId);
+
+                if (!userHasWritePermission)
+                {
+                    throw new ArgumentException("Unauthorized access");
                 }
 
                 string servicePrincipalObjectId = ServicePrincipalObjectId;
@@ -181,9 +207,18 @@ namespace CogsMinimizer.Controllers
            return RedirectToAction("Index", "Home");
         }
         
+        ///View resources in the subscriptions
         public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
         {
             Diagnostics.EnsureArgumentNotNull(() => subscription);
+
+            //Ensure the user has Write access to the requested subscription
+            bool userHasWritePermission = AzureResourceManagerUtil.LoggedInUserHasWritePermissionOnSubscription(subscription.Id, subscription.OrganizationId);
+
+            if (!userHasWritePermission)
+            {
+                throw new ArgumentException("Unauthorized access");
+            }
 
             var model = GetResourcesViewModel(subscription.Id);
             ViewData["UserId"] = AzureAuthUtils.GetSignedInUserUniqueName();
@@ -192,10 +227,18 @@ namespace CogsMinimizer.Controllers
 
         // Reserves the duration of a resource so that it does not get reported or deleted as expired
         [HttpPost]
-        public ActionResult ReserveResource(string ResourceId, string SubscriptionId)
+        public ActionResult ReserveResource(string ResourceId, string SubscriptionId, string OrganizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            //Ensure the user has Write access to the requested subscription
+            bool userHasWritePermission = AzureResourceManagerUtil.LoggedInUserHasWritePermissionOnSubscription(SubscriptionId, OrganizationId);
+
+            if (!userHasWritePermission)
+            {
+                throw new ArgumentException("Unauthorized access");
+            }
 
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
@@ -228,10 +271,18 @@ namespace CogsMinimizer.Controllers
 
         // Edit resource description
         [HttpPost]
-        public ActionResult SaveResourceDescription(string ResourceId, string SubscriptionId, string Description)
+        public ActionResult SaveResourceDescription(string ResourceId, string SubscriptionId, string Description, string OrganizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            //Ensure the user has Write access to the requested subscription
+            bool userHasWritePermission = AzureResourceManagerUtil.LoggedInUserHasWritePermissionOnSubscription(SubscriptionId, OrganizationId);
+
+            if (!userHasWritePermission)
+            {
+                throw new ArgumentException("Unauthorized access");
+            }
 
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
@@ -262,10 +313,18 @@ namespace CogsMinimizer.Controllers
 
         //Reset the duration of a resource ( removes it's confirmed owner and sets its expiration date to today + unclaimed resources expiration date)
         [HttpPost]
-        public ActionResult ResetResource(string ResourceId, string SubscriptionId)
+        public ActionResult ResetResource(string ResourceId, string SubscriptionId, string OrganizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            //Ensure the user has Write access to the requested subscription
+            bool userHasWritePermission = AzureResourceManagerUtil.LoggedInUserHasWritePermissionOnSubscription(SubscriptionId, OrganizationId);
+
+            if (!userHasWritePermission)
+            {
+                throw new ArgumentException("Unauthorized access");
+            }
 
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
@@ -304,10 +363,18 @@ namespace CogsMinimizer.Controllers
 
         //Extends the duration of a resource so that it does not get reported or deleted as expired
         [HttpPost]
-        public ActionResult ExtendResource(string ResourceId, string SubscriptionId)
+        public ActionResult ExtendResource(string ResourceId, string SubscriptionId, string OrganizationId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            //Ensure the user has Write access to the requested subscription
+            bool userHasWritePermission = AzureResourceManagerUtil.LoggedInUserHasWritePermissionOnSubscription(SubscriptionId, OrganizationId);
+
+            if (!userHasWritePermission)
+            {
+                throw new ArgumentException("Unauthorized access");
+            }
 
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
@@ -458,9 +525,6 @@ namespace CogsMinimizer.Controllers
             return View("Analyze", model);
         }
 
-
-
-        private DataAccess db = new DataAccess();
 
         public ActionResult Connect([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string servicePrincipalObjectId)
         {

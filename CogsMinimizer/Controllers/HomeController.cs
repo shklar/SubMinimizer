@@ -59,7 +59,6 @@ namespace CogsMinimizer.Controllers
                                 subscription.ManagementLevel = s.ManagementLevel;
                                 subscription.SendEmailToCoadmins = s.SendEmailToCoadmins;
                                 subscription.SendEmailOnlyInvalidResources = s.SendEmailOnlyInvalidResources;
-                                //subscription.AzureAccessNeedsToBeRepaired = !AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, org.Id);
                                 subscription.AzureAccessNeedsToBeRepaired = false;
 
                             }
@@ -70,8 +69,6 @@ namespace CogsMinimizer.Controllers
 
                             model.UserSubscriptions.Add(subscription.Id, subscription);
                             model.UserCanManageAccessForSubscriptions.Add(subscription.Id);
-                            //if (AzureResourceManagerUtil.UserCanManageAccessForSubscription(subscription.Id, org.Id)) model.UserCanManageAccessForSubscriptions.Add(subscription.Id);
-                          
                         }
                     }
                     else
