@@ -112,6 +112,7 @@
     <Compile Include="AzureADGraphAPIUtil.cs" />
     <Compile Include="AzureAuthUtils.cs" />
     <Compile Include="AzureDataUtils.cs" />
+    <Compile Include="InMemoryTokenCache.cs" />
     <Compile Include="ResourceOperationsUtil.cs" />
     <Compile Include="AzureResourceManagerUtil.cs" />
     <Compile Include="DataAccess.cs" />
@@ -147,7 +148,6 @@
     <Compile Include="Tracing\WebJobTracer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
     </None>
