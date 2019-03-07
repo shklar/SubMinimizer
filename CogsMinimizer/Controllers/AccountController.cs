@@ -5,6 +5,8 @@ using System.Configuration;
 using System.Web;
 using System.Web.Mvc;
 
+using CogsMinimizer.Shared;
+
 namespace CogsMinimizer.Controllers
 {
     public class AccountController : SubMinimizerController
@@ -16,7 +18,7 @@ namespace CogsMinimizer.Controllers
             if (!Request.IsAuthenticated)
             {
                 // note configuration (keys, etc…) will not necessarily understand this authority.
-                HttpContext.GetOwinContext().Environment.Add("Authority", string.Format(ConfigurationManager.AppSettings["ida:Authority"] + "OAuth2/Authorize", directoryName));
+                HttpContext.GetOwinContext().Environment.Add("Authority", string.Format(Settings.Instance.GetSetting("ida:Authority") + "OAuth2/Authorize", directoryName));
                 HttpContext.GetOwinContext().Authentication.Challenge(new AuthenticationProperties { RedirectUri = this.Url.Action("Index", "Home") }, OpenIdConnectAuthenticationDefaults.AuthenticationType);
             }
         }

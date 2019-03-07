@@ -35,7 +35,7 @@ namespace OfflineSubscriptionManager
                             </head>
                             <body>";
 
-            string serviceURL = ConfigurationManager.AppSettings["env:ServiceURL"]; ;
+            string serviceURL = Settings.Instance.GetSetting("env:ServiceURL");
             string analyzeControllerLink = $"{serviceURL}/Subscription/Analyze/";
             string headerLink = HTMLUtilities.CreateHTMLLink($"SubMinimizer report for subscription: {sub.DisplayName}",
                 $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");
@@ -120,7 +120,7 @@ namespace OfflineSubscriptionManager
                 result += "<tr>";
 
                 result += $"<td><a href=\"https://ms.portal.azure.com/#resource{resource.AzureResourceIdentifier}\">{resource.Name}</a></td>";
-                //result += $"<td>{CreateHTMLLink(resource.Name, "https://ms.portal.azure.com/#resource\{resource.AzureResourceIdentifier}\\")}</td>";
+                // result += $"<td>{CreateHTMLLink(resource.Name, "https://ms.portal.azure.com/#resource\{resource.AzureResourceIdentifier}\\")}</td>";
                 result += $"<td>{resource.Type}</td>";
                 result += $"<td>{resource.ResourceGroup}</td>";
                 result += $"<td>{resource.Description}</td>";
@@ -144,10 +144,10 @@ namespace OfflineSubscriptionManager
         {
             Diagnostics.EnsureArgumentNotNull(() => email);
             Diagnostics.EnsureArgumentNotNull(() => tracer);
-
-            string apiKey = ConfigurationManager.AppSettings["API_KEY"];
+            
+            string apiKey = Settings.Instance.ApiKey;
             tracer.TraceInformation($"API_KEY length: {apiKey.Length}");
-
+      
             dynamic sg = new SendGridAPIClient(apiKey);
 
             Email from = new Email("noreply@subminimizer.com");
@@ -177,6 +177,10 @@ namespace OfflineSubscriptionManager
             dynamic response = await sg.client.mail.send.post(requestBody: mail.Get());
             tracer.TraceInformation($"Email was sent for {email.Subject}");
             tracer.TraceInformation($"SendGrid response: {response.StatusCode}");
+
+            string message = response.Body.ReadAsStringAsync().Result;
+            tracer.TraceInformation($"SendGrid response message: {message}");
+
         }
     }
 }

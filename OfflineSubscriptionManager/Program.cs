@@ -12,14 +12,23 @@ namespace OfflineSubscriptionManager
     // To learn more about Microsoft Azure WebJobs SDK, please see http://go.microsoft.com/fwlink/?LinkID=320976
     class Program
     {
-        // Please set the following connection strings in app.config for this WebJob to run:
-        // AzureWebJobsDashboard and AzureWebJobsStorage
         static void Main()
         {
-            var host = new JobHost();
+            var cfg = new JobHostConfiguration();
 
-            Database.SetInitializer(new MigrateDatabaseToLatestVersion<DataAccess,
-               CogsMinimizer.Migrations.Configuration>());
+            if (cfg.IsDevelopment)
+            {
+                cfg.UseDevelopmentSettings();
+            }
+            else
+            {
+                cfg.DashboardConnectionString = Settings.Instance.WebJobDashboardConnectionString;
+                cfg.StorageConnectionString = Settings.Instance.WebJobStorageConnectionString;
+            }
+
+            var host = new JobHost(cfg);
+
+            Database.SetInitializer(new MigrateDatabaseToLatestVersion<DataAccess, CogsMinimizer.Migrations.Configuration>());
 
             // The following code will invoke a function called ManualTrigger and 
             // pass in data (value in this case) to the function

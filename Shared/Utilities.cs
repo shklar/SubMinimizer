@@ -17,11 +17,19 @@ using Microsoft.Azure.Management.Authorization.Models;
 using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Azure.Management.ResourceManager.Models;
 using Microsoft.Rest;
+using Microsoft.Azure.Services.AppAuthentication;
+using Microsoft.Azure.KeyVault;
+using System.Threading.Tasks;
 
 namespace CogsMinimizer.Shared
 {
-    public static class AzureDataUtils
+    public static class Utilities
     {
+        /// <summary>
+        /// Create Azure provider from given encoded content
+        /// </summary>
+        /// <param name="content">Content</param>
+        /// <returns>Provider</returns>
         public static Provider CreateProvider(string content)
         {
             JObject jObject = JObject.Parse(content);
@@ -62,6 +70,43 @@ namespace CogsMinimizer.Shared
             Provider provider = new Provider((string)jObject["id"], (string)jObject["namespace"], null, resourceTypes);
             return provider;
 
+        }
+
+        /// <summary>
+        ///  Gets key vault contained secret with given name
+        /// </summary>
+        /// <param name="keyVaultName">Key vault name</param>
+        /// <param name="secretName">Secret name</param>
+        /// <returns>Value</returns>
+        public static string GetKeyVaultSecret(string keyVaultName, string secretName)
+        {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => keyVaultName);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => secretName);
+
+            try
+            {
+                AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
+                var keyVaultClient = new KeyVaultClient(new Microsoft.Azure.KeyVault.KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+                Task<Microsoft.Azure.KeyVault.Models.SecretBundle> task = keyVaultClient.GetSecretAsync(
+                    $"https://{keyVaultName}.vault.azure.net/secrets/{secretName}");
+                task.Wait();
+
+                if (task.IsFaulted)
+                {
+                    System.Diagnostics.Trace.TraceInformation($"Unable get Value for secret {secretName} in App.config isn't defined");
+                    return null;
+                }
+                else
+                {
+                    return task.Result.Value;
+                }
+            }
+            catch (AggregateException e)
+            {
+                System.Diagnostics.Trace.TraceInformation($"Unable get Value for secret {secretName} in App.config isn't defined");
+                System.Diagnostics.Trace.TraceInformation($"Unable get Value for secret exception {e.InnerException.Message}");
+                return null;
+            }
         }
     }
 }
