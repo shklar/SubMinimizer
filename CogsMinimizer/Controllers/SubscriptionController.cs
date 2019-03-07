@@ -260,7 +260,7 @@ namespace CogsMinimizer.Controllers
         }
 
 
-        //Reset the duration of a resource ( removes it's confirmed owner and sets its expiration date to today + unclaimed resources expiration date)
+        // Reset the duration of a resource ( removes it's confirmed owner and sets its expiration date to today + unclaimed resources expiration date)
         [HttpPost]
         public ActionResult ResetResource(string ResourceId, string SubscriptionId)
         {
@@ -302,7 +302,7 @@ namespace CogsMinimizer.Controllers
             return result;
         }
 
-        //Extends the duration of a resource so that it does not get reported or deleted as expired
+        // Extends the duration of a resource so that it does not get reported or deleted as expired
         [HttpPost]
         public ActionResult ExtendResource(string ResourceId, string SubscriptionId)
         {
@@ -469,7 +469,7 @@ namespace CogsMinimizer.Controllers
 
             if (ModelState.IsValid)
             {
-                //A new subscription is created with ReportOnly mode by default
+                // A new subscription is created with ReportOnly mode by default
                 AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(SubscriptionManagementLevel.ReportOnly);
 
                 // Grant the subscription the needed role
@@ -515,7 +515,7 @@ namespace CogsMinimizer.Controllers
 
                     db.Subscriptions.Remove(s);
 
-                    //Delete from the DB all resources in this subscription 
+                    // Delete from the DB all resources in this subscription 
                     foreach (var resource in db.Resources.ToList())
                     {
                         if (resource.SubscriptionId.Equals(subscription.Id))
