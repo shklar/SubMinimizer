@@ -1,6 +1,6 @@
 ﻿# this script must be run manually at any folder containing repository for check
 # change lines for appropriate folder getting and branch for check
-cd ('C:\projects\Sub_prd')
+cd ('C:\projects\S_M')
 
 CompareBranches
 
@@ -13,5 +13,6 @@ CompareBranches
 # now we can delete dirty branch and commit from copy without sensitive info but with needed changes into master
 function CompareBranches()
 {
-   Git diff mov_secr_az  mov_secr_az_mrg
+   Git branch -a
+   Git --no-pager diff  --stat  remotes/origin/mov_secr_az_mrg remotes/origin/mov_secr_az
 }
