@@ -22,6 +22,15 @@ namespace SubMinimizerTests
     [TestClass]
     public class AuthenticationTests
     {
+        [TestInitialize]
+        public void TestInitialize()
+        {
+            if (!Settings.Initialize())
+            {
+                throw new ApplicationException("Failed initialize settings.");
+            }
+        }
+
         [TestMethod]
         public void TestAccessArmWithAppToken()
         {

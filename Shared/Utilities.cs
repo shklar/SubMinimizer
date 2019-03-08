@@ -83,22 +83,30 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => keyVaultName);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => secretName);
 
-            AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
-            var keyVaultClient = new KeyVaultClient(new Microsoft.Azure.KeyVault.KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
-            Task<Microsoft.Azure.KeyVault.Models.SecretBundle> task = keyVaultClient.GetSecretAsync(
-                $"https://{keyVaultName}.vault.azure.net/secrets/{secretName}");
-            task.Wait();
+            try
+            {
+                AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
+                var keyVaultClient = new KeyVaultClient(new Microsoft.Azure.KeyVault.KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+                Task<Microsoft.Azure.KeyVault.Models.SecretBundle> task = keyVaultClient.GetSecretAsync(
+                    $"https://{keyVaultName}.vault.azure.net/secrets/{secretName}");
+                task.Wait();
 
-            if (task.IsFaulted)
+                if (task.IsFaulted)
+                {
+                    System.Diagnostics.Trace.TraceInformation($"Unable get Value for secret {secretName} in App.config isn't defined");
+                    return null;
+                }
+                else
+                {
+                    return task.Result.Value;
+                }
+            }
+            catch (AggregateException e)
             {
                 System.Diagnostics.Trace.TraceInformation($"Unable get Value for secret {secretName} in App.config isn't defined");
+                System.Diagnostics.Trace.TraceInformation($"Unable get Value for secret exception {e.InnerException.Message}");
                 return null;
             }
-            else
-            {
-                return task.Result.Value;
-            }
         }
-
     }
 }
