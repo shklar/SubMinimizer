@@ -30,6 +30,43 @@ namespace CogsMinimizer.Controllers
                 model.Resources = db.Resources.ToList<Resource>();
 
                 var organizations = AzureResourceManagerUtil.GetUserOrganizations();
+                foreach (var org in organizations)
+                {
+                    model.UserOrganizations.Add(org.Id, org);
+                }
+               
+                var dbSubscriptions = db.Subscriptions.Where(s => s.ConnectedBy.Equals(userName));
+
+                foreach (var sub in dbSubscriptions)
+                {
+                    //subscription.AzureAccessNeedsToBeRepaired = !AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, org.Id);
+                    sub.IsConnected = true;
+                    sub.AzureAccessNeedsToBeRepaired = false;
+                    model.UserSubscriptions.Add(sub.Id, sub);
+                    model.UserCanManageAccessForSubscriptions.Add(sub.Id);
+                    //if (AzureResourceManagerUtil.UserCanManageAccessForSubscription(subscription.Id, org.Id)) model.UserCanManageAccessForSubscriptions.Add(subscription.Id);
+                }
+            }
+            return View(model);
+        }
+
+        //Renaming and keeping this for a later stage when we add ARM abilities to the app
+        private ActionResult ARMIndex()
+        {
+            HomeIndexViewModel model = null;
+
+            if (ClaimsPrincipal.Current.Identity.IsAuthenticated)
+            {
+                var userName = ClaimsPrincipal.Current.Identity.Name;
+                System.Diagnostics.Trace.TraceInformation($"Home/Index opened by {userName}");
+                model = new HomeIndexViewModel();
+                model.UserOrganizations = new Dictionary<string, Organization>();
+                model.UserSubscriptions = new Dictionary<string, Subscription>();
+                model.UserCanManageAccessForSubscriptions = new List<string>();
+                model.DisconnectedUserOrganizations = new List<string>();
+                model.Resources = db.Resources.ToList<Resource>();
+
+                var organizations = AzureResourceManagerUtil.GetUserOrganizations();
               
                 foreach (Organization org in organizations)
                 {
@@ -79,8 +116,6 @@ namespace CogsMinimizer.Controllers
                 }
             }
             db.SaveChanges();
-
-    
             return View(model);
         }
 
