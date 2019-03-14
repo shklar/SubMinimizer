@@ -314,7 +314,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
     </Content>
-    <Content Include="App.Secrets.config" />
     <Content Include="Properties\webjobs-list.json" />
     <None Include="Properties\PublishProfiles\subminimizer - Web Deploy.pubxml" />
     <None Include="Properties\PublishProfiles\SubMinimizerPPE - Web Deploy.pubxml" />
