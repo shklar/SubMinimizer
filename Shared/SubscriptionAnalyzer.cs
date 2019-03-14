@@ -74,7 +74,6 @@ namespace CogsMinimizer.Shared
 
             if (m_isOfflineMode)
             {
-                _tracer.TraceInformation("Offline mode analysis");
                 m_resourceManagementClient = AzureResourceManagerUtil.GetAppResourceManagementClient(
                     m_analyzedSubscription.Id,
                     m_analyzedSubscription.OrganizationId);
@@ -84,7 +83,6 @@ namespace CogsMinimizer.Shared
             }
             else 
             {
-                _tracer.TraceInformation("Online mode analysis");
                 m_resourceManagementClient = AzureResourceManagerUtil.GetUserResourceManagementClient(
                     m_analyzedSubscription.Id,
                     m_analyzedSubscription.OrganizationId);
@@ -101,17 +99,13 @@ namespace CogsMinimizer.Shared
             //Couldn't access the subcription
             if (!isApplicationAutohrizedToReadSubscription)
             {
-                _tracer.TraceInformation("Failed to get access to subscription");
                 m_analysisResult.IsSubscriptionAccessible = false;
             }
             
             //Successfully accessed the subscription. Process the resources.
             else
             {
-                _tracer.TraceInformation("Have access to subscription");
                 m_analysisResult.IsSubscriptionAccessible = true;
-
-                _tracer.TraceInformation($"Subscription management level: {m_analyzedSubscription.ManagementLevel}");
 
                 // Check if automatic resource deletion allowed
                 if (m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete ||
