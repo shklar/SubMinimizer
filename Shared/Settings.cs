@@ -24,6 +24,40 @@ namespace CogsMinimizer.Shared
 
         private static Configuration configuration;
 
+        private string allowWebJobEmail;
+
+        private string allowWebJobDelete;
+
+        private string aRMAuthorizationPermissionsAPIVersion;
+
+        private string aRMAuthorizationRoleAssignmentsAPIVersion;
+
+        private string aRMAuthorizationRoleDefinitionsAPIVersion;
+    
+        private string azureResourceManagerIdentifier;
+
+        private string azureResourceManagerUrl;
+
+        private string azureResourceManagerAPIVersion;
+
+        private string authority;
+
+        private string devTeam;
+
+        private string enableWebJob;
+
+        private string graphAPIIdentifier;
+
+        private string graphAPIVersion;
+
+        private string microsoftAADID;
+
+        private string serviceURL;
+
+        private string telemetryInstrumentationKey;
+
+        private string envDisplayName;
+
         private static Settings settings;
 
         public static Settings Instance
@@ -80,6 +114,104 @@ namespace CogsMinimizer.Shared
             get { return GetActualSetting("env:WebJobStorageCs", webJobStorageConnectionString); }
             set { webJobStorageConnectionString = value; }
         }
+
+        public string AllowWebJobEmail
+        {
+            get { return GetActualSetting("env:AllowWebJobEmail", allowWebJobEmail); }
+            set { allowWebJobEmail = value; }
+        }
+
+        public string AllowWebJobDelete
+        {
+            get { return GetActualSetting("env:AllowWebJobDelete", allowWebJobDelete); }
+            set { allowWebJobDelete = value; }
+        }
+
+        public string ARMAuthorizationPermissionsAPIVersion
+        {
+            get { return GetActualSetting("env:ARMAuthorizationPermissionsAPIVersion", aRMAuthorizationPermissionsAPIVersion); }
+            set { aRMAuthorizationPermissionsAPIVersion = value; }
+        }
+
+        public string ARMAuthorizationRoleDefinitionsAPIVersion
+        {
+            get { return GetActualSetting("env:ARMAuthorizationRoleDefinitionsAPIVersion", aRMAuthorizationRoleDefinitionsAPIVersion); }
+            set { aRMAuthorizationRoleDefinitionsAPIVersion = value; }
+        }
+
+        public string ARMAuthorizationRoleAssignmentsAPIVersion
+        {
+            get { return GetActualSetting("env:ARMAuthorizationRoleAssignmentsAPIVersion", aRMAuthorizationRoleDefinitionsAPIVersion); }
+            set { aRMAuthorizationRoleAssignmentsAPIVersion = value; }
+        }
+
+        public string AzureResourceManagerIdentifier
+        {
+            get { return GetActualSetting("env:AzureResourceManagerIdentifier", azureResourceManagerIdentifier); }
+            set { azureResourceManagerIdentifier = value; }
+        }
+        public string AzureResourceManagerUrl
+        {
+            get { return GetActualSetting("env:AzureResourceManagerUrl", azureResourceManagerUrl); }
+            set { azureResourceManagerUrl = value; }
+        }
+        public string AzureResourceManagerAPIVersion
+        {
+            get { return GetActualSetting("env:AzureResourceManagerAPIVersion", azureResourceManagerAPIVersion); }
+            set { azureResourceManagerAPIVersion = value; }
+        }
+        public string Authority
+        {
+            get { return GetActualSetting("env:Authority", authority); }
+            set { authority = value; }
+        }
+
+        public string DevTeam
+        {
+            get { return GetActualSetting("env:DevTeam", devTeam); }
+            set { devTeam = value; }
+        }
+
+        public string GraphAPIIdentifier
+        {
+            get { return GetActualSetting("env:GraphAPIIdentifier", graphAPIIdentifier); }
+            set { graphAPIIdentifier = value; }
+        }
+
+        public string GraphAPIVersion
+        {
+            get { return GetActualSetting("env:GraphAPIVersion", graphAPIVersion); }
+            set { graphAPIVersion = value; }
+        }
+
+        public string MicrosoftAADID
+        {
+            get { return GetActualSetting("env:MicrosoftAADID", microsoftAADID); }
+            set { microsoftAADID = value; }
+        }
+        public string ServiceURL
+        {
+            get { return GetActualSetting("env:ServiceURL", serviceURL); }
+            set { serviceURL = value; }
+        }
+
+        public string  TelemetryInstrumentationKey
+        {
+            get { return GetActualSetting("env:TelemetryInstrumentationKey", telemetryInstrumentationKey); }
+            set { telemetryInstrumentationKey = value; }
+        }
+
+        public string EnableWebJob
+        {
+            get { return GetActualSetting("env:EnableWebJob", enableWebJob); }
+            set { enableWebJob = value; }
+        }
+
+        public string EnvDisplayName
+        {
+            get { return GetActualSetting("env:EnvDisplayName", envDisplayName); }
+            set { envDisplayName = value; }
+        }
         
         private string GetActualSetting(string valueName, string defaultValue)
         {
@@ -101,7 +233,24 @@ namespace CogsMinimizer.Shared
                 settings.AppPassword != null &&
                 settings.DataAccessConnectionString != null &&
                 settings.WebJobDashboardConnectionString != null &&
-                settings.WebJobStorageConnectionString != null)
+                settings.WebJobStorageConnectionString != null &&
+                settings.AllowWebJobEmail != null &&
+                settings.AllowWebJobDelete != null &&
+                settings.ARMAuthorizationPermissionsAPIVersion != null &&
+                settings.ARMAuthorizationRoleAssignmentsAPIVersion != null &&
+                settings.ARMAuthorizationRoleDefinitionsAPIVersion != null &&
+                settings.AzureResourceManagerIdentifier != null &&
+                settings.AzureResourceManagerUrl != null &&
+                settings.AzureResourceManagerAPIVersion != null &&
+                settings.Authority != null &&
+                settings.DevTeam != null &&
+                settings.EnableWebJob != null &&
+                settings.GraphAPIIdentifier != null &&
+                settings.GraphAPIVersion != null &&
+                settings.MicrosoftAADID != null &&
+                settings.ServiceURL != null &&
+                settings.TelemetryInstrumentationKey != null &&
+                settings.EnvDisplayName != null)
             {
                 return true;
             }
@@ -111,7 +260,7 @@ namespace CogsMinimizer.Shared
             }
         }
 
-        public string GetSetting(string valueName)
+        private string GetSetting(string valueName)
         {
             if (valueName == "env:DataAccess")
             {
@@ -190,6 +339,24 @@ namespace CogsMinimizer.Shared
             {
                 AppPassword = Utilities.GetKeyVaultSecret(keyVaultName, appRegPwd);
             }
+
+            AllowWebJobDelete = GetConfigurationValue("env:AllowWebJobDelete");
+            AllowWebJobEmail = GetConfigurationValue("env:AllowWebJobEmail");
+            ARMAuthorizationPermissionsAPIVersion = GetConfigurationValue("ida:ARMAuthorizationPermissionsAPIVersion");
+            ARMAuthorizationRoleAssignmentsAPIVersion = GetConfigurationValue("ida:ARMAuthorizationRoleAssignmentsAPIVersion");
+            ARMAuthorizationRoleDefinitionsAPIVersion = GetConfigurationValue("ida:ARMAuthorizationRoleDefinitionsAPIVersion");
+            AzureResourceManagerAPIVersion = GetConfigurationValue("ida:AzureResourceManagerAPIVersion");
+            AzureResourceManagerIdentifier = GetConfigurationValue("ida:AzureResourceManagerIdentifier");
+            AzureResourceManagerUrl = GetConfigurationValue("ida:AzureResourceManagerUrl");
+            Authority = GetConfigurationValue("ida:Authority");
+            DevTeam = GetConfigurationValue("env:DevTeam");
+            EnableWebJob = GetConfigurationValue("env:EnableWebJob");
+            EnvDisplayName = GetConfigurationValue("env:EnvDisplayName");
+            GraphAPIIdentifier = GetConfigurationValue("ida:GraphAPIIdentifier");
+            GraphAPIVersion = GetConfigurationValue("ida:GraphAPIVersion");
+            MicrosoftAADID = GetConfigurationValue("ida:MicrosoftAADID");
+            ServiceURL = GetConfigurationValue("env:ServiceURL");
+            TelemetryInstrumentationKey = GetConfigurationValue("env:TelemetryInstrumentationKey");
         }
 
         private string GetConfigurationValue(string valueName)

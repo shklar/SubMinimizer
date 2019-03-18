@@ -27,9 +27,9 @@ namespace CogsMinimizer
 
             string appClientId = Settings.Instance.AppClientId;
             string appPassword = Settings.Instance.AppPassword;
-            string Authority = string.Format(Settings.Instance.GetSetting("ida:Authority"), "common");
-            string GraphAPIIdentifier = Settings.Instance.GetSetting("ida:GraphAPIIdentifier");
-            string AzureResourceManagerIdentifier = Settings.Instance.GetSetting("ida:AzureResourceManagerIdentifier");
+            string Authority = string.Format(Settings.Instance.Authority, "common");
+            string GraphAPIIdentifier = Settings.Instance.GraphAPIIdentifier;
+            string AzureResourceManagerIdentifier = Settings.Instance.AzureResourceManagerIdentifier;
 
             app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
             app.UseCookieAuthentication(new CookieAuthenticationOptions { });

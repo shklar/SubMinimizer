@@ -40,14 +40,14 @@ namespace SubMinimizerTests
             // Let's check access to some subscription through request just for checking validity of token received
             // Get permissions of the app on the subscription
 
-            string organizationId = Settings.Instance.GetSetting("ida:MicrosoftAADID");
+            string organizationId = Settings.Instance.MicrosoftAADID;
             string appToken = AzureAuthUtils.AcquireArmAppToken(organizationId).AccessToken;
 
             string subscriptionId = "bcbd775a-813c-46e8-afe5-1a66912e0f03";
             string requestUrl =
                 string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
-                    Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId,
-                    Settings.Instance.GetSetting("ida:ARMAuthorizationPermissionsAPIVersion"));
+                    Settings.Instance.AzureResourceManagerUrl, subscriptionId,
+                    Settings.Instance.ARMAuthorizationPermissionsAPIVersion);
 
             // Make the GET request
             HttpClient client = new HttpClient();
@@ -83,14 +83,14 @@ namespace SubMinimizerTests
             // Let's check access to some subscription through request just for checking validity of token received
             // Get permissions of the app on the subscription
 
-            string organizationId = Settings.Instance.GetSetting("ida:MicrosoftAADID");
-            string userToken = AzureAuthUtils.Authenticate(organizationId, Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), TokenKind.User, true).AccessToken;
+            string organizationId = Settings.Instance.MicrosoftAADID;
+            string userToken = AzureAuthUtils.Authenticate(organizationId, Settings.Instance.AzureResourceManagerUrl, TokenKind.User, true).AccessToken;
 
             string subscriptionId = "bcbd775a-813c-46e8-afe5-1a66912e0f03";
             string requestUrl =
                 string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
-                    Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId,
-                    Settings.Instance.GetSetting("ida:ARMAuthorizationPermissionsAPIVersion"));
+                    Settings.Instance.AzureResourceManagerUrl, subscriptionId,
+                    Settings.Instance.ARMAuthorizationPermissionsAPIVersion);
 
             // Make the GET request
             HttpClient client = new HttpClient();
@@ -126,14 +126,14 @@ namespace SubMinimizerTests
             // Let's check access to some subscription through request just for checking validity of token received
             // Get permissions of the app on the subscription
 
-            string organizationId = Settings.Instance.GetSetting("ida:MicrosoftAADID");
-            string appToken = AzureAuthUtils.Authenticate(organizationId, Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), TokenKind.Application, false).AccessToken;
+            string organizationId = Settings.Instance.MicrosoftAADID;
+            string appToken = AzureAuthUtils.Authenticate(organizationId, Settings.Instance.AzureResourceManagerUrl, TokenKind.Application, false).AccessToken;
 
             string subscriptionId = "bcbd775a-813c-46e8-afe5-1a66912e0f03";
             string requestUrl =
                 string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
-                    Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId,
-                    Settings.Instance.GetSetting("ida:ARMAuthorizationPermissionsAPIVersion"));
+                    Settings.Instance.AzureResourceManagerUrl, subscriptionId,
+                    Settings.Instance.ARMAuthorizationPermissionsAPIVersion);
 
             // Make the GET request
             HttpClient client = new HttpClient();
@@ -173,8 +173,8 @@ namespace SubMinimizerTests
             string subscriptionId = "bcbd775a-813c-46e8-afe5-1a66912e0f03";
             string requestUrl =
                 string.Format("{0}/subscriptions/{1}/providers/microsoft.authorization/permissions?api-version={2}",
-                    Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId,
-                    Settings.Instance.GetSetting("ida:ARMAuthorizationPermissionsAPIVersion"));
+                    Settings.Instance.AzureResourceManagerUrl, subscriptionId,
+                    Settings.Instance.ARMAuthorizationPermissionsAPIVersion);
 
             // Make the GET request
             HttpClient client = new HttpClient();
@@ -205,15 +205,15 @@ namespace SubMinimizerTests
         public void TestArmAccessWithAdalDirectCallUserToken()
         {
             //  test get token silently by direct call to ADAL
-            string organizationId = Settings.Instance.GetSetting("ida:MicrosoftAADID");
+            string organizationId = Settings.Instance.MicrosoftAADID;
             string userToken = GetAppTokenSilentAdal(organizationId).AccessToken;
 
             // Check token received
             // Received token for resource  manager access
             // Get subscriptions to which the user has some kind of access
             string requestUrl = string.Format("{0}/subscriptions?api-version={1}",
-                Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"),
-                Settings.Instance.GetSetting("ida:AzureResourceManagerAPIVersion"));
+                Settings.Instance.AzureResourceManagerUrl,
+                Settings.Instance.AzureResourceManagerAPIVersion);
 
             // Make the GET request
             HttpClient client = new HttpClient();
@@ -243,15 +243,15 @@ namespace SubMinimizerTests
         public void TestAcquireUserTokenMethod()
         {
             // test get token silent implementation  at our utility class
-            string organizationId = Settings.Instance.GetSetting("ida:MicrosoftAADID");
+            string organizationId = Settings.Instance.MicrosoftAADID;
             string userToken = AzureAuthUtils.AcquireArmUserToken(organizationId).AccessToken;
 
             // Check token received
             // Received token for resource  manager access
             // Get subscriptions to which the user has some kind of access
             string requestUrl = string.Format("{0}/subscriptions?api-version={1}",
-                Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"),
-                 Settings.Instance.GetSetting("ida:AzureResourceManagerAPIVersion"));
+                Settings.Instance.AzureResourceManagerUrl,
+                 Settings.Instance.AzureResourceManagerAPIVersion);
 
             // Make the GET request
             HttpClient client = new HttpClient();
@@ -292,9 +292,9 @@ namespace SubMinimizerTests
             string subscriptionUri =
                 string.Format(
                     "{0}/subscriptions/{1}",
-                    Settings.Instance.GetSetting("ida:AzureResourceManagerUrl"), subscriptionId);
+                    Settings.Instance.AzureResourceManagerUrl, subscriptionId);
 
-            string organizationId = Settings.Instance.GetSetting("ida:MicrosoftAADID");
+            string organizationId = Settings.Instance.MicrosoftAADID;
             string appToken = AzureAuthUtils.AcquireArmAppToken(organizationId).AccessToken;
             var credentials = new TokenCloudCredentials(appToken);
 
@@ -315,10 +315,10 @@ namespace SubMinimizerTests
 
             // initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
             AuthenticationContext authContext = new AuthenticationContext(
-                string.Format(Settings.Instance.GetSetting("ida:Authority"), organizationId),
+                string.Format(Settings.Instance.Authority, organizationId),
                 new ADALTokenCache(signedInUserUniqueName));
             Task<AuthenticationResult> resultTask =
-                authContext.AcquireTokenSilentAsync(Settings.Instance.GetSetting("ida:AzureResourceManagerIdentifier"),
+                authContext.AcquireTokenSilentAsync(Settings.Instance.AzureResourceManagerIdentifier,
                     credential,
                     new UserIdentifier(signedInUserUniqueName, UserIdentifierType.RequiredDisplayableId));
             resultTask.Wait();
@@ -332,15 +332,15 @@ namespace SubMinimizerTests
             // use application credentials for getting token
 
             // Aquire App Only Access Token to call Azure Revsource Manager - Client Credential OAuth Flow
-            string organizationId = Settings.Instance.GetSetting("ida:MicrosoftAADID");
+            string organizationId = Settings.Instance.MicrosoftAADID;
 
             ClientCredential credential = AzureAuthUtils.GetAppClientCredential();
         
             // Initialize AuthenticationContext with the token cache of the currently signed in user, as kept in the app's EF DB
             AuthenticationContext authContext =
-                new AuthenticationContext(string.Format(Settings.Instance.GetSetting("ida:Authority"), organizationId));
+                new AuthenticationContext(string.Format(Settings.Instance.Authority, organizationId));
             Task<AuthenticationResult> resultTask =
-                authContext.AcquireTokenAsync(Settings.Instance.GetSetting("ida:AzureResourceManagerIdentifier"),
+                authContext.AcquireTokenAsync(Settings.Instance.AzureResourceManagerIdentifier,
                     credential);
             resultTask.Wait();
 

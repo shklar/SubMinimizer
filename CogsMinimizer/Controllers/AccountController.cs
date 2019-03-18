@@ -18,7 +18,7 @@ namespace CogsMinimizer.Controllers
             if (!Request.IsAuthenticated)
             {
                 // note configuration (keys, etc…) will not necessarily understand this authority.
-                HttpContext.GetOwinContext().Environment.Add("Authority", string.Format(Settings.Instance.GetSetting("ida:Authority") + "OAuth2/Authorize", directoryName));
+                HttpContext.GetOwinContext().Environment.Add("Authority", string.Format(Settings.Instance.Authority + "OAuth2/Authorize", directoryName));
                 HttpContext.GetOwinContext().Authentication.Challenge(new AuthenticationProperties { RedirectUri = this.Url.Action("Index", "Home") }, OpenIdConnectAuthenticationDefaults.AuthenticationType);
             }
         }

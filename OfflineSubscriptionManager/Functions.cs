@@ -26,10 +26,10 @@ namespace OfflineSubscriptionManager
 
             ITracer tracer = TracerFactory.CreateTracer(logger);
             tracer.TraceInformation("OfflineSubscriptionManager web job started!");
-            tracer.TraceInformation($"Ikey: {Settings.Instance.GetSetting("env:TelemetryInstrumentationKey")}");
+            tracer.TraceInformation($"Ikey: {Settings.Instance.TelemetryInstrumentationKey}");
 
             // Top level feature switch to allow easy disabling
-            if (Settings.Instance.GetSetting("env:EnableWebJob").Equals("True", StringComparison.OrdinalIgnoreCase))
+            if (Settings.Instance.EnableWebJob.Equals("True", StringComparison.OrdinalIgnoreCase))
             {
                 tracer.TraceInformation("EnableWebJob switch is Enabled.");
                 ProcessSubscriptions(tracer);
@@ -62,7 +62,7 @@ namespace OfflineSubscriptionManager
                     // Persist analysis results to DB
                     db.SaveChanges();
 
-                    if (Settings.Instance.GetSetting("env:AllowWebJobEmail").Equals("True", StringComparison.OrdinalIgnoreCase))
+                    if (Settings.Instance.AllowWebJobEmail.Equals("True", StringComparison.OrdinalIgnoreCase))
                     {
                        tracer.TraceInformation("AllowWebJobEmail switch is Enabled.");
 
@@ -80,7 +80,7 @@ namespace OfflineSubscriptionManager
         private static void EmailSubscriptionAnalysisResult(SubscriptionAnalysisResult analysisResult, ITracer tracer)
         {
             Subscription sub = analysisResult.AnalyzedSubscription;
-            string envDisplayName = Settings.Instance.GetSetting("env:EnvDisplayName");
+            string envDisplayName = Settings.Instance.EnvDisplayName;
             if (! string.IsNullOrWhiteSpace(envDisplayName))
             {
                 envDisplayName = $" [{envDisplayName}]";
@@ -119,10 +119,18 @@ namespace OfflineSubscriptionManager
             }
 
             // Add BCC recepients - dev team, as configured in the app config
-            string devTeam = Settings.Instance.GetSetting("env:DevTeam");
-            if (devTeam != null && !devTeam.Equals("Dummy", StringComparison.OrdinalIgnoreCase))
+            string devTeam = Settings.Instance.DevTeam;
+            string[] mails = devTeam.Split(';');
+
+            if (mails.Length > 0)
             {
-               bcc.AddRange(devTeam.Split(';').Select(x => new Email(x)));
+                foreach (string mail in mails)
+                {
+                    if (Utilities.IsValidMail(mail))
+                    {
+                        bcc.Add(new Email(mail));
+                    }
+                }
             }
 
             var email = new SubMinimizerEmail(subject, message, to, cc, bcc );

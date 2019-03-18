@@ -26,11 +26,27 @@ namespace CogsMinimizer.Shared
     public static class Utilities
     {
         /// <summary>
+        ///  check if mail is valid
+        /// </summary>
+        /// <param name="mail"></param>
+        /// <returns>true for valid mail false otherwise</returns>
+        public static bool IsValidMail(string mail)
+        {
+            if (Regex.Match(mail, "[^ ^@]+@[^ ^.].[^ ]+").Success)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        /// <summary>
         /// Create Azure provider from given encoded content
         /// </summary>
         /// <param name="content">Content</param>
         /// <returns>Provider</returns>
-        public static Provider CreateProvider(string content)
+        public static Provider CreateAzureProviderFromJson(string content)
         {
             JObject jObject = JObject.Parse(content);
             System.Web.Helpers.DynamicJsonObject providerResult = Json.Decode(content);
