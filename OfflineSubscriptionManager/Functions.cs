@@ -27,8 +27,8 @@ namespace OfflineSubscriptionManager
             ITracer tracer = TracerFactory.CreateTracer(logger);
             tracer.TraceInformation("OfflineSubscriptionManager web job started!");
             tracer.TraceInformation($"Ikey: {Settings.Instance.TelemetryInstrumentationKey}");
+            tracer.TraceInformation($"Application Key: {Settings.Instance.AppClientId}");
 
-            // Top level feature switch to allow easy disabling
             if (Settings.Instance.EnableWebJob.Equals("True", StringComparison.OrdinalIgnoreCase))
             {
                 tracer.TraceInformation("EnableWebJob switch is Enabled.");

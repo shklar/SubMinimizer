@@ -66,7 +66,7 @@ namespace CogsMinimizer.Shared
         /// </summary>
         public SubscriptionAnalysisResult AnalyzeSubscription()
         {
-            // Record the start time of the analysis process
+            // Record the star3t time of the analysis process
             DateTime startTime = DateTime.UtcNow;
             m_analysisResult.AnalysisStartTime = startTime;
 
@@ -74,6 +74,7 @@ namespace CogsMinimizer.Shared
 
             if (m_isOfflineMode)
             {
+                _tracer.TraceInformation("Offline mode analysis");
                 m_resourceManagementClient = AzureResourceManagerUtil.GetAppResourceManagementClient(
                     m_analyzedSubscription.Id,
                     m_analyzedSubscription.OrganizationId);
@@ -83,7 +84,7 @@ namespace CogsMinimizer.Shared
             }
             else 
             {
-                m_resourceManagementClient = AzureResourceManagerUtil.GetUserResourceManagementClient(
+                _tracer.TraceInformation("Online mode analysis"); m_resourceManagementClient = AzureResourceManagerUtil.GetUserResourceManagementClient(
                     m_analyzedSubscription.Id,
                     m_analyzedSubscription.OrganizationId);
                 m_authorizationManagementClient = AzureResourceManagerUtil.GetUserAuthorizationManagementClient(
@@ -99,13 +100,18 @@ namespace CogsMinimizer.Shared
             // Couldn't access the subcription
             if (!isApplicationAutohrizedToReadSubscription)
             {
+                _tracer.TraceInformation("Failed to get access to subscription");
                 m_analysisResult.IsSubscriptionAccessible = false;
             }
             
             // Successfully accessed the subscription. Process the resources.
             else
             {
+                _tracer.TraceInformation("Have access to subscription");
                 m_analysisResult.IsSubscriptionAccessible = true;
+
+                _tracer.TraceInformation($"Subscription management level: {m_analyzedSubscription.ManagementLevel}");
+
 
                 // Check if automatic resource deletion allowed
                 if (m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete ||
@@ -213,7 +219,7 @@ namespace CogsMinimizer.Shared
                 foreach (var genericResource in resourceList)
                 {
                     // Skip any resources that appear although we have successfully deleted them
-                    if (m_analysisResult.DeletedResources.Any(x=>x.AzureResourceIdentifier.Equals(genericResource.Id)))
+                    if (m_analysisResult.DeletedResources.Any(x => x.AzureResourceIdentifier.Equals(genericResource.Id)))
                     {
                         _tracer.TraceVerbose($"Found and skipping a resource which was just deleted: {genericResource.Name}");
                         continue;
@@ -303,7 +309,7 @@ namespace CogsMinimizer.Shared
             if (String.IsNullOrWhiteSpace(resourceEntryFromDb.Owner))
             {
                 var foundOwner = FindOwner(resourceEntryFromDb.Name, resourceEntryFromDb.ResourceGroup, adminEmails);
-                if (foundOwner!= null)
+                if (foundOwner != null)
                 {
                     resourceEntryFromDb.Owner = foundOwner;
                     _tracer.TraceVerbose($"Found owner for {resourceEntryFromDb.Name} Owner: {resourceEntryFromDb.Owner}");
@@ -360,7 +366,7 @@ namespace CogsMinimizer.Shared
 
         private static string FindOwner(string resourceName, string groupName, List<string> emails)
         {
-            var owner = emails.FirstOrDefault(x => (resourceName+groupName).Contains(GetAlias(x)));
+            var owner = emails.FirstOrDefault(x => (resourceName + groupName).Contains(GetAlias(x)));
             return owner;
         }
         #endregion

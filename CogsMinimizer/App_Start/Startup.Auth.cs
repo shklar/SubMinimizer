@@ -29,7 +29,7 @@ namespace CogsMinimizer
             string appPassword = Settings.Instance.AppPassword;
             string Authority = string.Format(Settings.Instance.Authority, "common");
             string GraphAPIIdentifier = Settings.Instance.GraphAPIIdentifier;
-            string AzureResourceManagerIdentifier = Settings.Instance.AzureResourceManagerIdentifier;
+            // string AzureResourceManagerIdentifier = Settings.Instance.AzureResourceManagerIdentifier;
 
             app.SetDefaultSignInAsAuthenticationType(CookieAuthenticationDefaults.AuthenticationType);
             app.UseCookieAuthentication(new CookieAuthenticationOptions { });
@@ -74,8 +74,8 @@ namespace CogsMinimizer
                             context.ProtocolMessage.RedirectUri = HttpContext.Current.Request.Url.GetLeftPart(UriPartial.Path);
                             context.ProtocolMessage.PostLogoutRedirectUri = new UrlHelper(HttpContext.Current.Request.RequestContext).Action
                                 ("Index", "Home", null, HttpContext.Current.Request.Url.Scheme);
-                            // context.ProtocolMessage.Resource = GraphAPIIdentifier;
-                            context.ProtocolMessage.Resource = AzureResourceManagerIdentifier;
+                            // context.ProtocolMessage.Resource = AzureResourceManagerIdentifier;
+                            context.ProtocolMessage.Resource = GraphAPIIdentifier;
                             return Task.FromResult(0);
                         },
                         AuthorizationCodeReceived = (context) =>
