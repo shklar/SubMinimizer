@@ -28,7 +28,7 @@ namespace CogsMinimizer.Shared
 
             ClientCredential credential = AzureAuthUtils.GetAppClientCredential();
             Task<AuthenticationResult> resultTask = null;
-            string authority = Settings.Instance.GetSetting("ida:Authority");
+            string authority = Settings.Instance.Authority;
 
             if (tokenKind == TokenKind.User)
             {
@@ -77,7 +77,7 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
 
 
-            return Authenticate(organizationId, Settings.Instance.GetSetting("ida:AzureResourceManagerIdentifier"), TokenKind.User, true);
+            return Authenticate(organizationId, Settings.Instance.AzureResourceManagerIdentifier, TokenKind.User, true);
         }
 
 
@@ -91,7 +91,7 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => organizationId);
 
 
-            return Authenticate(organizationId, Settings.Instance.GetSetting("ida:AzureResourceManagerIdentifier"), TokenKind.Application, false);
+            return Authenticate(organizationId, Settings.Instance.AzureResourceManagerIdentifier, TokenKind.Application, false);
         }
 
 

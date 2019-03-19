@@ -17,7 +17,7 @@
         static TracerFactory()
         {
             SessionId = Guid.NewGuid().ToString();
-            InstrumentationKey = Settings.Instance.GetSetting("env:TelemetryInstrumentationKey");
+            InstrumentationKey = Settings.Instance.TelemetryInstrumentationKey;
         }
 
         /// <summary>

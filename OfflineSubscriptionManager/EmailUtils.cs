@@ -35,7 +35,7 @@ namespace OfflineSubscriptionManager
                             </head>
                             <body>";
 
-            string serviceURL = Settings.Instance.GetSetting("env:ServiceURL");
+                string serviceURL = Settings.Instance.ServiceURL;
             string analyzeControllerLink = $"{serviceURL}/Subscription/Analyze/";
             string headerLink = HTMLUtilities.CreateHTMLLink($"SubMinimizer report for subscription: {sub.DisplayName}",
                 $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");

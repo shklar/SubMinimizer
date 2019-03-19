@@ -158,6 +158,12 @@ namespace SubMinimizerTests
         }
 
         [TestMethod]
+        public void TestMailValidCheck()
+        {
+            Assert.IsFalse(Utilities.IsValidMail("Dummy"));
+            Assert.IsFalse(Utilities.IsValidMail("Dummy"));
+            Assert.IsTrue(Utilities.IsValidMail("somebody@organization.com"));
+        }
 
         public void TestGetSubscriptionAdministrators()
         {
