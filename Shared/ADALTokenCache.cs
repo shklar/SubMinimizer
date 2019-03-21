@@ -20,7 +20,7 @@ namespace CogsMinimizer.Shared
 {
     public class ADALTokenCache : TokenCache
     {
-        private DataAccess db = new DataAccess();
+        private InMemoryTokenCache memoryCache = InMemoryTokenCache.Instance;
         string User;
         PerUserTokenCache Cache;
 
@@ -35,7 +35,7 @@ namespace CogsMinimizer.Shared
             this.BeforeWrite = BeforeWriteNotification;
 
             // look up the entry in the DB
-            Cache = db.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+            Cache = memoryCache.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
 
             // place the entry in memory
             this.Deserialize((Cache == null) ? null : Cache.cacheBits);
@@ -45,9 +45,8 @@ namespace CogsMinimizer.Shared
         public override void Clear()
         {
             base.Clear();
-            foreach (var cacheEntry in db.PerUserTokenCacheList)
-                db.PerUserTokenCacheList.Remove(cacheEntry);
-            db.SaveChanges();
+            memoryCache.PerUserTokenCacheList.Clear();
+
         }
 
         // Notification raised before ADAL accesses the cache.
@@ -57,11 +56,11 @@ namespace CogsMinimizer.Shared
             if (Cache == null)
             {
                 // first time access
-                Cache = db.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+                Cache = memoryCache.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
             }
             else
             {   // retrieve last write from the DB
-                var status = from e in db.PerUserTokenCacheList
+                var status = from e in memoryCache.PerUserTokenCacheList
                              where (e.webUserUniqueId == User)
                              select new
                              {
@@ -71,7 +70,7 @@ namespace CogsMinimizer.Shared
                 if (status.Count() > 0 && status.First().LastWrite > Cache.LastWrite)
                 //// read from from storage, update in-memory copy
                 {
-                    Cache = db.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+                    Cache = memoryCache.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
                 }
             }
             this.Deserialize((Cache == null) ? null : Cache.cacheBits);
@@ -84,8 +83,8 @@ namespace CogsMinimizer.Shared
             if (this.HasStateChanged)
             {
                 // check for an existing entry
-                Cache = db.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
-                Cache = null;
+                Cache = memoryCache.PerUserTokenCacheList.FirstOrDefault(c => c.webUserUniqueId == User);
+
                 if (Cache == null)
                 {
                     // if no existing entry for that user, create a new one
@@ -93,15 +92,16 @@ namespace CogsMinimizer.Shared
                     {
                         webUserUniqueId = User,
                     };
+
+                    // Add to memory cache for later use
+                    memoryCache.PerUserTokenCacheList.Add(Cache);
                 }
 
                 // update the cache contents and the last write timestamp
                 Cache.cacheBits = this.Serialize();
-                Cache.LastWrite = DateTime.Now;
+                Cache.LastWrite = DateTime.UtcNow;
 
-                // update the DB with modification or new entry
-                db.Entry(Cache).State = Cache.Id == 0 ? EntityState.Added : EntityState.Modified;
-                db.SaveChanges();
+                // Cache change has been recorded. Resetting the flag.
                 this.HasStateChanged = false;
             }
         }
