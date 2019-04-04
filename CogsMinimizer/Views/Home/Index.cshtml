@@ -61,7 +61,7 @@
                     <h4>Monitoring</h4>
                 </td>
             </tr>
-            @foreach (KeyValuePair<string, CogsMinimizer.Shared.Subscription> entry in Model.UserSubscriptions.OrderByDescending(x=>x.Value.IsConnected).ThenBy(x=>x.Value.DisplayName))
+            @foreach (KeyValuePair<string, CogsMinimizer.Shared.Subscription> entry in Model.UserSubscriptions.OrderByDescending(x => x.Value.IsConnected).ThenBy(x => x.Value.DisplayName))
             {
                 var subscription = entry.Value as CogsMinimizer.Shared.Subscription;
                 <tr>
@@ -69,15 +69,15 @@
                         @subscription.DisplayName
                         <br />
                         &nbsp;&nbsp;<small>Subscription Id: @subscription.Id</small>
-                       <!--
-                        <br />
-                        &nbsp;&nbsp;<small>Organization Id: @subscription.OrganizationId</small>
-                       -->
+                        <!--
+                         <br />
+                         &nbsp;&nbsp;<small>Organization Id: @subscription.OrganizationId</small>
+                        -->
                     </td>
                     <td>
                         @if (subscription.IsConnected)
                         {
-                            
+
                             if (Model.UserCanManageAccessForSubscriptions.Contains(@subscription.Id))
                             {
                                 @Html.ActionLink("View resources", "Analyze", "Subscription",
@@ -173,7 +173,7 @@
                             <div>Started on: @subscription.ConnectedOn </div>
                         }
                     </td>
-            </tr>
+                </tr>
             }
         </table>
         if (Model.DisconnectedUserOrganizations.Count > 0)
@@ -186,5 +186,10 @@
                 </h5>
             </div>
         }
+        <div>
+            @Html.ActionLink("Register subscription", "Register", "Subscription",
+            new { },
+           new { @class = "btn btn-primary btn-md" })
+        </div>
     }
 </div>

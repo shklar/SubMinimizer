@@ -364,6 +364,7 @@
     <Content Include="Views\Subscription\Analyze.cshtml" />
     <Content Include="Views\Subscription\GetSettings.cshtml" />
     <Content Include="Views\Home\Error.cshtml" />
+    <Content Include="Views\Subscription\Register.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
