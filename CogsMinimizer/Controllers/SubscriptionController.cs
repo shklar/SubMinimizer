@@ -10,6 +10,7 @@ using System.Web.Mvc;
 using CogsMinimizer.Shared;
 using Microsoft.Azure.Management.Authorization.Models;
 using Resource = CogsMinimizer.Shared.Resource;
+using System.Configuration;
 
 namespace CogsMinimizer.Controllers
 {
@@ -462,7 +463,13 @@ namespace CogsMinimizer.Controllers
 
         private DataAccess db = new DataAccess();
 
-        public ActionResult Connect([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string servicePrincipalObjectId)
+        public ActionResult Register()
+        {
+            return View();
+        }
+
+
+        private ActionResult Connect([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string servicePrincipalObjectId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => servicePrincipalObjectId);
             Diagnostics.EnsureArgumentNotNull(() => subscription);
@@ -495,6 +502,43 @@ namespace CogsMinimizer.Controllers
             return RedirectToAction("Index", "Home");
         }
 
+        public ActionResult ConnectNoArm([Bind(Include = "Id, DisplayName")] Subscription subscription)
+        {
+            Diagnostics.EnsureArgumentNotNull(() => subscription);
+
+            if (ModelState.IsValid)
+            {
+                //Check whether the subscription is already monitored
+                Subscription existingSubscription = 
+                    db.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
+                if (existingSubscription != null)
+                {
+                    throw new ArgumentException(string.Format("Subscription already registered"));
+                }
+
+                subscription.OrganizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
+
+                // Ensure the service has read permission to the subscription
+                if (AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, subscription.OrganizationId))
+                {                  
+                    //Create a new entry in the DB
+                    subscription.ConnectedBy = AzureAuthUtils.GetSignedInUserUniqueName();
+                    subscription.ConnectedOn = DateTime.UtcNow;
+                    subscription.IsConnected = true;
+                    subscription.AzureAccessNeedsToBeRepaired = false;
+                    subscription.LastAnalysisDate = DateTime.UtcNow.Date;
+                    db.Subscriptions.AddOrUpdate(subscription);
+                    db.SaveChanges();
+                }
+                else
+                {
+                    throw new ArgumentException(string.Format("Unable to monitor subscription with ID '{0}'. " +
+                        "Please make sure you have assigned reader role to SubMinimizer for this subscription", subscription.Id));
+                }
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
         public ActionResult Disconnect([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => servicePrincipalObjectId);
@@ -510,8 +554,6 @@ namespace CogsMinimizer.Controllers
                     {
                         throw new ArgumentException("You are not authorized to stop monitoring this subscription.Please contact the subscription owner");
                     }
-
-                    AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId);
 
                     db.Subscriptions.Remove(s);
 
@@ -530,12 +572,10 @@ namespace CogsMinimizer.Controllers
                 {
                     throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
-
-
             }
-
             return RedirectToAction("Index", "Home");
         }
+
         public ActionResult RepairAccess([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => servicePrincipalObjectId);
