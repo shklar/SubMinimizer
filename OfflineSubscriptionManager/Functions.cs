@@ -114,9 +114,16 @@ namespace OfflineSubscriptionManager
             to.AddRange(analysisResult.ExpiredResources.Where(x=> ! string.IsNullOrWhiteSpace(x.Owner)).Select(x=> new Email(x.Owner)));
 
             //Add CC recepients - the subscription coadmins if so selected by the admin in the settings
-            if (sub.SendEmailToCoadmins)
+            if (sub.SendEmailToCoadmins && analysisResult.Admins != null)
             {
                 cc.AddRange(analysisResult.Admins.Select(x=>new Email(x)));         
+            }
+
+            //Add CC recepients - additional recipients if configured by the admin in the settings
+            if (!string.IsNullOrWhiteSpace(sub.AdditionalRecipients))
+            {
+                var additionalRecipients = EmailAddressUtils.splitEmailsString(sub.AdditionalRecipients);
+                cc.AddRange(additionalRecipients.Select(x=>new Email(x)));
             }
 
             //Add BCC recepients - dev team, as configured in the app config

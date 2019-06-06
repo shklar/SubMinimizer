@@ -112,6 +112,7 @@
     <Compile Include="AzureADGraphAPIUtil.cs" />
     <Compile Include="AzureAuthUtils.cs" />
     <Compile Include="AzureDataUtils.cs" />
+    <Compile Include="EmailAddressUtils.cs" />
     <Compile Include="InMemoryTokenCache.cs" />
     <Compile Include="ResourceOperationsUtil.cs" />
     <Compile Include="AzureResourceManagerUtil.cs" />

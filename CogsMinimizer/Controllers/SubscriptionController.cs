@@ -82,37 +82,12 @@ namespace CogsMinimizer.Controllers
                     throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
                 }
 
-
-                string servicePrincipalObjectId = ServicePrincipalObjectId;
-                if (String.IsNullOrEmpty(servicePrincipalObjectId))
-                {
-                    var organizations = AzureResourceManagerUtil.GetUserOrganizations();
-                    foreach (var org in organizations)
-                    {
-                        var subscriptions = AzureResourceManagerUtil.GetUserSubscriptions(org.Id);
-                        foreach (var sub in subscriptions)
-                        {
-                            if (sub.Id.Equals(subscription.Id))
-                            {
-                                servicePrincipalObjectId = org.objectIdOfCloudSenseServicePrincipal;
-                                break;
-                            }
-                        }
-                    }
-                }
-
-
-                if (String.IsNullOrEmpty(servicePrincipalObjectId))
-                {
-                    throw new ArgumentException(string.Format("Service principal with ID '{0}' wasn't found.", servicePrincipalObjectId));
-                }
-
                 return View(existingSubscription);
             }
         }
 
         [HttpPost]
-        public ActionResult SaveSettings(string ServicePrincipalObjectId, Subscription subscription)
+        public ActionResult SaveSettings(Subscription subscription)
         {
             Diagnostics.EnsureArgumentNotNull(() => subscription);
 
@@ -128,8 +103,11 @@ namespace CogsMinimizer.Controllers
                 string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
                 if (currentUser != existingSubscription.ConnectedBy)
                 {
-                    throw new ArgumentException("You are not authorized to edit the subscription settings.Please contact the subscription owner");
+                    throw new ArgumentException("You are not authorized to edit the subscription settings. Please contact the subscription owner");
                 }
+
+                /*
+                // This section was used when the service issued delegated requests to ARM on behalf of the user 
 
                 string servicePrincipalObjectId = ServicePrincipalObjectId;
                 if (String.IsNullOrEmpty(servicePrincipalObjectId))                {
@@ -147,12 +125,12 @@ namespace CogsMinimizer.Controllers
                         }
                     }
                 }
-
-
+                
                 if (String.IsNullOrEmpty(servicePrincipalObjectId))
                 {
                     throw new ArgumentException(string.Format("Service principal with ID '{0}' wasn't found.", servicePrincipalObjectId));
                 }
+                */
 
                 existingSubscription.ReserveIntervalInDays = subscription.ReserveIntervalInDays;
                 existingSubscription.ExpirationIntervalInDays = subscription.ExpirationIntervalInDays;
@@ -161,15 +139,21 @@ namespace CogsMinimizer.Controllers
                 existingSubscription.ManagementLevel = subscription.ManagementLevel;
                 existingSubscription.SendEmailToCoadmins = subscription.SendEmailToCoadmins;
                 existingSubscription.SendEmailOnlyInvalidResources = subscription.SendEmailOnlyInvalidResources;
+
+                //validate additional email recepients user input
+                if (existingSubscription.AdditionalRecipients == null ||
+                    !existingSubscription.AdditionalRecipients.Equals(subscription.AdditionalRecipients))
+                {
+                    existingSubscription.AdditionalRecipients = EmailAddressUtils.ValidateAndNormalizeEmails(subscription.AdditionalRecipients);
+                }
+
                 dataAccess.Subscriptions.AddOrUpdate<Subscription>(existingSubscription);
-
-                AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
-
-                AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, existingSubscription.Id, existingSubscription.OrganizationId);
-
-                AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, existingSubscription.Id, existingSubscription.OrganizationId, role);
-
                 dataAccess.SaveChanges();
+
+                //We no longer manage permissions to the subscription on behalf of the user
+                //AzureResourceManagementRole role = AzureResourceManagerUtil.GetNeededAzureResourceManagementRole(existingSubscription.ManagementLevel);
+                //AzureResourceManagerUtil.RevokeAllRolesFromServicePrincipalOnSubscription(servicePrincipalObjectId, existingSubscription.Id, existingSubscription.OrganizationId);
+                //AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, existingSubscription.Id, existingSubscription.OrganizationId, role);
 
                 return RedirectToAction("Index", "Home");
             }
