@@ -43,13 +43,7 @@ new SelectListItem
 </script>
 }
 
-@using (@Html.BeginForm("SaveSettings", "Subscription",
-    new
-    {
-        ServicePrincipalObjectId = ViewData["ServicePrincipalObjectId"]
-    },
-
-    FormMethod.Post))
+@using (@Html.BeginForm("SaveSettings", "Subscription", FormMethod.Post))
 {
     <h1>@ViewBag.Title</h1>
  
@@ -63,8 +57,8 @@ new SelectListItem
             </td>
             <td>
                 <h4>@Model.DisplayName</h4>
-        </td>
-    </tr>
+            </td>
+        </tr>
         <tr>
             <td>
                 <h4>Subscription ID</h4>
@@ -94,7 +88,7 @@ new SelectListItem
                 <h4>Unclaimed resources expire after (days)</h4>
             </td>
             <td style="vertical-align:middle">
-                @Html.TextBoxFor(m => m.ExpirationUnclaimedIntervalInDays, null, new { @class = "spinnerTxt"})
+                @Html.TextBoxFor(m => m.ExpirationUnclaimedIntervalInDays, null, new { @class = "spinnerTxt" })
             </td>
         </tr>
         <tr>
@@ -105,16 +99,16 @@ new SelectListItem
                 @Html.TextBoxFor(m => m.DeleteIntervalInDays)
             </td>
         </tr>
-       <tr>
+        <tr>
             <td>
                 <h4>Management level (action when resource expires)</h4>
             </td>
-           <td style="vertical-align:middle">
+            <td style="vertical-align:middle">
                 @Html.DropDownListFor(m => m.ManagementLevel, managementLevelList)
             </td>
         </tr>
         <tr>
-            <td><h1>Report options (mails are sent daily)</h1></td>
+            <td><h2>Report options (mails are sent daily)</h2></td>
         </tr>
         <tr>
             <td>
@@ -132,7 +126,15 @@ new SelectListItem
                 @Html.CheckBoxFor(m => m.SendEmailToCoadmins)
             </td>
         </tr>
-  </table>
+        <tr>
+            <td>
+                <h4>Additional recipients</h4>
+            </td>
+            <td style="vertical-align:middle">
+                @Html.TextBoxFor(m => m.AdditionalRecipients)
+            </td>
+        </tr>
+    </table>
 <table>
     <tr>
         @if (Model.ConnectedBy == User.Identity.Name)

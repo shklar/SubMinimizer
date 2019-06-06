@@ -40,6 +40,8 @@ namespace CogsMinimizer.Shared
 
         public bool SendEmailOnlyInvalidResources { get; set; }
 
+        public string AdditionalRecipients { get; set; }
+
         public Subscription()
         {
             this.ReserveIntervalInDays = 180;
@@ -49,6 +51,7 @@ namespace CogsMinimizer.Shared
             this.ManagementLevel = SubscriptionManagementLevel.ReportOnly;
             this.SendEmailToCoadmins = true;
             this.SendEmailOnlyInvalidResources = true;
+            this.AdditionalRecipients = null;
         }
     }
 
