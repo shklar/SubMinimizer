@@ -69,17 +69,17 @@ namespace CogsMinimizer.Controllers
         }
 
         // GET: Subscription
-        public ActionResult GetSettings([Bind(Include = "Id, OrganizationId, DisplayName")] string ServicePrincipalObjectId, Subscription subscription)
+        public ActionResult GetSettings(string subscriptionId)
         {
-            Diagnostics.EnsureArgumentNotNull(() => subscription);
+            Diagnostics.EnsureArgumentNotNull(() => subscriptionId);
 
             using (DataAccess dataAccess = new DataAccess())
             { 
                 Subscription existingSubscription =
-                    dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscription.Id)).FirstOrDefault();
+                    dataAccess.Subscriptions.Where<Subscription>(s => s.Id.Equals(subscriptionId)).FirstOrDefault();
                 if (existingSubscription == null)
                 {
-                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscription.Id));
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", subscriptionId));
                 }
 
                 return View(existingSubscription);
@@ -166,7 +166,7 @@ namespace CogsMinimizer.Controllers
            return RedirectToAction("Index", "Home");
         }
         
-        public ActionResult Analyze([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription)
+        public ActionResult Analyze([Bind(Include = "Id")] Subscription subscription)
         {
             Diagnostics.EnsureArgumentNotNull(() => subscription);
 

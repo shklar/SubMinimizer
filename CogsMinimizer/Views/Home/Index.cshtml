@@ -95,9 +95,7 @@
                                 @Html.ActionLink("Settings", "GetSettings", "Subscription",
                                new
                                {
-                                   Id = @subscription.Id,
-                                   OrganizationId = @subscription.OrganizationId,
-                                   DisplayName = @subscription.DisplayName
+                                   subscriptionId = @subscription.Id
                                },
                                new { @class = "btn btn-warning btn-xs wait-crs" })
 
