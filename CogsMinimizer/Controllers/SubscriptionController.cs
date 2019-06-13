@@ -500,7 +500,7 @@ namespace CogsMinimizer.Controllers
                     throw new ArgumentException(string.Format("Subscription already registered"));
                 }
 
-                subscription.OrganizationId = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
+                subscription.OrganizationId = ConfigurationManager.AppSettings["env:TenantAADID"];
 
                 // Ensure the service has read permission to the subscription
                 if (AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, subscription.OrganizationId))
