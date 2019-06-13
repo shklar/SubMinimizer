@@ -556,9 +556,7 @@
                         @Html.ActionLink("Settings", "GetSettings",
                             new
                             {
-                                Id = Model.SubscriptionData.Id,
-                                OrganizationId = Model.SubscriptionData.OrganizationId,
-                                DisplayName = Model.SubscriptionData.DisplayName                               
+                                subscriptionId = Model.SubscriptionData.Id             
                             },
                             new {@class = "btn btn-warning btn-round wait-crs btn-cmd", @title = "Edit subscription settings"})
                     </div>

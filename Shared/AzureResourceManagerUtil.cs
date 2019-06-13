@@ -27,15 +27,15 @@ namespace CogsMinimizer.Shared
         public static List<Organization> GetUserOrganizations()
         {
             List<Organization> organizations = new List<Organization>();
-            string microsoftAADID = ConfigurationManager.AppSettings["ida:MicrosoftAADID"];
+            string tenantAADID = ConfigurationManager.AppSettings["env:TenantAADID"];
 
             string objectIdOfCloudSenseServicePrincipal =
-                AzureADGraphAPIUtil.GetObjectIdOfServicePrincipalInOrganization(microsoftAADID,
+                AzureADGraphAPIUtil.GetObjectIdOfServicePrincipalInOrganization(tenantAADID,
                     ConfigurationManager.AppSettings["ida:ClientID"]);
 
             organizations.Add(new Organization()
             {
-                Id = microsoftAADID,
+                Id = tenantAADID,
                 objectIdOfCloudSenseServicePrincipal = objectIdOfCloudSenseServicePrincipal
                 //DisplayName = AzureADGraphAPIUtil.GetOrganizationDisplayName(organization.tenantId),
             });
