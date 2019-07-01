@@ -23,8 +23,6 @@
     <IISExpressWindowsAuthentication />
     <IISExpressUseClassicPipelineMode />
     <UseGlobalApplicationHostFile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
     <ApplicationInsightsResourceId>/subscriptions/b4b7d4c1-8c25-4da3-bf1c-e50f647a8130/resourcegroups/maxim/providers/microsoft.insights/components/SubMinimizerAI</ApplicationInsightsResourceId>
     <Use64BitIISExpress />
   </PropertyGroup>
@@ -315,8 +313,6 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Properties\webjobs-list.json" />
-    <None Include="Properties\PublishProfiles\subminimizer - Web Deploy.pubxml" />
-    <None Include="Properties\PublishProfiles\SubMinimizerPPE - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\colResizable-1.6.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />

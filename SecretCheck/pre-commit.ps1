@@ -1,299 +1,405 @@
+# this script run at commit time for checking  current content.  if you want check current content earlier just make SecretCheck project current, open this script at visual studio and press F5
+# output window show  errors
+
 #
 # pre_commit.ps1
 #
 
 Write-Host '~Powershell precommit hook. Sorry only commit from Visual Studio supported. Do not commit another way meanwhile'
 
+#  meanwhile check comments readability disabled not to deal with numerous not important changes
+$checkSpaceAfterComm =$false
+
+$checkCfgNonNeutralChanges = $true
+$checkApplicationInsightsCfg = $true
+$checkNotNecessaryChgsCfg = $true
+$checkHCUserName = $true
+$checkNuGetPackageImportStamp = $true
+
+# meanwhile check application ID and password references and data in code disabled till moving secrets to Azure
+$checkSecrets = $false
+
+$checkPublicProfileCfg = $true
+$checkBetaVersion = $true
+
 function PreCommit
 {
 
    $err = $false
    
-   Write-Host "`nCheck comments without space after //`n"
+   if ($checkSpaceAfterComm)
+   {
+      Write-Host "`nCheck comments without space after //`n"
    
-   $files = GetFiles('.cs')
-   $chFound = CheckComments $files
-   if ($chFound)
-   {
-
-      Write-Host 'Less readable comments found.'
-      $err = $true
-   }
-
-   Write-Host "`nCheck from neutral values changes in application configuration`n"
-
-   $files = GetFiles('.config')
-   
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:WebJobDashboardCs\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (WebJobDashboardCs is changed from neutral).'
-      $err = $true
-   }
-
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:WebJobStorageCs\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (WebJobStorageCs is changed from neutral).'
-      $err = $true
-   }
-
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:ApiKey\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (ApiKey is changed from neutral).'
-      $err = $true
-   }
-
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:AppRegId\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (AppRegId is changed from neutral).'
-      $err = $true
-   }
-
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:AppRegPassword\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (AppRegPassword is changed from neutral).'
-      $err = $true
-   }
-   
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:KeyVault\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (KeyVault is changed from neutral).'
-      $err = $true
-   }
-   
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:DataAccess\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (DataAccess is changed from neutral).'
-      $err = $true
-   }
-
-
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:EnableWebJob\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (EnableWebJob is changed from neutral).'
-      $err = $true
-   }
-
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:\AllowWebJobDelete" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (AllowWebJobDelete is changed from neutral).'
-      $err = $true
-   }
-
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:AllowWebJobEmail\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (AllowWebJobEmail is changed from neutral).'
-      $err = $true
-   }
-
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:DevTeam\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (DevTeam is changed from neutral).'
-      $err = $true
-   }
-   
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:EnvDisplayName\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (EnvDisplayName is changed from neutral).'
-      $err = $true
-   }
-   
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:ServiceURL\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (ServiceURL is changed from neutral).'
-      $err = $true
-   }
-
-   $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:TelemetryInstrumentationKey\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (TelemetryInstrumentationKey is changed from neutral).'
-      $err = $true
-   }
-
-   Write-Host "`nCheck unnecessary changes in application insights configuration`n"
-
-   $chgs = GetMod 'ApplicationInsights.config'
-   $aiModified = $chgs[0]
-   $filepath = $chgs[1]
-
-   if ($aiModified)
-   {
-         Write-Host "`nChanges in application insights configuration discovered`n"
-         Write-Host "Please revert changes in ApplicationInsights.config if they are not intentional. If intentional please stage them manually"
-         Write-Host "`Otherwise your commit will be forbidden`n"
-         $err = $true
-   }
-   else
-   {
-         Write-Host "`nNo changes in application insights configuration discovered`n"
-   }
-
-   Write-Host "`nCheck unnecessary changes in configuration files`n"
-
-   $files = GetFiles '.config' 'Web'
-
-   $chFound = CheckContent $files 'TelemetryCorrelationHttpModule'
-   if ($chFound)
-   {
-      Write-Host 'Changes at Web.config found (TelemetryCorrelationHttpModule). Are all them intentional?'
-      $err = $true
-   }
-   else
-   {
-      Write-Host 'Changes at Web.config (TelemetryCorrelationHttpModule) not found.'
-   }
-
-   Write-Host "`nCheck hard coded user name`n"
-
-   $files = GetFiles('.cs')
-   $mailFound = CheckContent $files 'eviten@microsoft.com'
-   if ($mailFound)
-   {
-      Write-Host 'Hard coded user name found'
-      $err = $true
-   }
-   else
-   {
-      Write-Host 'Hard coded user name not found'
-   }
-
-   Write-Host "`nCheck NuGetPackageImportStamp`n"
-
-   $files = GetFiles('.csproj')
-   $nugImpFound = CheckContent $files 'NuGetPackageImportStamp'
-   if ($nugImpFound)
-   {
-      Write-Host 'NuGetPackageImportStamp found'
-      $err = $true
-   }
-   else
-   {
-      Write-Host 'NuGetPackageImportStamp not found'
-   }   
-   
-   Write-Host "`nCheck hard coded application ID`n"
-   
-   $files = GetFiles('.config') 
-   $files += GetFiles('.cs')
-   $appIdFound = CheckContent $files 'ida:ClientID'
-   if ($appIdFound)
-   {
-      Write-Host 'Hard coded app ID found'
-      $err = $true
-   }
-   else
-   {
-      Write-Host 'Hard coded app ID not found'
-   }
-
-   Write-Host "`nCheck hard coded application password`n"
-   
-   $files = GetFiles('.config') 
-   $files += GetFiles('.cs')
-   $pwdFound = CheckContent $files 'ida:Password'
-   if ($pwdFound)
-   {
-      Write-Host 'Hard coded password found'
-      $err = $true
-   }
-   else
-   {
-      Write-Host 'Hard coded password not found'
-   }
-
-   Write-Host "`nCheck hard coded  database connection string`n"
-   
-   $files = GetFiles('.config')
-   $connFound = CheckContent $files 'add name=\"DataAccess'
-   if ($connFound)
-   {
-      Write-Host 'Hard coded connection string found'
-      $err = $true
-   }
-   else
-   {
-      Write-Host 'Hard coded connection string not found'
-   }
-
-   Write-Host "`nCheck hard coded web job connection string`n"
-   
-   $files = GetFiles('.config')
-   $connFound1 = CheckContent $files 'WebJobsDash'
-   if ($connFound1)
-   {
-      Write-Host 'Hard coded web job connection string found'
-      $err = $true
-   }
-   else
-   {
-      Write-Host 'Hard coded web job connection string not found'
-   }
-
-   $files = GetFiles('.config')
-   $connFound2 = CheckContent $files 'WebJobsStorage'
-   if ($connFound2)
-   {
-      Write-Host 'Hard coded web job connection string 2 found'
-      $err = $true
-   }
-   else
-   {
-      Write-Host 'Hard coded web job connection string 2 not found'
-   }
-
-   Write-Host "`nCheck  publishing profile reference`n"
-
-   $files = GetFiles('.csproj')
-   $pubFound = CheckContent $files 'pubxml'
-   if ($pubFound)
-   {
-      Write-Host 'Publishing profile reference found'
-      $err = $true
-   }
-   else
-   {
-      Write-Host 'Publishing profile reference not found'
-   }
-
-   Write-Host "`nCheck beta usage`n"
-   Write-Host "`nAttention! Using by partial projects different package versions isn't checked meanwhile`n"
-
-   # check version info existence and ask run version info existence script running if info absent
-   $verInfo = GetVersionInfo
-   if ($verInfo -eq $null)
-   {
-      Write-Host 'Unfortunately package information is not fully available outside of console manager context.  please run ./SecurityCheck/GetVersion.ps1 from package manager console and repeat commit.'
-      $err = $true
-   }
-   else
-   {
-      $files = Get-ChildItem -path $curDir -recurse | where {$_.Name -eq 'packages.config' }
-      $betaFound = CheckBetaContent $files $verInfo
-      if ($betaFound)
+      $files = GetFiles('.cs')
+      $chFound = CheckComments $files
+      if ($chFound)
       {
-         Write-Host 'Beta version usage found'
+
+         Write-Host 'Less readable comments found.'
+         $err = $true
+      }
+   }
+   else
+   {
+      Write-Host "`nCheck comments without space after // skipped`n"
+   }
+
+   if ($checkCfgNonNeutralChanges)
+   {
+      $cfgChFound = $false
+
+      Write-Host "`nCheck from neutral values changes in application configuration`n"
+
+      $files = GetFiles('.config')
+   
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:WebJobDashboardCs\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (WebJobDashboardCs is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:WebJobStorageCs\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (WebJobStorageCs is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:ApiKey\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (ApiKey is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:AppRegId\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (AppRegId is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:AppRegPassword\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (AppRegPassword is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+   
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:KeyVault\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (KeyVault is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+   
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:DataAccess\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (DataAccess is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+
+
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:EnableWebJob\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (EnableWebJob is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:\AllowWebJobDelete" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (AllowWebJobDelete is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:AllowWebJobEmail\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (AllowWebJobEmail is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:DevTeam\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (DevTeam is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+   
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:EnvDisplayName\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (EnvDisplayName is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+   
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:ServiceURL\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (ServiceURL is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+
+      $chFound = CheckContent -fs $files -pattern 'add key[ ]*=[ ]*\"env:TelemetryInstrumentationKey\" value[ ]*=[ ]*\"([^ ]+)\"' -vals @('Dummy')
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (TelemetryInstrumentationKey is changed from neutral).'
+         $cfgChFound = $true
+         $err = $true
+      }
+
+      if (-not $cfgChFound)
+      {
+         Write-Host 'No changes at Web.config found changed from neutral.'
+      }
+   }
+   else
+   {
+      Write-Host "`nCheck from neutral values changes in application configuration skipped`n"
+   }
+
+   if ($checkApplicationInsightsCfg)
+   {
+      Write-Host "`nCheck unnecessary changes in application insights configuration`n"
+
+      $chgs = GetMod 'ApplicationInsights.config'
+      $aiModified = $chgs[0]
+      $filepath = $chgs[1]
+
+      if ($aiModified)
+      {
+            Write-Host "`nChanges in application insights configuration discovered`n"
+            Write-Host "Please revert changes in ApplicationInsights.config if they are not intentional. If intentional please stage them manually"
+            Write-Host "`Otherwise your commit will be forbidden`n"
+            $err = $true
+      }
+      else
+      {
+            Write-Host "`nNo changes in application insights configuration discovered`n"
+      }
+   }
+   else
+   {
+      Write-Host "`nCheck unnecessary changes in application insights configuration skipped`n"
+   }
+
+   if ($checkNotNecessaryChgsCfg)
+   {
+      Write-Host "`nCheck unnecessary changes in configuration files`n"
+
+      $files = GetFiles '.config' 'Web'
+
+      $chFound = CheckContent $files 'TelemetryCorrelationHttpModule'
+      if ($chFound)
+      {
+         Write-Host 'Changes at Web.config found (TelemetryCorrelationHttpModule). Are all them intentional?'
          $err = $true
       }
       else
       {
-         Write-Host 'Beta version usage not found'
+         Write-Host 'Changes at Web.config (TelemetryCorrelationHttpModule) not found.'
       }
    }
+   else
+   {
+      Write-Host "`nCheck unnecessary changes in configuration files skipped`n"
+   }
 
-   $err = $true
+
+   if ($checkHCUserName)
+   {
+      Write-Host "`nCheck hard coded user name`n"
+
+      $files = GetFiles('.cs')
+      $mailFound = CheckContent $files 'eviten@microsoft.com'
+      if ($mailFound)
+      {
+         Write-Host 'Hard coded user name found'
+         $err = $true
+      }
+      else
+      {
+         Write-Host 'Hard coded user name not found'
+      }
+   }
+   else
+   {
+      Write-Host "`nCheck hard coded user name skipped`n"
+   }
+
+   
+   if ($checkNuGetPackageImportStamp)
+   {
+      Write-Host "`nCheck NuGetPackageImportStamp`n"
+
+      $files = GetFiles('.csproj')
+      $nugImpFound = CheckContent $files 'NuGetPackageImportStamp'
+      if ($nugImpFound)
+      {
+         Write-Host 'NuGetPackageImportStamp found'
+         $err = $true
+      }
+      else
+      {
+         Write-Host 'NuGetPackageImportStamp not found'
+      }   
+   }
+   else
+   {
+      Write-Host "`nCheck NuGetPackageImportStamp skipped`n"
+   }
+
+   if ($checkSecrets)
+   {
+      Write-Host "`nCheck hard coded application ID`n"
+   
+      $files = GetFiles('.config') 
+      $files += GetFiles('.cs')
+      $appIdFound = CheckContent $files 'ida:ClientID'
+      if ($appIdFound)
+      {
+         Write-Host 'Hard coded app ID found'
+         $err = $true
+      }
+      else
+      {
+         Write-Host 'Hard coded app ID not found'
+      }
+
+      Write-Host "`nCheck hard coded application password`n"
+   
+      $files = GetFiles('.config') 
+      $files += GetFiles('.cs')
+      $pwdFound = CheckContent $files 'ida:Password'
+      if ($pwdFound)
+      {
+         Write-Host 'Hard coded password found'
+         $err = $true
+      }
+      else
+      {
+         Write-Host 'Hard coded password not found'
+      }
+   }
+   else
+   {
+      Write-Host "`nCheck secrets skipped`n"
+   }
+   
+   if ($chkConnStrings)
+   {
+      Write-Host "`nCheck hard coded  database connection string`n"
+   
+      $files = GetFiles('.config')
+      $connFound = CheckContent $files 'add name=\"DataAccess'
+      if ($connFound)
+      {
+         Write-Host 'Hard coded connection string found'
+         $err = $true
+      }
+      else
+      {
+         Write-Host 'Hard coded connection string not found'
+      }
+
+      Write-Host "`nCheck hard coded web job connection string`n"
+   
+      $files = GetFiles('.config')
+      $connFound1 = CheckContent $files 'WebJobsDash'
+      if ($connFound1)
+      {
+         Write-Host 'Hard coded web job connection string found'
+         $err = $true
+      }
+      else
+      {
+         Write-Host 'Hard coded web job connection string not found'
+      }
+
+      $files = GetFiles('.config')
+      $connFound2 = CheckContent $files 'WebJobsStorage'
+      if ($connFound2)
+      {
+         Write-Host 'Hard coded web job connection string 2 found'
+         $err = $true
+      }
+      else
+      {
+         Write-Host 'Hard coded web job connection string 2 not found'
+      }
+   }
+   
+
+   if ($checkPublicProfileCfg)
+   {
+      Write-Host "`nCheck  publishing profile reference`n"
+
+      $files = GetFiles('.csproj')
+      $pubFound = CheckContent $files 'pubxml'
+      if ($pubFound)
+      {
+         Write-Host 'Publishing profile reference found'
+         $err = $true
+      }
+      else
+      {
+         Write-Host 'Publishing profile reference not found'
+      }
+   }
+   else
+   {
+      Write-Host "`nCheck  publishing profile reference skipped`n"
+   }
+
+   if ($checkBetaVersion)
+   {
+      Write-Host "`nCheck beta usage`n"
+      Write-Host "`nAttention! Using by partial projects different package versions isn't checked meanwhile`n"
+
+      # check version info existence and ask run version info existence script running if info absent
+       $verInfo = GetVersionInfo
+      if ($verInfo -eq $null)
+      {
+         Write-Host 'Unfortunately package information is not fully available outside of console manager context.  please run ./SecurityCheck/GetVersion.ps1 from package manager console and repeat commit.'
+         $err = $true
+      }
+      else
+      {
+         $files = Get-ChildItem -path $curDir -recurse | where {$_.Name -eq 'packages.config' }
+         $betaFound = CheckBetaContent $files $verInfo
+         if ($betaFound)
+         {
+            Write-Host 'Beta version usage found'
+            $err = $true
+         }
+         else
+         {
+            Write-Host 'Beta version usage not found'
+         }
+      }
+  }
+   else
+   {
+      Write-Host "`nCheck beta usage skipped`n"
+   }
    if ($err -eq $true)
    {
       Write-Host "`n`nErrors found"
@@ -309,7 +415,7 @@ function GetFiles
 {
    param
    (
-      [Parameter(Mandatory=$true, Position=0)]
+           [Parameter(Mandatory=$true, Position=0)]
       [string] $ext,
       [Parameter(Mandatory=$false, Position=1)]
       [string] $name
