@@ -37,12 +37,7 @@ namespace CogsMinimizer.Controllers
                     throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
                 }
 
-                string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
-                if (currentUser != subscription.ConnectedBy)
-                {
-                    throw new ArgumentException("You are not authorized to  reset resources at this subscription.Please contact the subscription owner");
-                }
-
+ 
                 // Let's compose result list in order to fill resources table at view
                 List<Resource> subscriptionResourceList = db.Resources.Where(r => r.SubscriptionId == SubscriptionId && r.ResourceGroup == Group).ToList();
 
@@ -64,10 +59,6 @@ namespace CogsMinimizer.Controllers
                             resource.ConfirmedOwner = true;
                             resource.ExpirationDate = ResourceOperationsUtil.GetNewReserveDate(subscription, resource);
                             resource.Status = ResourceStatus.Valid;
-                            break;
-                        case "reset":
-                            // Reset expiration date for resources of selected subscription
-                            ResourceOperationsUtil.ResetResource(resource, subscription);
                             break;
                     }
 
