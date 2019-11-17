@@ -19,6 +19,76 @@ namespace CogsMinimizer.Controllers
     {
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
 
+        // Reset, extend or reserve  all given subscription and group resources depending from operation
+        [HttpPost]
+        public ActionResult ResourceGroupOperation(string Operation, string Group, string SubscriptionId)
+        {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => Operation);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => Group);
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            List<object> resultList = new List<object>();
+            using (DataAccess db = new DataAccess())
+            {
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
+
+                if (subscription == null)
+                {
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
+                }
+
+                string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
+                if (currentUser != subscription.ConnectedBy)
+                {
+                    throw new ArgumentException("You are not authorized to  reset resources at this subscription.Please contact the subscription owner");
+                }
+
+                // Let's compose result list in order to fill resources table at view
+                List<Resource> subscriptionResourceList = db.Resources.Where(r => r.SubscriptionId == SubscriptionId && r.ResourceGroup == Group).ToList();
+
+                // Let's compose result list in order to fill resources table at view
+                foreach (Resource resource in subscriptionResourceList)
+                {
+                    switch (Operation)
+                    {
+                        case "extend":
+                            // Extend resources of given  group and subscription
+                            resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                            resource.ConfirmedOwner = true;
+                            resource.ExpirationDate = ResourceOperationsUtil.GetNewExpirationDate(subscription, resource);
+                            resource.Status = ResourceStatus.Valid;
+                            break;
+                        case "reserve":
+                            // Reserve resources of given  group and subscription
+                            resource.Owner = AzureAuthUtils.GetSignedInUserUniqueName();
+                            resource.ConfirmedOwner = true;
+                            resource.ExpirationDate = ResourceOperationsUtil.GetNewReserveDate(subscription, resource);
+                            resource.Status = ResourceStatus.Valid;
+                            break;
+                        case "reset":
+                            // Reset expiration date for resources of selected subscription
+                            ResourceOperationsUtil.ResetResource(resource, subscription);
+                            break;
+                    }
+
+                    db.Resources.AddOrUpdate(resource);
+
+                    resultList.Add(new
+                    {
+                        Id = resource.Id,
+                        Status = resource.Status.ToString(),
+                        ConfirmedOwner = resource.ConfirmedOwner,
+                        ExpirationDate = resource.ExpirationDate.ToShortDateString(),
+                    });
+
+                }
+
+                db.SaveChanges();
+            }
+
+            return Json(resultList);
+        }
+
         // Reset the duration of all subscription resources ( removes it's confirmed owner and sets its expiration date to today + unclaimed resources expiration date)
         [HttpPost]
         public ActionResult ResetResources(string SubscriptionId)
@@ -338,7 +408,14 @@ namespace CogsMinimizer.Controllers
             }
 
             var orderedResources = resources.OrderBy(x => x.ExpirationDate);
-            var model = new SubscriptionAnalyzeViewModel {Resources = orderedResources, SubscriptionData = subscription};
+
+            var groups = from r in resources select r.ResourceGroup; 
+             
+            var orderedGroups = groups.OrderBy(g => g).Distinct().ToList();
+            SelectList groupList = new SelectList(orderedGroups);
+
+
+            var model = new SubscriptionAnalyzeViewModel {Resources = orderedResources, SubscriptionData = subscription, GroupList = groupList};
             return model;
         }
 
