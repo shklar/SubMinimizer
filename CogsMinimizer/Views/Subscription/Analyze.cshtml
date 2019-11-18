@@ -306,6 +306,60 @@
         }
     }
 
+    function ResourceGroupOp(opName) {
+        var selectedGroup = $('#groupList').val();
+        if (selectedGroup == '') {
+            alert("Please select resource group");
+            return;
+        }
+
+        SetCursor('wait', 'wait');
+        $.ajax({
+            url: "/Subscription/ResourceGroupOperation",
+            type: "POST",
+            dataType: "json",
+            data: JSON.stringify({
+                Operation: opName,
+                Group: selectedGroup,
+                SubscriptionId: "@Model.SubscriptionData.Id"
+            }),
+
+            contentType: "application/json; charset=utf-8",
+            success: function (data) {
+                for (var resNum = 0; resNum < data.length; resNum++) {
+                    var resource = data[resNum];
+                    // let's find resource raw in resource table in order to update appropriate values
+                    var rowSelector = "#resourcesTable tr[data-resource-id='" + resource.Id + "']";
+                    var resourceRow = $(rowSelector).first();
+                    if (resourceRow != null) {
+                        if (resource.ConfirmedOwner) {
+                            $(resourceRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
+                        }
+                        else {
+                            $(resourceRow).find('#item_ConfirmedOwner').prop('checked', '');
+                        }
+
+                        $(resourceRow).find('td').eq(ownerColumn).html(resource.Owner);
+                        $(resourceRow).find('td').eq(ownerColumn).attr("title", resource.Owner);
+
+                        $(resourceRow).find('td').eq(expirationDateColumn).html(resource.ExpirationDate);
+                        $(resourceRow).find('td').eq(expirationDateColumn).attr("title", resource.ExpirationDate);
+
+                        SetStatusIcon($(resourceRow).find('td').eq(statusColumn).find("button"), resource.Status);
+                        $(resourceRow).find('td').eq(statusColumn).attr("title", resource.Status);
+                    }
+                }
+
+                RedrawResourceTable();
+                SetCursor(initialBodyCursor, initialBtnCursor);
+             
+            }
+        });
+
+
+    }
+
+
     function OnResetResources() {
         $('#resetRessConfDialog').modal('show');
     }
@@ -486,7 +540,7 @@
         SetCursor('wait', 'wait');
         var selectedRow = $(extendBtn).parents("tr");
         $.ajax({
-            url: "/Subscription/ExtendResource",
+           url: "/Subscription/ExtendResource",
             type: "POST",
             dataType: "json",
             data: JSON.stringify({
@@ -528,8 +582,8 @@
 <br />
 <div class="panel panel-default" style="border:none;width:1100px">
     <div class="row">
-        <div class="col-md-6 pull-left" style="width:250px">
-
+        <div class="col-md-6 pull-left" style="width:250px;padding-right:20px">
+            <div class="row">
             <div class="panel panel-default">
                 <div style="text-align:left" class="panel-heading">Choose resources to view</div>
                 <div class="panel-body">
@@ -547,9 +601,7 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-md-6 pull-left" style="width:200px">
-
+            <div class="row">
             <div class="panel panel-default" style="border:none">
                 <div class="panel-body">
                     <div class="row">
@@ -571,13 +623,33 @@
                     }
                 </div>
             </div>
+            </div>
 
         </div>
 
-        <div class="col-md-6 pull-right" style="width:250px">
+        <div class="col-md-d6 pull-left" style="width:300px">
 
             <div class="panel panel-default">
-                <div style="text-align:left" class="panel-heading">Status Legend (check to view)</div>
+                <div style="text-align:left" class="panel-heading">Extend all resources in group</div>
+                <div class="panel-body">
+                    <div class="row" style="align-content:left;margin-left:0px;margin-right:20px;padding-bottom:10px;">
+                        @Html.DropDownList("groupList", Model.GroupList, "Select resource group")
+
+                    </div>
+                    <div style="align-content:center" class="row">
+                        <button onclick="ResourceGroupOp('extend')" style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resources
+                    </div>
+                    <div class="row">
+                        <button onclick="ResourceGroupOp('reserve')" style="margin-left:15px" class="btn btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resources
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 pull-left" style="width:250px">
+
+            <div class="panel panel-default">
+                 <div style="text-align:left" class="panel-heading">Status Legend (check to view)</div>
                 <div class="panel-body">
                     <div class="row">
                         <input id="showValidResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon glyphicon-ok tbl-btn" data-status=""></button>&nbsp;Valid
@@ -591,7 +663,7 @@
                 </div>
             </div>
         </div>
-            <div class="col-md-6 pull-right" style="width:250px">
+        <div class="col-md-6 pull-left" style="width:250px">
 
                 <div class="panel panel-default">
                     <div style="text-align:left" class="panel-heading">Actions Legend</div>
