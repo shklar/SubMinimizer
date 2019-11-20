@@ -70,6 +70,7 @@ namespace CogsMinimizer.Controllers
                         Status = resource.Status.ToString(),
                         ConfirmedOwner = resource.ConfirmedOwner,
                         ExpirationDate = resource.ExpirationDate.ToShortDateString(),
+                        Owner = resource.Owner
                     });
 
                 }
@@ -120,6 +121,7 @@ namespace CogsMinimizer.Controllers
                         Status = resource.Status.ToString(),
                         ConfirmedOwner = resource.ConfirmedOwner,
                         ExpirationDate = resource.ExpirationDate.ToShortDateString(),
+                        Owner = resource.Owner
                     });
                 }
 
@@ -335,10 +337,8 @@ namespace CogsMinimizer.Controllers
                     throw new ArgumentException("You are not authorized to  reset resources at this subscription.Please contact the subscription owner");
                 }
 
-                resource.ConfirmedOwner = false;
+                ResourceOperationsUtil.ResetResource(resource, subscription);
 
-                resource.ExpirationDate = ResourceOperationsUtil.GetNewExpirationDate(subscription, resource);
-                resource.Status = ResourceStatus.Valid;
                 result.Data = new { ConfirmedOwner = resource.ConfirmedOwner, Owner = resource.Owner, ResourceId = resource.Id, SubscriptionId = resource.SubscriptionId, ExpirationDate = resource.ExpirationDate.ToShortDateString(), Status = resource.Status.ToString() };
 
                 db.Resources.AddOrUpdate(resource);
@@ -585,7 +585,7 @@ namespace CogsMinimizer.Controllers
                 else
                 {
                     throw new ArgumentException(string.Format("Unable to monitor subscription with ID '{0}'. " +
-                        "Please make sure you have assigned reader role to SubMinimizer for this subscription", subscription.Id));
+                        "Please make sure you have assigned reader role to SubMinimizer_prod for this subscription", subscription.Id));
                 }
             }
             return RedirectToAction("Index", "Home");

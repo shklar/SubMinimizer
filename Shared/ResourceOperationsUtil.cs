@@ -29,6 +29,7 @@ namespace CogsMinimizer.Shared
             }
 
             resource.ConfirmedOwner = false;
+            resource.Owner = string.Empty;
 
             resource.ExpirationDate = GetNewExpirationDate(subscription, resource);
             resource.Status = ResourceStatus.Valid;
