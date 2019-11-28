@@ -26,7 +26,7 @@ namespace OfflineSubscriptionManager
 
             ITracer tracer = TracerFactory.CreateTracer(logger);
             tracer.TraceInformation("OfflineSubscriptionManager web job started!");
-            tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["env:TelemetryInstrumentationKey"]}");
+            tracer.TraceInformation($"Ikey: {ConfigurationManager.AppSettings["APPINSIGHTS_INSTRUMENTATIONKEY"]}");
             tracer.TraceInformation($"Application Key: {ConfigurationManager.AppSettings["ida:ClientID"]}");
 
             //Top level feature switch to allow easy disabling
