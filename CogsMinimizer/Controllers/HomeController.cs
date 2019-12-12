@@ -127,6 +127,14 @@ namespace CogsMinimizer.Controllers
             return View();
         }
 
+
+        public ActionResult Message(string message)
+        {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => message);
+            ViewData["Message"] = message;
+            return View();
+        }
+
         public ActionResult About()
         {
             return View();

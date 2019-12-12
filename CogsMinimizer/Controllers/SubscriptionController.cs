@@ -11,6 +11,7 @@ using CogsMinimizer.Shared;
 using Microsoft.Azure.Management.Authorization.Models;
 using Resource = CogsMinimizer.Shared.Resource;
 using System.Configuration;
+using System.Web.Hosting;
 
 namespace CogsMinimizer.Controllers
 {
@@ -234,6 +235,15 @@ namespace CogsMinimizer.Controllers
             Diagnostics.EnsureArgumentNotNull(() => subscription);
 
             var model = GetResourcesViewModel(subscription.Id);
+
+            //A subscription is registered with a last analysis time which is the same
+            //as the registration time. It gets update on the first scan which is triggered
+            //upon registration. This could take a few minutes.
+            if (model.SubscriptionData.ConnectedOn.Equals(model.SubscriptionData.LastAnalysisDate))
+            {
+                return RedirectToAction("Message", "Home", new { Message = "We are still analyzing your subscription. Please check back in a few minutes." });
+            }
+
             ViewData["UserId"] = AzureAuthUtils.GetSignedInUserUniqueName();
             return View(model);
         }
@@ -521,6 +531,7 @@ namespace CogsMinimizer.Controllers
         }
 
 
+        //Deprecated flow - requires delgated ARM actions
         private ActionResult Connect([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string servicePrincipalObjectId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => servicePrincipalObjectId);
@@ -535,11 +546,14 @@ namespace CogsMinimizer.Controllers
                 AzureResourceManagerUtil.GrantRoleToServicePrincipalOnSubscription(servicePrincipalObjectId, subscription.Id, subscription.OrganizationId, role);
                 if (AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, subscription.OrganizationId))
                 {
+                    DateTime registrationTime = DateTime.UtcNow;
                     subscription.ConnectedBy = (System.Security.Claims.ClaimsPrincipal.Current).FindFirst(ClaimTypes.Name).Value;
-                    subscription.ConnectedOn = DateTime.UtcNow;
+                    subscription.ConnectedOn = registrationTime;
                     subscription.IsConnected = true;
                     subscription.AzureAccessNeedsToBeRepaired = false;
-                    subscription.LastAnalysisDate = DateTime.UtcNow.Date;
+
+                    //The last analysis date starts off the same as the ConnectedOn time to indicate that scan hasn't happened yet.
+                    subscription.LastAnalysisDate = registrationTime;
 
                     db.Subscriptions.AddOrUpdate(subscription);
                     db.SaveChanges();
@@ -572,15 +586,22 @@ namespace CogsMinimizer.Controllers
 
                 // Ensure the service has read permission to the subscription
                 if (AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, subscription.OrganizationId))
-                {                  
+                {
                     //Create a new entry in the DB
+                    DateTime registrationTime = DateTime.UtcNow;
                     subscription.ConnectedBy = AzureAuthUtils.GetSignedInUserUniqueName();
-                    subscription.ConnectedOn = DateTime.UtcNow;
+                    subscription.ConnectedOn = registrationTime;
                     subscription.IsConnected = true;
                     subscription.AzureAccessNeedsToBeRepaired = false;
-                    subscription.LastAnalysisDate = DateTime.UtcNow.Date;
+                    subscription.LastAnalysisDate = registrationTime;
                     db.Subscriptions.AddOrUpdate(subscription);
                     db.SaveChanges();
+
+                    //Trigger a scan on a background job
+                    HostingEnvironment.QueueBackgroundWorkItem(cancellationToken =>
+                    {
+                        SubscriptionProcessor.ProcessSubscriptions(TracerFactory.CreateTracer(), new[] { subscription.Id });
+                    });
                 }
                 else
                 {
