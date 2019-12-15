@@ -15,18 +15,6 @@
         $('.wait-crs').on('click', function () { $('body').css('cursor', 'wait'); $('.btn').css('cursor', 'wait'); })
     });
 
-    function CheckSubscriptionConnectDate(btn)
-    {
-        var href = $(btn).prop("href");
-        var connTimeHoursMatches = href.match(/ConnectedTime=([0-9]*)/);
-        var connTimeHours = connTimeHoursMatches[1]
-
-        if (connTimeHours <= 24)
-        {
-            alert("This subscription has not been analyzed yet. Please check back tomorrow. If the problem persists, then contact support.");
-        }
-    }
-
 </script>
 <div class="jumbotron">
     <h1>SubMinimizer</h1>
@@ -85,10 +73,9 @@
                                {
                                    Id = @subscription.Id,
                                    OrganizationId = @subscription.OrganizationId,
-                                   DisplayName = @subscription.DisplayName,
-                                   ConnectedTime = (DateTime.Now - @subscription.ConnectedOn).TotalHours
+                                   DisplayName = @subscription.DisplayName
                                },
-                               new { @class = "btn btn-success btn-xs wait-crs", onclick = "javascript: CheckSubscriptionConnectDate(this); return true;" })
+                               new { @class = "btn btn-success btn-xs wait-crs"})
 
                                 <small>&nbsp;&nbsp;</small>
 
