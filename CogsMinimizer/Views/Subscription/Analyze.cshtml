@@ -306,6 +306,60 @@
         }
     }
 
+function OnGetDeleteResourcesScript() {
+   
+    var content = 'Write-host  \'Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name: "@Model.SubscriptionData.DisplayName", Subscription id: "@Model.SubscriptionData.Id". Are you sure ? y/n\'\n';
+    content += '$confirm = Read-Host\n';
+    content += 'if ($confirm -ne \'y\')\n' +
+    '{\n' +
+    'return\n' +
+    '}\n' +
+    'Connect-AzureRmAccount\n' +
+    'Set-AzureRmContext -Subscription \'@Model.SubscriptionData.Id\'\n';
+
+       @{
+           foreach (var @resource in @Model.Resources)
+           {
+               if (@resource.Status != ResourceStatus.MarkedForDeletion)
+               {
+                 continue;
+               }
+
+
+       @Html.Raw(" content += 'Write-Host \\'Deleting resource \"" + @resource.Name + "\" from group \"" + @resource.ResourceGroup + "\"';\n")
+       if (@resource.ConfirmedOwner)
+         {
+        @Html.Raw(" content += ' last claimed by " + @resource.Owner + "\\'\\';\n")
+        }
+        else
+        {
+           @Html.Raw(" content += ' unclaimed\\'\\n';\n")
+        }
+             
+      @Html.Raw(" content += 'Remove-AzureRmResource -Force -ResourceId \\'" + @resource.AzureResourceIdentifier + "\\'\\n';\n")
+}
+}
+
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+
+    var todayString = mm + '-' + dd + '-' + yyyy;
+
+    var fileName = 'DeleteObsoleteResource_' + '@Model.SubscriptionData.DisplayName' + '_' + todayString + '_.ps1';
+
+    var blob = new Blob([content],
+        {
+            type: "text/plain;charset=utf-8",       });
+
+    var link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = fileName;
+    link.click();
+}
+
+
     function ResourceGroupOp(opName) {
         var selectedGroup = $('#groupList').val();
         if (selectedGroup == '') {
@@ -621,6 +675,10 @@
                             <br />
                         </div>
                     }
+                    <div class="row">
+                        <button style="width:fit-content" class="btn btn-warning btn-round btn-cmd" title="Download delete resources script" onclick="OnGetDeleteResourcesScript()">Download delete resources script</button>
+                            <br />
+                        </div>                    
                 </div>
             </div>
             </div>
