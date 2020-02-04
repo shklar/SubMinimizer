@@ -1,0 +1,1 @@
+﻿<%@ ServiceHost Language="C#" Debug="true" Service="GetResourcesServiceRole.GetResourcesService" CodeBehind="GetResourcesService.svc.cs" %>

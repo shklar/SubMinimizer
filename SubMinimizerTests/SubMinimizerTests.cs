@@ -15,8 +15,9 @@ using Microsoft.Azure.Subscriptions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 using CogsMinimizer.Shared;
+using SubMinimizerTests.GetResourcesServiceReference;
 
-namespace SubMinimizerTests
+namespace SubMinimizerUnitTests
 {
     [TestClass]
     public class SubMinimizerTests
@@ -176,6 +177,15 @@ namespace SubMinimizerTests
                 }
             }
         }
+
+        [TestMethod]
+        public void TestGetResources()
+        {
+            GetResourcesServiceClient getResourcesServiceClient = new GetResourcesServiceClient();
+            var resources = getResourcesServiceClient.GetResources("bcbd775a-813c-46e8-afe5-1a66912e0f03");
+        }
+
+
     }
 }
 
