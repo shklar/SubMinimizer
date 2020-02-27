@@ -1,14 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Data.Entity.Migrations;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Azure.Management.Authorization;
-using Microsoft.Azure.Management.Authorization.Models;
 using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Azure.Management.ResourceManager.Models;
 
@@ -20,20 +14,16 @@ namespace CogsMinimizer.Shared
         /// <summary>
         /// The DB instance against which all updates and queries are made
         /// </summary>
-        private DataAccess m_Db;
+        private IDataAccess m_Db;
 
         /// <summary>
         /// The subscription that needs to be analyzed
         /// </summary>
         private Subscription m_analyzedSubscription;
 
-        private readonly bool m_isOfflineMode;
+        private IAzureResourceManagement m_azureResourceManagement;
 
         private SubscriptionAnalysisResult m_analysisResult;
-
-        private ResourceManagementClient m_resourceManagementClient;
-
-        private AuthorizationManagementClient m_authorizationManagementClient;
 
         private List<string> m_subscriptionAdmins;
 
@@ -44,9 +34,9 @@ namespace CogsMinimizer.Shared
         /// </summary>
         /// <param name="dbAccess"></param>
         /// <param name="sub"></param>
-        /// <param name="isOfflineMode">Indicates whether the analysis is run offline or with user interaction
         /// </param>
-        public SubscriptionAnalyzer(DataAccess dbAccess, Subscription sub, bool isOfflineMode, ITracer tracer)
+        public SubscriptionAnalyzer(IDataAccess dbAccess, Subscription sub,
+            IAzureResourceManagement azureManagement, ITracer tracer)
         {
             Diagnostics.EnsureArgumentNotNull(() => sub);
             Diagnostics.EnsureArgumentNotNull(() => tracer);
@@ -54,7 +44,7 @@ namespace CogsMinimizer.Shared
 
             m_Db = dbAccess;
             m_analyzedSubscription = sub;
-            m_isOfflineMode = isOfflineMode;
+            m_azureResourceManagement = azureManagement;
             _tracer = tracer;
 
             m_analysisResult = new SubscriptionAnalysisResult(sub);
@@ -72,36 +62,15 @@ namespace CogsMinimizer.Shared
 
             _tracer.TraceInformation($"Subscription Analysis started for {m_analyzedSubscription.DisplayName}");
 
-            if (m_isOfflineMode)
-            {
-                _tracer.TraceInformation("Offline mode analysis");
-                m_resourceManagementClient = AzureResourceManagerUtil.GetAppResourceManagementClient(
-                    m_analyzedSubscription.Id,
-                    m_analyzedSubscription.OrganizationId);
-                m_authorizationManagementClient = AzureResourceManagerUtil.GetAppAuthorizationManagementClient(
-                    m_analyzedSubscription.Id,
-                    m_analyzedSubscription.OrganizationId);
-            }
-            else
-            {
-                _tracer.TraceInformation("Online mode analysis");
-                m_resourceManagementClient = AzureResourceManagerUtil.GetUserResourceManagementClient(
-                    m_analyzedSubscription.Id,
-                    m_analyzedSubscription.OrganizationId);
-                m_authorizationManagementClient = AzureResourceManagerUtil.GetUserAuthorizationManagementClient(
-                    m_analyzedSubscription.Id,
-                    m_analyzedSubscription.OrganizationId);
-            }
-
             //Verify that the application indeed has access to the subscription
             bool isApplicationAutohrizedToReadSubscription =
-                AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(m_analyzedSubscription.Id,
+                m_azureResourceManagement.ServicePrincipalHasReadAccessToSubscription(m_analyzedSubscription.Id,
                 m_analyzedSubscription.OrganizationId);
 
             //Couldn't access the subcription
             if (!isApplicationAutohrizedToReadSubscription)
             {
-                _tracer.TraceInformation("Failed to get access to subscription");
+                _tracer.TraceInformation("Failed to get read access to subscription");
                 m_analysisResult.IsSubscriptionAccessible = false;
             }
 
@@ -112,40 +81,6 @@ namespace CogsMinimizer.Shared
                 m_analysisResult.IsSubscriptionAccessible = true;
 
                 _tracer.TraceInformation($"Subscription management level: {m_analyzedSubscription.ManagementLevel}");
-
-                // Check if automatic resource deletion allowed
-                if (m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete ||
-                    m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.ManualDelete)
-                {
-                    _tracer.TraceVerbose(
-                        $"Subscription marked for deletion : name: {m_analyzedSubscription.DisplayName} management level: {m_analyzedSubscription.ManagementLevel}");
-
-                    //Check whether the feature switch for deleting resources is enabled
-                    if (ConfigurationManager.AppSettings["env:AllowWebJobDelete"].Equals("True", StringComparison.OrdinalIgnoreCase))
-                    {
-                        _tracer.TraceInformation("AllowWebJobDelete switch is Enabled.");
-
-                        // If automatic resources deletion allowed delete marked for deletion resources
-                        DeleteMarkedResources();
-                    }
-                    else
-                    {
-                        _tracer.TraceWarning("AllowWebJobDelete switch is disabled. Skipping deleting resources.");
-                    }
-
-
-                    if (m_analysisResult.DeletedResources.Any())
-                    {
-                        //The purpose of this sleep is to allow Azure to update its status for the deleted resources
-                        //otherwise once we check what's left we might still find them.
-                        Thread.Sleep(5000);
-                    }
-                }
-                else
-                {
-                    _tracer.TraceVerbose(
-                          $"Subscription marked for report only: {m_analyzedSubscription.DisplayName}");
-                }
 
                 AnalyzeSubscriptionResources();
             }
@@ -158,68 +93,26 @@ namespace CogsMinimizer.Shared
         }
 
         /// <summary>
-        /// Deletes all the resources that were marked for deletion
-        /// </summary>
-        private void DeleteMarkedResources()
-        {
-            var resourcesMarkedForDeletion =
-                m_Db.Resources.Where(x => x.SubscriptionId.Equals(m_analyzedSubscription.Id) &&
-                x.Status == ResourceStatus.MarkedForDeletion).ToList();
-
-            _tracer.TraceInformation($"Found {resourcesMarkedForDeletion.Count} resources for delete");
-
-            //Try to delete the resources that are marked for delete
-            foreach (var resource in resourcesMarkedForDeletion)
-            {
-                try
-                {
-                    _tracer.TraceVerbose($"Trying to delete the resource {resource.Name} of Type {resource.Type}");
-
-                    AzureResourceManagerUtil.DeleteAzureResource(m_resourceManagementClient, resource.AzureResourceIdentifier, _tracer);
-                    m_Db.Resources.Remove(resource);
-                    m_analysisResult.DeletedResources.Add(resource);
-                    _tracer.TraceVerbose($"Successfully deleted the resource {resource.Name} of Type {resource.Type}");
-
-                }
-                catch (Exception e)
-                {
-                    _tracer.TraceError($"Failed to delete the resource {resource.Name} of Type {resource.Type}. Exception details: {e.Message}");
-
-                    m_analysisResult.FailedDeleteResources.Add(resource);
-                }
-            }
-
-            m_Db.SaveChanges();
-        }
-
-        /// <summary>
         /// Review all the resources in the subscription
         /// </summary>
         private void AnalyzeSubscriptionResources()
         {
-            m_subscriptionAdmins = AzureResourceManagerUtil.GetSubscriptionAdmins2(m_analyzedSubscription.Id, m_analyzedSubscription.OrganizationId);
+            m_subscriptionAdmins = m_azureResourceManagement.GetSubscriptionAdmins(m_analyzedSubscription.Id, m_analyzedSubscription.OrganizationId);
             m_analysisResult.Admins = m_subscriptionAdmins;
 
             var emails = m_subscriptionAdmins;
             var adminEmails = emails.ToList();
 
-            var resourceGroups = AzureResourceManagerUtil.GetResourceGroups(m_resourceManagementClient);
+            var resourceGroups = m_azureResourceManagement.GetResourceGroups();
 
             //Go over all the resource groups
             foreach (var group in resourceGroups)
             {
-                var resourceList = AzureResourceManagerUtil.GetResourceList(m_resourceManagementClient, group.Name);
+                var resourceList = m_azureResourceManagement.GetResourceList(group.Name);
 
                 //Go over all the resource
                 foreach (var genericResource in resourceList)
                 {
-                    //Skip any resources that appear although we have successfully deleted them
-                    if (m_analysisResult.DeletedResources.Any(x => x.AzureResourceIdentifier.Equals(genericResource.Id)))
-                    {
-                        _tracer.TraceVerbose($"Found and skipping a resource which was just deleted: {genericResource.Name}");
-                        continue;
-                    }
-
                     //Try to find the resource in the DB
                     var resourceEntryFromDb = m_Db.Resources.FirstOrDefault(x => x.AzureResourceIdentifier.Equals(genericResource.Id));
 
@@ -326,17 +219,42 @@ namespace CogsMinimizer.Shared
                 {
                     resourceEntryFromDb.Status = ResourceStatus.Expired;
                     _tracer.TraceVerbose($"Assigning expired resource: {resourceEntryFromDb.Name} with status {resourceEntryFromDb.Status}");
+                    
+                    //Add to the list of expired resources
+                    m_analysisResult.ExpiredResources.Add(resourceEntryFromDb);
                 }
 
-                if ((m_analyzedSubscription.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete &&
-                     resourceEntryFromDb.Status == ResourceStatus.Expired) && resourceExpirationAge <= -m_analyzedSubscription.DeleteIntervalInDays)
+               else if (resourceEntryFromDb.Status == ResourceStatus.Expired)
                 {
-                    resourceEntryFromDb.Status = ResourceStatus.MarkedForDeletion;
-                    _tracer.TraceVerbose($"Subscription defined for automatic delete. Assigning expired resource: {resourceEntryFromDb.Name} with status {resourceEntryFromDb.Status}");
-                }
+                    if (resourceExpirationAge <= -m_analyzedSubscription.DeleteIntervalInDays)
+                    {
+                        resourceEntryFromDb.Status = ResourceStatus.MarkedForDeletion;
+                        _tracer.TraceVerbose($"Mark for delete time reached. Assigning expired resource: {resourceEntryFromDb.Name} with status {resourceEntryFromDb.Status}");
 
-                //Add to the list of expired resources even if it is marked for delete
-                m_analysisResult.ExpiredResources.Add(resourceEntryFromDb);
+                        //Add to the list of marked for delete resources
+                        m_analysisResult.MarkedForDeleteResources.Add(resourceEntryFromDb);
+                    }
+
+                    //This resource remains expired
+                    else
+                    {
+                        _tracer.TraceVerbose($"Resource remains expired: {resourceEntryFromDb.Name}");
+
+                        //Add to the list of expired resources
+                        m_analysisResult.ExpiredResources.Add(resourceEntryFromDb);
+
+                    }
+                }
+               
+                // The resource was already marked for delete
+                else if (resourceEntryFromDb.Status == ResourceStatus.MarkedForDeletion)
+                {
+                    _tracer.TraceVerbose($"Resource remains marked for delete: {resourceEntryFromDb.Name}");
+
+                    //Add to the list of marked for delete resources
+                    m_analysisResult.MarkedForDeleteResources.Add(resourceEntryFromDb);
+                }
+                
             }
 
             //This is a plain valid resource

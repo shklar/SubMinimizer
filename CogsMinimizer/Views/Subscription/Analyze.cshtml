@@ -770,14 +770,6 @@
                             <button class="btn btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
                                     data-toggle = "tooltip", title = "Reset expiration date making resource unclaimed."></button>
                         }
-                        <!--
-                        @if (Model.SubscriptionData.ManagementLevel == SubscriptionManagementLevel.ManualDelete && item.Expired)
-                        {
-                                        @Html.ActionLink("Delete", "Delete",
-                                     new { SubscriptionId = item.SubscriptionId, resourceId = item.Id },
-                                     new { @class = "btn btn-danger btn-xs wait-crs" })
-                        }
-                        -->
                     </td>
                 </tr>
             }
