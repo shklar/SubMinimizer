@@ -433,62 +433,6 @@ namespace CogsMinimizer.Controllers
             return emails;
         }
 
-
-
-        /// <summary>
-        /// Marks a single resource for delete
-        /// </summary>
-        /// <param name="subscriptionId"></param>
-        /// <param name="resourceId"></param>
-        /// <returns></returns>
-        private ActionResult Delete(string subscriptionId, string resourceId)
-        {
-            using (var db = new DataAccess())
-            {
-                var resource = db.Resources.FirstOrDefault(x => x.SubscriptionId.Equals(subscriptionId) && x.Id.Equals(resourceId));
-
-                if (resource != null)
-                {
-                    resource.Status = ResourceStatus.MarkedForDeletion;
-                    db.Resources.AddOrUpdate(resource);
-                    db.SaveChanges();
-                }
-                else
-                {
-                    throw new ArgumentException(string.Format("Resource with ID '{0}' wasn't found.", resourceId));
-                }
-
-            }
-
-            var model = GetResourcesViewModel(subscriptionId);
-            return View("Analyze", model);
-        }
-
-        /// <summary>
-        /// Marks all the expired resources in the subscription for deletion
-        /// </summary>
-        /// <param name="subscriptionId"></param>
-        /// <returns></returns>
-        private ActionResult DeleteExpired(string subscriptionId)
-        {
-            using (var db = new DataAccess())
-            {
-                var subResources = db.Resources.Where(x => x.SubscriptionId.Equals(subscriptionId)).ToList();
-                var expiredResources = subResources.Where(r => ResourceOperationsUtil.HasExpired(r));
-
-                foreach (var resource in expiredResources)
-                {
-                    resource.Status = ResourceStatus.MarkedForDeletion;
-                    db.Resources.AddOrUpdate(resource);
-                }
-               
-                db.SaveChanges();
-            }
-
-            var model = GetResourcesViewModel(subscriptionId);
-            return View("Analyze", model);
-        }
-
         /// <summary>
         /// Extends all the expired resources in the subscription
         /// </summary>
@@ -612,9 +556,8 @@ namespace CogsMinimizer.Controllers
             return RedirectToAction("Index", "Home");
         }
 
-        public ActionResult Disconnect([Bind(Include = "Id, OrganizationId")] Subscription subscription, string servicePrincipalObjectId)
+        public ActionResult Disconnect([Bind(Include = "Id, OrganizationId")] Subscription subscription)
         {
-            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => servicePrincipalObjectId);
             Diagnostics.EnsureArgumentNotNull(() => subscription);
 
             if (ModelState.IsValid)

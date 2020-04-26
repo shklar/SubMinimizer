@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Data.Entity.Migrations.Model;
-using System.Reflection;
-using Microsoft.Azure.Management.Authorization.Models;
 
 namespace CogsMinimizer.Shared
 {
@@ -20,10 +16,8 @@ namespace CogsMinimizer.Shared
         {
             this.AnalyzedSubscription = sub;
             ExpiredResources = new List<Resource>();
-            NearExpiredResources = new List<Resource>();
-            DeletedResources = new List<Resource>();
-            FailedDeleteResources = new List<Resource>();
             NotFoundResources = new List<Resource>();
+            MarkedForDeleteResources = new List<Resource>();
             NewResources = new List<Resource>();
             ValidResources = new List<Resource>();
         }
@@ -44,19 +38,9 @@ namespace CogsMinimizer.Shared
         public List<Resource> ExpiredResources { get; set; }
 
         /// <summary>
-        /// A list of all the near expiration resources found within the subscription
+        /// A list of all the marked for delete resources found within the subscription
         /// </summary>
-        public List<Resource> NearExpiredResources { get; set; }
-
-        /// <summary>
-        /// A list of all the resources that were deleted during the operation
-        /// </summary>
-        public List<Resource> DeletedResources { get; set; }
-
-        /// <summary>
-        /// A list of all the resources that wfailed deleting during the operation
-        /// </summary>
-        public List<Resource> FailedDeleteResources { get; set; }
+        public List<Resource> MarkedForDeleteResources { get; set; }
 
         /// <summary>
         /// A list of resources that were previously tracked but are no longer found in the subscription

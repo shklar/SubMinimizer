@@ -28,8 +28,14 @@ namespace CogsMinimizer.Shared
                         continue;
                     }
 
+                    var resourceManagementClient = AzureResourceManagerUtil.GetAppResourceManagementClient(sub.Id, sub.OrganizationId);
+                    //var authorizationManagementClient = AzureResourceManagerUtil.GetAppAuthorizationManagementClient(sub.Id, sub.OrganizationId);
+                    var azureResourceManagement = new AzureResourcesManagementProvider(resourceManagementClient);
+
+                    var dataAccessPrvoider = new DataAccessProvider(db);
+
                     //Analyze the subscription
-                    SubscriptionAnalyzer analyzer = new SubscriptionAnalyzer(db, sub, true, tracer);
+                    SubscriptionAnalyzer analyzer = new SubscriptionAnalyzer(dataAccessPrvoider, sub, azureResourceManagement, tracer);
                     SubscriptionAnalysisResult analysisResult = analyzer.AnalyzeSubscription();
                     sub.LastAnalysisDate = analysisResult.AnalysisStartTime;
 
@@ -66,9 +72,7 @@ namespace CogsMinimizer.Shared
             if (sub.SendEmailOnlyInvalidResources)
             {
                 if (analysisResult.NotFoundResources.Count == 0 &&
-                    analysisResult.NearExpiredResources.Count == 0 &&
-                    analysisResult.DeletedResources.Count == 0 &&
-                    analysisResult.FailedDeleteResources.Count == 0 &&
+                    analysisResult.MarkedForDeleteResources.Count == 0 &&
                     analysisResult.ExpiredResources.Count == 0)
                 {
                     return;

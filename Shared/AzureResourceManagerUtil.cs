@@ -5,20 +5,14 @@ using System.Configuration;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Claims;
 using System.Text.RegularExpressions;
 using System.Web.Helpers;
-using CogsMinimizer.Shared;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Microsoft.Azure.Management.Authorization;
-using Microsoft.Azure.Management.Authorization.Models;
 using Microsoft.Azure.Management.ResourceManager;
 using Microsoft.Azure.Management.ResourceManager.Models;
 using Microsoft.Rest;
 using ResourceManagementClient = Microsoft.Azure.Management.ResourceManager.ResourceManagementClient;
-using Subscription = CogsMinimizer.Shared.Subscription;
 
 namespace CogsMinimizer.Shared
 {
@@ -37,7 +31,6 @@ namespace CogsMinimizer.Shared
             {
                 Id = microsoftAADID,
                 objectIdOfCloudSenseServicePrincipal = objectIdOfCloudSenseServicePrincipal
-                //DisplayName = AzureADGraphAPIUtil.GetOrganizationDisplayName(organization.tenantId),
             });
 
             return organizations;
@@ -364,7 +357,7 @@ namespace CogsMinimizer.Shared
             }
             else
             {
-                return AzureResourceManagementRole.Contributor;
+                throw new InvalidOperationException("unsupported management lever " + level);
             }
         }
 
@@ -544,15 +537,6 @@ namespace CogsMinimizer.Shared
             return resourceGroupsList;
         }
 
-        public static IEnumerable<ClassicAdministrator> GetSubscriptionAdmins(
-            AuthorizationManagementClient authClient)
-        {
-            Diagnostics.EnsureArgumentNotNull(() => authClient);
-
-            var admins = authClient.ClassicAdministrators.List("2015-06-01");
-            return admins;
-        }
-
         #region Management Clients
 
         public static ResourceManagementClient GetUserResourceManagementClient(string subscriptionId, string organizationId)
@@ -612,49 +596,5 @@ namespace CogsMinimizer.Shared
         }
 
         #endregion
-
-        public static void DeleteAzureResource(ResourceManagementClient resourceClient, string azureresourceid, ITracer tracer)
-        {
-            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => azureresourceid);
-            Diagnostics.EnsureArgumentNotNull(() => resourceClient);
-            Diagnostics.EnsureArgumentNotNull(() => tracer);
-
-            string[] apiVersion = { "2015-01-01", "2014-04-01", "2015-08-01" , "2016-05-01", "2016-01-01", "2016-04-01",
-                "2016-09-01", "2015-11-01", "2015-03-20", "2015-03-01-preview", "2015-08-01-preview",
-                "2016-12-01", "2017-03-30", "2015-10-31", "2015-03-15" ,"2014-02-26", "2016-03-30", "2015-11-01-preview",
-                "2016-10-01" };
-
-            for (int i = 0; i < apiVersion.Length; i++)
-            {
-                try
-                {
-                    tracer.TraceVerbose($"Trying to delete the resource {azureresourceid} with API version: {apiVersion[i]}");
-                    resourceClient.Resources.DeleteById(azureresourceid, apiVersion[i]);
-
-                    //If successfully deleted the resource no need to continue
-                    tracer.TraceVerbose($"Deleted the resource {azureresourceid} with API version: {apiVersion[i]}");
-                    return;
-                }
-                catch (Exception e)
-                {
-                    tracer.TraceError($"Failed to delete the resource {azureresourceid} with API version: {apiVersion[i]}");
-                    if (i==apiVersion.Length-1)
-                    {
-                        if (!string.IsNullOrEmpty(e.Message))
-                        {
-                            tracer.TraceError($"Failed to delete the resource {azureresourceid} with error message {e.Message}");
-                        }
-                        if (!string.IsNullOrEmpty(e.InnerException?.Message))
-                        {
-                            tracer.TraceError($"Failed to delete the resource {azureresourceid} with internal exception message {e.InnerException.Message}");
-                        }
-
-                        throw;
-                    }
-                }
-            }
-        }
-
-     
     }
 }

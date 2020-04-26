@@ -43,17 +43,14 @@ namespace CogsMinimizer.Shared
             message += $"<H2>Analysis Date : {GetShortDate(sub.LastAnalysisDate)}</H2>";
             message += "<br>";
 
-            if (analysisResult.DeletedResources.Count != 0)
+            if (analysisResult.MarkedForDeleteResources.Count == 0)
             {
-                message += $"<h3>Deleted {analysisResult.DeletedResources.Count} resource(s):</h3>";
-                message += GetHTMLTableForResources(analysisResult.DeletedResources);
+                message += "<h3>No resources marked for delete found</h3>";
             }
-
-
-            if (analysisResult.FailedDeleteResources.Count != 0)
+            else
             {
-                message += $"<h3>Failed deleting {analysisResult.FailedDeleteResources.Count} resource(s):</h3>";
-                message += GetHTMLTableForResources(analysisResult.FailedDeleteResources);
+                message += $"<h3>Found {analysisResult.MarkedForDeleteResources.Count} resource(s) marked for delete:</h3>";
+                message += GetHTMLTableForResources(analysisResult.MarkedForDeleteResources);
             }
 
             if (analysisResult.ExpiredResources.Count == 0)
@@ -63,14 +60,6 @@ namespace CogsMinimizer.Shared
             else
             {
                 message += $"<h3>Found {analysisResult.ExpiredResources.Count} expired resource(s):</h3>";
-                if (sub.ManagementLevel == SubscriptionManagementLevel.AutomaticDelete ||
-                    sub.ManagementLevel == SubscriptionManagementLevel.ManualDelete)
-                {
-                    message +=
-                        "<h3><font color=\"#ff0000\"><b>WARNING - Expired resources are about to be deleted!</b></font></h3>" +
-                        $"<h3>Based on current settings, expired resources will be deleted after {sub.DeleteIntervalInDays} days </h3>";
-                }
-
                 message += GetHTMLTableForResources(analysisResult.ExpiredResources);
             }
 

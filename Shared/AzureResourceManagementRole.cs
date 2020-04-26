@@ -12,8 +12,6 @@ namespace CogsMinimizer.Shared
     /// </summary>
     public enum AzureResourceManagementRole
     {
-        Reader = 0,
-
-        Contributor = 1
+        Reader = 0
     }
 }
