@@ -105,14 +105,14 @@ namespace CogsMinimizer.Shared
 
             //Add BCC recepients - dev team, as configured in the app config
             string devTeam = ConfigurationManager.AppSettings["env:DevTeam"];
-            if (devTeam != null)
+            if (devTeam != null && !devTeam.Equals("Dummy", StringComparison.OrdinalIgnoreCase))
             {
                 bcc.AddRange(devTeam.Split(';').Select(x => new Email(x)));
             }
 
             var email = new SubMinimizerEmail(subject, message, to, cc, bcc);
-
             EmailUtils.SendEmail(email, tracer).Wait();
+
         }
 
     }

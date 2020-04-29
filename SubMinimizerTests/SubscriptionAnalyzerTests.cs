@@ -16,8 +16,7 @@ namespace SubMinimizerTests
     [TestClass]
     public class SubscriptionAnalyzerTests
     {
-        //
-        //Consts
+        //        // Consts
         //
         public readonly string SUBSCRIPTION_ID = "A69C3703-5D68-4735-AF29-71396481D861";
         public readonly string RESOURCE_GROUP_NAME = "Resource_Group_Name";
@@ -31,10 +30,10 @@ namespace SubMinimizerTests
         {
             var testTime = DateTime.UtcNow;
             //
-            //Arrange
+            // Arrange test data
             //
 
-            //Expired 2 days ago
+            // Make resource expired 2 days ago
             var resource1 = CreateResource();
             resource1.Expired = true;
             resource1.Status = ResourceStatus.Expired;
@@ -44,10 +43,10 @@ namespace SubMinimizerTests
 
             SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList);
 
-            //Act
+            // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
 
-            //Assert
+            // Check test results
             Assert.IsTrue(analysisResult.ExpiredResources.Count == 1);
             Assert.IsTrue(analysisResult.ValidResources.Count == 0);
             Assert.IsTrue(analysisResult.MarkedForDeleteResources.Count == 0);
@@ -60,12 +59,12 @@ namespace SubMinimizerTests
         public void TestValidFutureExpirationResourceRemainsValid()
         {
             var testTime = DateTime.UtcNow;
-            
+
             //
-            //Arrange
+            // Arrange test data
             //
 
-            //Expires in 2 days
+            // Make resource expired 2 days ago
             var resource2 = CreateResource();
             resource2.Expired = false;
             resource2.Status = ResourceStatus.Valid;
@@ -75,27 +74,26 @@ namespace SubMinimizerTests
 
             SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList);
 
-            //Act
+            // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
 
-            //Assert
+            // Check test results
             Assert.IsTrue(analysisResult.ExpiredResources.Count == 0);
             Assert.IsTrue(analysisResult.ValidResources.Count == 1);
             Assert.IsTrue(analysisResult.MarkedForDeleteResources.Count == 0);
             Assert.IsTrue(analysisResult.NewResources.Count == 0);
             Assert.IsTrue(analysisResult.NotFoundResources.Count == 0);
         }
-
         [TestMethod]
         public void TestValidPastExpirationResourceBecomesExpired()
         {
             var testTime = DateTime.UtcNow;
 
             //
-            //Arrange
+            // Arrange test data
             //
 
-            //Should have expired by now
+            // Make resource should have expired by now
             var resource3 = CreateResource();
             resource3.Expired = false;
             resource3.Status = ResourceStatus.Valid;
@@ -105,10 +103,10 @@ namespace SubMinimizerTests
 
             SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList);
 
-            //Act
+            // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
 
-            //Assert
+            // Check test results
             Assert.IsTrue(analysisResult.ExpiredResources.Count == 1);
             Assert.IsTrue(analysisResult.ValidResources.Count == 0);
             Assert.IsTrue(analysisResult.MarkedForDeleteResources.Count == 0);
@@ -121,9 +119,9 @@ namespace SubMinimizerTests
         {
             var testTime = DateTime.UtcNow;
 
-            //Arrange
-
-            //New resource
+            // Arrange test data
+            
+            // Create new resource
             var resource4 = CreateResource();
             resource4.Expired = false;
  
@@ -131,10 +129,10 @@ namespace SubMinimizerTests
 
             SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList, new List<Resource>());
 
-            //Act
+            // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
 
-            //Assert
+            // Check test results
             Assert.IsTrue(analysisResult.ExpiredResources.Count == 0);
             Assert.IsTrue(analysisResult.ValidResources.Count == 0);
             Assert.IsTrue(analysisResult.MarkedForDeleteResources.Count == 0);
@@ -147,7 +145,7 @@ namespace SubMinimizerTests
         {
             var testTime = DateTime.UtcNow;
 
-            //Arrange
+            // Arrange test data
             var resource5 = CreateResource();
             resource5.Expired = false;
             resource5.Status = ResourceStatus.Valid;
@@ -156,10 +154,10 @@ namespace SubMinimizerTests
 
             SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(new List<Resource>(), resourceList);
 
-            //Act
+            // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
 
-            //Assert
+            // Check test results
             Assert.IsTrue(analysisResult.ExpiredResources.Count == 0);
             Assert.IsTrue(analysisResult.ValidResources.Count == 0);
             Assert.IsTrue(analysisResult.MarkedForDeleteResources.Count == 0);
@@ -173,15 +171,15 @@ namespace SubMinimizerTests
         {
             var testTime = DateTime.UtcNow;
 
-            //Arrange
+            // Arrange test data
 
-            //Expired, not ready for delete
+            // Make resource expired, not ready for delete
             var resource1 = CreateResource();
             resource1.Expired = true;
             resource1.Status = ResourceStatus.Expired;
             resource1.ExpirationDate = testTime.Date.Subtract(new TimeSpan(DELETE_AFTER_DAYS - 1, 0, 0, 0));
 
-            //Expired, ready for delete
+            // Make resourc eexpired, ready for delete
             var resource2 = CreateResource();
             resource2.Expired = true;
             resource2.Status = ResourceStatus.Expired;
@@ -191,10 +189,10 @@ namespace SubMinimizerTests
 
             SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList);
 
-            //Act
+            // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
 
-            //Assert
+            // Check test results
             Assert.IsTrue(analysisResult.ExpiredResources.Count == 1);
             Assert.IsTrue(analysisResult.ValidResources.Count == 0);
             Assert.IsTrue(analysisResult.MarkedForDeleteResources.Count == 1);
@@ -207,9 +205,9 @@ namespace SubMinimizerTests
         {
             var testTime = DateTime.UtcNow;
 
-            //Arrange
+            // Arrange test data
 
-            //Expired, marked for delete
+            // Make resource expired, marked for delete
             var resource1 = CreateResource();
             resource1.Expired = true;
             resource1.Status = ResourceStatus.MarkedForDeletion;
@@ -220,10 +218,10 @@ namespace SubMinimizerTests
 
             SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList);
 
-            //Act
+            // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
 
-            //Assert
+            // Check test results
             Assert.IsTrue(analysisResult.ExpiredResources.Count == 0);
             Assert.IsTrue(analysisResult.ValidResources.Count == 0);
             Assert.IsTrue(analysisResult.MarkedForDeleteResources.Count == 1);
@@ -238,10 +236,10 @@ namespace SubMinimizerTests
         //The default implementation uses the same list for both
         private SubscriptionAnalyzer TestPreparation(List<Resource> resourceList)
         {
-            return TestPreparation(resourceList, resourceList);
+            return PrepareTestData(resourceList, resourceList);
         }
 
-        private SubscriptionAnalyzer TestPreparation(List<Resource> AzureResources, List<Resource> DBResourcesources)
+        private SubscriptionAnalyzer PrepareTestData(List<Resource> AzureResources, List<Resource> DBResourcesources)
         {
             var subscription = CreateSubscription();
 

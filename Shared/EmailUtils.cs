@@ -130,9 +130,13 @@ namespace CogsMinimizer.Shared
         {
             Diagnostics.EnsureArgumentNotNull(() => email);
             Diagnostics.EnsureArgumentNotNull(() => tracer);
-
+            
             string apiKey = ConfigurationManager.AppSettings["API_KEY"];
             tracer.TraceInformation($"API_KEY length: {apiKey.Length}");
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                throw new ArgumentException("SendGrid API key cannot be empty");
+            }
 
             dynamic sg = new SendGrid.SendGridAPIClient(apiKey);
 

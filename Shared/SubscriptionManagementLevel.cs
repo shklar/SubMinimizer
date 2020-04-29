@@ -14,7 +14,7 @@ namespace CogsMinimizer.Shared
     {
         /// <summary>
         /// Subminimizer will only report about expired resources, but will never delete them.
-        /// In this management level Subminimizer requires only write permission to the subscription.
+        /// In this management level Subminimizer requires only read permission to the subscription.
         /// </summary>
         ReportOnly = 0
     }
