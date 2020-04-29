@@ -16,7 +16,8 @@ namespace SubMinimizerTests
     [TestClass]
     public class SubscriptionAnalyzerTests
     {
-        //        // Consts
+        //        
+        // Consts
         //
         public readonly string SUBSCRIPTION_ID = "A69C3703-5D68-4735-AF29-71396481D861";
         public readonly string RESOURCE_GROUP_NAME = "Resource_Group_Name";
@@ -179,7 +180,7 @@ namespace SubMinimizerTests
             resource1.Status = ResourceStatus.Expired;
             resource1.ExpirationDate = testTime.Date.Subtract(new TimeSpan(DELETE_AFTER_DAYS - 1, 0, 0, 0));
 
-            // Make resourc eexpired, ready for delete
+            // Make resource expired, ready for delete
             var resource2 = CreateResource();
             resource2.Expired = true;
             resource2.Status = ResourceStatus.Expired;
