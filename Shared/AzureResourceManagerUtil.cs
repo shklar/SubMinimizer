@@ -357,7 +357,7 @@ namespace CogsMinimizer.Shared
             }
             else
             {
-                throw new InvalidOperationException("unsupported management lever " + level);
+                throw new InvalidOperationException("Unsupported management level" + level);
             }
         }
 
