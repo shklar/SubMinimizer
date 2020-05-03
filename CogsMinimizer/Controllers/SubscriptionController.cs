@@ -550,7 +550,7 @@ namespace CogsMinimizer.Controllers
                 else
                 {
                     throw new ArgumentException(string.Format("Unable to monitor subscription with ID '{0}'. " +
-                        "Please make sure you have assigned reader role to SubMinimizer_prod for this subscription", subscription.Id));
+                        "Please make sure you have assigned reader role to SubMinimizer_prod for this subscription. Are you sure you entered correct subscription ID?", subscription.Id));
                 }
             }
             return RedirectToAction("Index", "Home");
