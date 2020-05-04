@@ -42,8 +42,7 @@ namespace SubMinimizerTests
 
             var resourceList = new List<Resource> { resource1};
 
-            SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList);
-
+            SubscriptionAnalyzer subscriptionsAnalyzer = PrepareTestData(resourceList);
             // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
 
@@ -73,7 +72,7 @@ namespace SubMinimizerTests
 
             var resourceList = new List<Resource> { resource2};
 
-            SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList);
+            SubscriptionAnalyzer subscriptionsAnalyzer = PrepareTestData(resourceList);
 
             // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
@@ -102,7 +101,7 @@ namespace SubMinimizerTests
 
             var resourceList = new List<Resource> { resource3 };
 
-            SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList);
+            SubscriptionAnalyzer subscriptionsAnalyzer = PrepareTestData(resourceList);
 
             // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
@@ -128,7 +127,7 @@ namespace SubMinimizerTests
  
             var resourceList = new List<Resource> { resource4 };
 
-            SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList, new List<Resource>());
+            SubscriptionAnalyzer subscriptionsAnalyzer = PrepareTestData(resourceList, new List<Resource>());
 
             // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
@@ -153,7 +152,7 @@ namespace SubMinimizerTests
 
             var resourceList = new List<Resource> { resource5 };
 
-            SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(new List<Resource>(), resourceList);
+            SubscriptionAnalyzer subscriptionsAnalyzer = PrepareTestData(new List<Resource>(), resourceList);
 
             // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
@@ -188,7 +187,7 @@ namespace SubMinimizerTests
 
             var resourceList = new List<Resource> { resource1, resource2 };
 
-            SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList);
+            SubscriptionAnalyzer subscriptionsAnalyzer = PrepareTestData(resourceList);
 
             // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
@@ -217,7 +216,7 @@ namespace SubMinimizerTests
           
             var resourceList = new List<Resource> { resource1 };
 
-            SubscriptionAnalyzer subscriptionsAnalyzer = TestPreparation(resourceList);
+            SubscriptionAnalyzer subscriptionsAnalyzer = PrepareTestData(resourceList);
 
             // Execute testing operation
             var analysisResult = subscriptionsAnalyzer.AnalyzeSubscription();
@@ -235,7 +234,7 @@ namespace SubMinimizerTests
         #region Test Preparation
 
         //The default implementation uses the same list for both
-        private SubscriptionAnalyzer TestPreparation(List<Resource> resourceList)
+        private SubscriptionAnalyzer PrepareTestData(List<Resource> resourceList)
         {
             return PrepareTestData(resourceList, resourceList);
         }
