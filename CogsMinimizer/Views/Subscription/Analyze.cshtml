@@ -62,7 +62,7 @@
         var expirationDateColumn = 8;
 
         function SetCursor(bodyCursor, btnCursor) {
-        $('body').css('cursor', bodyCursor); 
+        $('body').css('cursor', bodyCursor);
         $('.btn').css('cursor', btnCursor);
     }
 
@@ -82,7 +82,7 @@
 
             $('.btn-status').each(
                 function(index, btn)
-                { 
+                {
                     if ($(btn).attr('data-status').length != 0) { SetStatusIcon(btn, $(btn).attr('data-status')); }
                 });
         });
@@ -119,7 +119,7 @@
     function GetBool(colNum, value) {
         var input = $(value.elm).find("td").eq(colNum).find("input")[0];
         if (input.checked) {
-            return 1;
+    return 1;
         }
         else
         {
@@ -149,12 +149,12 @@
 
     function GetDate(colNum, value)
     {
-        var dateAsString = $(value.elm).find("td").eq(colNum).html(); 
+        var dateAsString = $(value.elm).find("td").eq(colNum).html();
         var dateParts = dateAsString.split('/');
         var date = new Date(dateParts[2], dateParts[0], dateParts[1]);
         return date;
     }
-        
+
     function SortResources(th) {
 
         if ($('#resourcesTable tbody tr').length == 0)
@@ -200,7 +200,7 @@
                 order: order, selector: selector, sortFunction: function (a, b) {
                     return GetDescription(colNum, a) - GetDescription(colNum, b);
                 }
-            });
+                });
         }
         else if (sortKind == "status") {
             tinysort($('#resourcesTable tbody tr'), {
@@ -301,7 +301,7 @@
                 var confirmedUser = $(this).find('td #item_ConfirmedOwner').is(':checked');
                 if (confirmedUser)
                 {
-                    $(this).hide();
+                   $(this).hide();
                 }
                 else
                 {
@@ -317,6 +317,61 @@
             });
         }
     }
+
+function OnGetDeleteResourcesScript() {
+   var content = 'Write-host  \'Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name: \\\'@Model.SubscriptionData.DisplayName\\\', Subscription id: \\\'@Model.SubscriptionData.Id\\\'. Are you sure? y/n\'\n';
+    content += '$confirm = Read-Host\n';
+    content += 'if ($confirm -ne \'y\')\n' +
+    '{\n' +  'return\n' +
+    '}\n' +
+'Connect-AzureRmAccount\n' +
+    'Set-AzureRmContext -Subscription \'@Model.SubscriptionData.Id\'\n';
+
+        var resourceData = new Array();
+        @{
+          foreach (var @resource in @Model.Resources)
+          {
+              if (@resource.Status != ResourceStatus.MarkedForDeletion)
+              {
+                  continue;
+              }
+
+       @Html.Raw(" var resProps = new Object();\n")
+       @Html.Raw(" resProps['name'] = '" + @resource.Name + "';\n")
+        @Html.Raw(" resProps['group'] = '" + @resource.ResourceGroup + "';\n")
+       @Html.Raw(" resProps['conf_owner'] = '" + @resource.ConfirmedOwner + "';\n") 
+       @Html.Raw(" resProps['owner'] = '" + @resource.Owner + "';\n")
+       @Html.Raw(" resProps['name'] = '" + @resource.Name + "';\n")
+       @Html.Raw(" resProps['azure_id'] = '" + @resource.AzureResourceIdentifier + "';\n")       
+        @Html.Raw("resourceData.push(resProps);\n")
+    }
+}
+    resourceData.forEach(function(res) {
+            var delResTemplate = 'Write-Host \'Deleting resource "{0}" from group "{1}"\'\n';
+             content += delResTemplate.replace('{0}', res['name']).replace('{1}', res['group']);
+             var remResTemplate = 'Remove-AzureRmResource -Force -ResourceId \'{0}\'\n';
+        content += remResTemplate.replace('{0}', res['azure_id']);
+    });
+       
+    var today = new Date();
+           var dd = String(today.getDate()).padStart(2, '0');
+           var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+          var yyyy = today.getFullYear();
+   
+           var todayString = mm + '-' + dd + '-' + yyyy;
+   
+           var fileName = 'DeleteObsoleteResource_' + '@Model.SubscriptionData.DisplayName' + '_' + todayString + '_.ps1';
+
+           var blob = new Blob([content],
+        {
+           type: "text/plain;charset=utf-8",       });
+   
+           var link = document.createElement("a");
+           link.href = window.URL.createObjectURL(blob);
+           link.download = fileName;
+           link.click();
+
+}
 
     function ResourceGroupOp(opName) {
         var selectedGroup = $('#groupList').val();
@@ -364,7 +419,7 @@
 
                 RedrawResourceTable();
                 SetCursor(initialBodyCursor, initialBtnCursor);
-             
+
             }
         });
 
@@ -454,7 +509,7 @@
                     var rowSelector = "#resourcesTable tr[data-resource-id='" + resourceId + "']";
                     var resourceRow = $(rowSelector).first();
                     if (resourceRow != null) {
-          
+
                    $(resourceRow).find('td').eq(descriptionColumn).find("#descrTxt").html(data.Description);
                    $(resourceRow).find('td').eq(descriptionColumn).attr("title", data.Description);
                     }
@@ -633,6 +688,10 @@
                             <br />
                         </div>
                     }
+                    <div class="row">
+                        <button style="width:fit-content" class="btn btn-warning btn-round btn-cmd" title="Download delete resources script" onclick="OnGetDeleteResourcesScript()">Download delete resources script</button>
+                            <br />
+                        </div>                    
                 </div>
             </div>
             </div>
