@@ -301,7 +301,7 @@
                 var confirmedUser = $(this).find('td #item_ConfirmedOwner').is(':checked');
                 if (confirmedUser)
                 {
-                   $(this).hide();
+                    $(this).hide();
                 }
                 else
                 {
@@ -314,46 +314,61 @@
 
                     }
                 }
-            });
-        }
+           });
+       }
     }
 
-function OnGetDeleteResourcesScript() {
-   var content = 'Write-host  \'Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name: \\\'@Model.SubscriptionData.DisplayName\\\', Subscription id: \\\'@Model.SubscriptionData.Id\\\'. Are you sure? y/n\'\n';
-    content += '$confirm = Read-Host\n';
-    content += 'if ($confirm -ne \'y\')\n' +
+    function OnGetDeleteResourcesScript() {
+        SetCursor('wait', 'wait');
+    $.ajax({
+        url: "/Subscription/GetResources",
+        type: "POST",
+        dataType: "json",
+        data: JSON.stringify({
+        SubscriptionId: "@Model.SubscriptionData.Id"
+        }),
+
+
+        contentType: "application/json; charset=utf-8",
+        success: function (data) {
+                            SetCursor(initialBodyCursor, initialBtnCursor);
+            
+            var content = 'Write-host  \'Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name: \\\'@Model.SubscriptionData.DisplayName\\\', Subscription id: \\\'@Model.SubscriptionData.Id\\\'. Are you sure? y/n\'\n';
+            content += '$confirm = Read-Host\n';
+           content += 'if ($confirm -ne \'y\')\n' +
     '{\n' +  'return\n' +
     '}\n' +
 'Connect-AzureRmAccount\n' +
     'Set-AzureRmContext -Subscription \'@Model.SubscriptionData.Id\'\n';
 
-        var resourceData = new Array();
-        @{
-          foreach (var @resource in @Model.Resources)
-          {
-              if (@resource.Status != ResourceStatus.MarkedForDeletion)
-              {
-                  continue;
-              }
+    for (var resNum = 0; resNum < data.length; resNum++)
+    {
+        var resource = data[resNum];
+        if (resource.Status != 'MarkedForDeletion') {
+            continue;
+        }
+        
+        
+        
+      var delResTemplate = 'Write-Host \'Deleting resource "{0}" from group "{1}"\'\n';
+      content += delResTemplate.replace('{0}', resource.Name).replace('{1}', resource.Group);
 
-       @Html.Raw(" var resProps = new Object();\n")
-       @Html.Raw(" resProps['name'] = '" + @resource.Name + "';\n")
-        @Html.Raw(" resProps['group'] = '" + @resource.ResourceGroup + "';\n")
-       @Html.Raw(" resProps['conf_owner'] = '" + @resource.ConfirmedOwner + "';\n") 
-       @Html.Raw(" resProps['owner'] = '" + @resource.Owner + "';\n")
-       @Html.Raw(" resProps['name'] = '" + @resource.Name + "';\n")
-       @Html.Raw(" resProps['azure_id'] = '" + @resource.AzureResourceIdentifier + "';\n")       
-        @Html.Raw("resourceData.push(resProps);\n")
-    }
+
+      if (resource.ConfirmedOwner)
+         {
+          var claimResTemplate = 'Write-Host \'Last claimed "{0}"\'\n';
+          content += claimResTemplate.replace('{0}', resource.Owner);
+        }
+        else
+        {
+           content += 'Write-Host \'Unclaimed\'\n';
+        }
+                    
+        var remResTemplate = 'Remove-AzureRmResource -Force -ResourceId \'{0}\'\n';
+        content += remResTemplate.replace('{0}', resource.AzureId);
 }
-    resourceData.forEach(function(res) {
-            var delResTemplate = 'Write-Host \'Deleting resource "{0}" from group "{1}"\'\n';
-             content += delResTemplate.replace('{0}', res['name']).replace('{1}', res['group']);
-             var remResTemplate = 'Remove-AzureRmResource -Force -ResourceId \'{0}\'\n';
-        content += remResTemplate.replace('{0}', res['azure_id']);
-    });
-       
-    var today = new Date();
+  
+   var today = new Date();
            var dd = String(today.getDate()).padStart(2, '0');
            var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
           var yyyy = today.getFullYear();
@@ -364,20 +379,21 @@ function OnGetDeleteResourcesScript() {
 
            var blob = new Blob([content],
         {
-           type: "text/plain;charset=utf-8",       });
-   
+           type: "text/plain;charset=utf-8",       });   
            var link = document.createElement("a");
            link.href = window.URL.createObjectURL(blob);
            link.download = fileName;
            link.click();
 
 }
+    });
+}
 
     function ResourceGroupOp(opName) {
         var selectedGroup = $('#groupList').val();
         if (selectedGroup == '') {
             alert("Please select resource group");
-            return;
+           return;
         }
 
         SetCursor('wait', 'wait');
