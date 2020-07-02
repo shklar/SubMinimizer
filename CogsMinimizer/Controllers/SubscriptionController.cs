@@ -21,14 +21,14 @@ namespace CogsMinimizer.Controllers
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
 
 
-        // Get resources from database
+        // Get resources marked for deletion from database
         [HttpPost]
-        public ActionResult GetResources(string SubscriptionId)
+        public ActionResult GetResourcesMarkedForDelete(string SubscriptionId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
 
             // Let's compose result list in order to fill resources table at view
-            List<Resource> subscriptionResourceList = db.Resources.Where(r => r.SubscriptionId == SubscriptionId).ToList();
+            List<Resource> subscriptionResourceList = db.Resources.Where(r => r.SubscriptionId == SubscriptionId && r.Status == ResourceStatus.MarkedForDeletion).ToList();
 
 
             List<object> resultList = new List<object>();

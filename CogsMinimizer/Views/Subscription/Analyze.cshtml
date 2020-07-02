@@ -321,7 +321,7 @@
     function OnGetDeleteResourcesScript() {
         SetCursor('wait', 'wait');
     $.ajax({
-        url: "/Subscription/GetResources",
+        url: "/Subscription/GetResourcesMarkedForDelete",
         type: "POST",
         dataType: "json",
         data: JSON.stringify({
@@ -344,10 +344,6 @@
     for (var resNum = 0; resNum < data.length; resNum++)
     {
         var resource = data[resNum];
-        if (resource.Status != 'MarkedForDeletion') {
-            continue;
-        }
-        
         
         
       var delResTemplate = 'Write-Host \'Deleting resource "{0}" from group "{1}"\'\n';
@@ -372,9 +368,11 @@
            var dd = String(today.getDate()).padStart(2, '0');
            var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
           var yyyy = today.getFullYear();
-   
-           var todayString = mm + '-' + dd + '-' + yyyy;
-   
+            var hh = today.getHours();
+            var min = today.getMinutes();
+
+            var todayString = mm + '-' + dd + '-' + yyyy + ':' + hh + '.' + min;
+  
            var fileName = 'DeleteObsoleteResource_' + '@Model.SubscriptionData.DisplayName' + '_' + todayString + '_.ps1';
 
            var blob = new Blob([content],
