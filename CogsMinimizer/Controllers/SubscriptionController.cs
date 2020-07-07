@@ -20,6 +20,51 @@ namespace CogsMinimizer.Controllers
     {
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
 
+
+        // Get resources marked for deletion from database
+        [HttpPost]
+        public ActionResult GetResourcesMarkedForDelete(string SubscriptionId)
+        {
+            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            // Let's compose result list in order to fill resources table at view
+            List<Resource> subscriptionResourceList = db.Resources.Where(r => r.SubscriptionId == SubscriptionId && r.Status == ResourceStatus.MarkedForDeletion).ToList();
+
+
+            List<object> resultList = new List<object>();
+            using (DataAccess db = new DataAccess())
+            {
+                var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
+
+                if (subscription == null)
+                {
+                    throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
+                }
+
+                // Let's compose result list in order to fill resources table at view
+                foreach (Resource resource in subscriptionResourceList)
+                {
+                    resultList.Add(new
+                    {
+                        Id = resource.Id,
+                        Status = resource.Status.ToString(),
+                        ConfirmedOwner = resource.ConfirmedOwner,
+                        ExpirationDate = resource.ExpirationDate.ToShortDateString(),
+                        Owner = resource.Owner,
+                        Name = resource.Name,
+                        Group = resource.ResourceGroup,
+                        AzureId = resource.AzureResourceIdentifier,
+
+
+                    });
+
+                }
+
+            }
+
+            return Json(resultList);
+        }
+
         // Reset, extend or reserve  all given subscription and group resources depending from operation
         [HttpPost]
         public ActionResult ResourceGroupOperation(string Operation, string Group, string SubscriptionId)

@@ -146,6 +146,10 @@ namespace OfflineSubscriptionManager
             Diagnostics.EnsureArgumentNotNull(() => tracer);
 
             string apiKey = ConfigurationManager.AppSettings["API_KEY"];
+            if (apiKey == null)
+            {
+                tracer.($"API_KEY length: {apiKey.Length}");
+            }
             tracer.TraceInformation($"API_KEY length: {apiKey.Length}");
 
             dynamic sg = new SendGridAPIClient(apiKey);
