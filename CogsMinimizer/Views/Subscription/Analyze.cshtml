@@ -333,7 +333,8 @@
         success: function (data) {
                             SetCursor(initialBodyCursor, initialBtnCursor);
             
-            var content = 'Write-host  \'Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name: \\\'@Model.SubscriptionData.DisplayName\\\', Subscription id: \\\'@Model.SubscriptionData.Id\\\'. Are you sure? y/n\'\n';
+            var content = 'Write-host  \'Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name: \\\'@Model.SubscriptionData.DisplayName\\\', Subscription id: \\\'@Model.SubscriptionData.Id\\\'.\'\n';            
+            content += 'Write-host  \'Are you sure? y/n\'\n';
             content += '$confirm = Read-Host\n';
            content += 'if ($confirm -ne \'y\')\n' +
     '{\n' +  'return\n' +

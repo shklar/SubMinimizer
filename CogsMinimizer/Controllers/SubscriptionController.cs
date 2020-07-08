@@ -26,12 +26,7 @@ namespace CogsMinimizer.Controllers
         public ActionResult GetResourcesMarkedForDelete(string SubscriptionId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
-
-            // Let's compose result list in order to fill resources table at view
-            List<Resource> subscriptionResourceList = db.Resources.Where(r => r.SubscriptionId == SubscriptionId && r.Status == ResourceStatus.MarkedForDeletion).ToList();
-
-
-            List<object> resultList = new List<object>();
+            
             using (DataAccess db = new DataAccess())
             {
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
@@ -40,6 +35,11 @@ namespace CogsMinimizer.Controllers
                 {
                     throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
                 }
+
+                List<object> resultList = new List<object>();
+
+                // Let's compose result list in order to fill resources table at view
+                List<Resource> subscriptionResourceList = db.Resources.Where(r => r.SubscriptionId == SubscriptionId && r.Status == ResourceStatus.MarkedForDeletion).ToList();
 
                 // Let's compose result list in order to fill resources table at view
                 foreach (Resource resource in subscriptionResourceList)
@@ -60,9 +60,8 @@ namespace CogsMinimizer.Controllers
 
                 }
 
+                return Json(resultList);
             }
-
-            return Json(resultList);
         }
 
         // Reset, extend or reserve  all given subscription and group resources depending from operation
