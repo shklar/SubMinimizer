@@ -78,6 +78,16 @@ namespace CogsMinimizer.Shared
             message += $"<tr><td>Valid</td><td>{analysisResult.ValidResources.Count}</td></tr>";
             message += $"<tr style='background-color: #eeeeee;'><td>Expired</td><td>{analysisResult.ExpiredResources.Count}</td></tr>";
             message += $"<tr><td>Marked for deletion</td><td>{analysisResult.MarkedForDeleteResources.Count}</td></tr>";
+
+            if (analysisResult.NewResources.Count != 0)
+            {
+                message += $"<tr style='background-color: #eeeeee;'><td>New discovered</td><td>{analysisResult.NewResources.Count}</td></tr>";
+            }
+
+            if (analysisResult.NotFoundResources.Count != 0)
+            {
+                message += $"<tr><td>Not found</td><td>{analysisResult.NotFoundResources.Count}</td></tr>";
+            }
             message += "</tbody>";
             message += "</table>";
 
