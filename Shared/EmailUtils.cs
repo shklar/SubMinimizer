@@ -9,7 +9,84 @@ namespace CogsMinimizer.Shared
 {
     class EmailUtils
     {
+        // Create resource report
         internal static string CreateEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
+        {
+            if (sub.SendShortReports)
+            {
+                return CreateShortEmailMessage(analysisResult, sub);
+            }
+            else
+            {
+                return CreateFullEmailMessage(analysisResult, sub);
+            }
+        }
+
+        // Create short resource report
+        private static string CreateShortEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
+        {
+            Diagnostics.EnsureArgumentNotNull(() => sub);
+            Diagnostics.EnsureArgumentNotNull(() => analysisResult);
+
+            string message = @"<!DOCTYPE html>
+                            <html lang=""en"">
+                            <head>    
+                                <meta content=""text/html; charset=utf-8"" http-equiv=""Content-Type"">
+                                <title>
+                                   Subminimizer report
+                                </title>
+                                <style type=""text/css"">
+                                    HTML{background-color: #ffffff;}
+                                    .courses-table{font-size: 16px; padding: 3px; border-collapse: collapse; border-spacing: 0;}
+                                    .courses-table .description{color: #505050;}
+                                    .courses-table td{border: 1px solid #D1D1D1; background-color: #F3F3F3; padding: 0 10px;}
+                                    .courses-table th{border: 1px solid #424242; color: #FFFFFF;text-align: left; padding: 0 10px;}
+                                    .tableheadercolor{background-color: #111111;}
+                                        table {
+                                          font-family: arial, sans-serif;
+                                          border-collapse: collapse;
+                                          width: 100%;
+                                        }
+
+                                        td, th {
+                                          border: 1px solid #dddddd;
+                                          text-align: left;
+                                          padding: 8px;
+                                        }
+                                        th
+                                        {
+                                           background-color: #dddddd;
+                                        }
+                                </style>
+                            </head>
+                            <body>";
+
+            string serviceURL = ConfigurationManager.AppSettings["env:ServiceURL"]; ;
+            string analyzeControllerLink = $"{serviceURL}/Subscription/Analyze/";
+            string headerLink = HTMLUtilities.CreateHTMLLink($"SubMinimizer report for subscription: {sub.DisplayName}",
+                $"{analyzeControllerLink}/{sub.Id}?OrganizationId={sub.OrganizationId}&DisplayName={sub.DisplayName}");
+
+            message += $"<H2>{headerLink}</H2>";
+
+            message += $"<H2>Subscription ID : {sub.Id} </H2>";
+            message += $"<H2>Analysis Date : {GetShortDate(sub.LastAnalysisDate)}</H2>";
+            message += "<br>";
+
+            message += "<table>";
+            message += "<thead><th>Status</th><th>Count</th></thead>";
+            message += "<tbody>";
+            message += $"<tr><td>Valid</td><td>{analysisResult.ValidResources.Count}</td></tr>";
+            message += $"<tr style='background-color: #eeeeee;'><td>Expired</td><td>{analysisResult.ExpiredResources.Count}</td></tr>";
+            message += $"<tr><td>Marked for deletion</td><td>{analysisResult.MarkedForDeleteResources.Count}</td></tr>";
+            message += "</tbody>";
+            message += "</table>";
+
+
+            return message;
+        }
+
+        // Create full resource report
+        private static string CreateFullEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
         {
             Diagnostics.EnsureArgumentNotNull(() => sub);
             Diagnostics.EnsureArgumentNotNull(() => analysisResult);
@@ -132,12 +209,12 @@ namespace CogsMinimizer.Shared
             Diagnostics.EnsureArgumentNotNull(() => tracer);
             
             string apiKey = ConfigurationManager.AppSettings["API_KEY"];
-            tracer.TraceInformation($"API_KEY length: {apiKey.Length}");
             if (string.IsNullOrEmpty(apiKey))
             {
                 throw new ArgumentException("SendGrid API key cannot be empty");
             }
-
+            tracer.TraceInformation($"API_KEY length: {apiKey.Length}");
+            
             dynamic sg = new SendGrid.SendGridAPIClient(apiKey);
 
             Email from = new Email("noreply@subminimizer.com");
@@ -148,7 +225,7 @@ namespace CogsMinimizer.Shared
             
             Mail mail = new Mail( from, email.Subject, email.To.First(), content);
 
-            mail.Personalization[0].Tos = email.To.ToList();
+        mail.Personalization[0].Tos = email.To.ToList();
             if (email.CC.Any())
             {
                 mail.Personalization[0].Ccs = email.CC.ToList();
