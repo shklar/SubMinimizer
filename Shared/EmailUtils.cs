@@ -12,23 +12,21 @@ namespace CogsMinimizer.Shared
         // Create resource report
         internal static string CreateEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
         {
-            if (sub.SendShortReports)
+            if (sub.SendDetailedReports)
             {
-                return CreateShortEmailMessage(analysisResult, sub);
+                return CreateDetailedEmailMessage(analysisResult, sub);
             }
             else
             {
-                return CreateFullEmailMessage(analysisResult, sub);
+                return CreateSummarizedEmailMessage(analysisResult, sub);
             }
         }
 
-        // Create short resource report
-        private static string CreateShortEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
+        
+        // create mail header
+        private static string GetHeader()
         {
-            Diagnostics.EnsureArgumentNotNull(() => sub);
-            Diagnostics.EnsureArgumentNotNull(() => analysisResult);
-
-            string message = @"<!DOCTYPE html>
+            string header = @"<!DOCTYPE html>
                             <html lang=""en"">
                             <head>    
                                 <meta content=""text/html; charset=utf-8"" http-equiv=""Content-Type"">
@@ -60,6 +58,18 @@ namespace CogsMinimizer.Shared
                                 </style>
                             </head>
                             <body>";
+
+            return header;
+
+        }
+
+        // Create short resource report
+        private static string CreateSummarizedEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
+        {
+            Diagnostics.EnsureArgumentNotNull(() => sub);
+            Diagnostics.EnsureArgumentNotNull(() => analysisResult);
+
+            string message = GetHeader();
 
             string serviceURL = ConfigurationManager.AppSettings["env:ServiceURL"]; ;
             string analyzeControllerLink = $"{serviceURL}/Subscription/Analyze/";
@@ -96,28 +106,12 @@ namespace CogsMinimizer.Shared
         }
 
         // Create full resource report
-        private static string CreateFullEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
+        private static string CreateDetailedEmailMessage(SubscriptionAnalysisResult analysisResult, Subscription sub)
         {
             Diagnostics.EnsureArgumentNotNull(() => sub);
             Diagnostics.EnsureArgumentNotNull(() => analysisResult);
 
-            string message = @"<!DOCTYPE html>
-                            <html lang=""en"">
-                            <head>    
-                                <meta content=""text/html; charset=utf-8"" http-equiv=""Content-Type"">
-                                <title>
-                                   Subminimizer report
-                                </title>
-                                <style type=""text/css"">
-                                    HTML{background-color: #ffffff;}
-                                    .courses-table{font-size: 16px; padding: 3px; border-collapse: collapse; border-spacing: 0;}
-                                    .courses-table .description{color: #505050;}
-                                    .courses-table td{border: 1px solid #D1D1D1; background-color: #F3F3F3; padding: 0 10px;}
-                                    .courses-table th{border: 1px solid #424242; color: #FFFFFF;text-align: left; padding: 0 10px;}
-                                    .tableheadercolor{background-color: #111111;}
-                                </style>
-                            </head>
-                            <body>";
+            string message = GetHeader();
 
             string serviceURL = ConfigurationManager.AppSettings["env:ServiceURL"]; ;
             string analyzeControllerLink = $"{serviceURL}/Subscription/Analyze/";
