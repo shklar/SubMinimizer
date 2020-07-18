@@ -150,6 +150,15 @@
                             {
                                 <div>Expired resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Status == CogsMinimizer.Shared.ResourceStatus.Expired).Count()</div>
                             }
+
+                            if (Model.Resources.Where(r => (r.SubscriptionId == subscription.Id && r.Status == CogsMinimizer.Shared.ResourceStatus.MarkedForDeletion)).Count() > 0)
+                            {
+                                <div class="red_txt">Marked for deletion resources: @Model.Resources.Where(r => (r.SubscriptionId == subscription.Id && r.Status == CogsMinimizer.Shared.ResourceStatus.MarkedForDeletion)).Count()</div>
+                            }
+                            else
+                            {
+                                <div>Marked for deletion resources: @Model.Resources.Where(r => r.SubscriptionId == subscription.Id && r.Status == CogsMinimizer.Shared.ResourceStatus.MarkedForDeletion).Count()</div>
+                            }
                         }
                     </td>
                     <td>

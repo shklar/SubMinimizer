@@ -103,10 +103,18 @@
         </tr>
         <tr>
             <td>
+                <h4>Send detailed reports</h4>
+            </td>
+            <td style="vertical-align:middle">
+                @Html.CheckBoxFor(m => m.SendDetailedReports)
+            </td>
+        </tr>
+        <tr>
+            <td>
                 <h4>Additional recipients</h4>
             </td>
             <td style="vertical-align:middle">
-                @Html.TextBoxFor(m => m.AdditionalRecipients, new {style = "width:300px" })
+                @Html.TextBoxFor(m => m.AdditionalRecipients, new { style = "width:300px" })
             </td>
         </tr>
     </table>

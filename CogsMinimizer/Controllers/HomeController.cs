@@ -95,6 +95,7 @@ namespace CogsMinimizer.Controllers
                                 subscription.ExpirationUnclaimedIntervalInDays = s.ExpirationUnclaimedIntervalInDays;
                                 subscription.ManagementLevel = s.ManagementLevel;
                                 subscription.SendEmailToCoadmins = s.SendEmailToCoadmins;
+                                subscription.SendDetailedReports = s.SendDetailedReports;
                                 subscription.SendEmailOnlyInvalidResources = s.SendEmailOnlyInvalidResources;
                                 //subscription.AzureAccessNeedsToBeRepaired = !AzureResourceManagerUtil.ServicePrincipalHasReadAccessToSubscription(subscription.Id, org.Id);
                                 subscription.AzureAccessNeedsToBeRepaired = false;

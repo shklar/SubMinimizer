@@ -246,6 +246,7 @@ namespace CogsMinimizer.Controllers
                 existingSubscription.DeleteIntervalInDays = subscription.DeleteIntervalInDays;
                 existingSubscription.ManagementLevel = subscription.ManagementLevel;
                 existingSubscription.SendEmailToCoadmins = subscription.SendEmailToCoadmins;
+                existingSubscription.SendDetailedReports = subscription.SendDetailedReports;
                 existingSubscription.SendEmailOnlyInvalidResources = subscription.SendEmailOnlyInvalidResources;
 
                 //validate additional email recepients user input
