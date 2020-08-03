@@ -1,4 +1,5 @@
-﻿@using CogsMinimizer.Shared
+﻿
+@using CogsMinimizer.Shared
 @model CogsMinimizer.Models.SubscriptionAnalyzeViewModel
 
 @{
@@ -65,57 +66,53 @@
         $('body').css('cursor', bodyCursor);
         $('.btn').css('cursor', btnCursor);
     }
-
-        $(document).ready(function () {
-
-            initialBodyCursor = $('body').first().css('cursor');
-            initialBtnCursor = $('.btn').first().css('cursor');
+   
+    $(document).ready(function () {          
+        initialBodyCursor = $('body').first().css('cursor');
+        initialBtnCursor = $('.btn').first().css('cursor');
 
             // In addition to calling controller action buttons click will cause setting cursor to wait while being over body and buttons
-            $('.wait-crs').on('click', function () { SetCursor('wait', 'wait'); });
+           $('.wait-crs').on('click', function () { SetCursor('wait', 'wait'); });
 
             $('input:radio').change(function () {
                 FilterResources(this);
             });
 
-            $("[data-toggle='tooltip']").tooltip({trigger: 'hover'});
-
-            $('.btn-status').each(
-                function(index, btn)
+                $("[data-toggle='tooltip']").tooltip({trigger: 'hover'});
+    
+            $(".img-status").each(
+                function(index, img)
                 {
-                    if ($(btn).attr('data-status').length != 0) { SetStatusIcon(btn, $(btn).attr('data-status')); }
+                    if ($(img).attr('data-status').length != 0) { SetStatusIcon(img, $(img).attr('data-status')); }
                 });
-        });
-
+    
+ 
      $("#resourcesTable").colResizable({
             liveDrag: true,
-            gripInnerHtml: "<div class='grip'></div>",
+          gripInnerHtml: "<div class='grip'></div>",
             draggingClass: "dragging",
             resizeMode: 'fit'
-        });
+     });
 
-     function SetStatusIcon(statusBtn, status)
+  });
+     
+
+     function SetStatusIcon(img, status)
      {
-         $(statusBtn).attr('class', '');
-
-         $(statusBtn).addClass("glyphicon");
-         $(statusBtn).addClass("btn");
-         $(statusBtn).addClass("tbl-btn");
-         $(statusBtn).addClass("btn-status");
-         $(statusBtn).addClass("btn-xs");
-
          if (status == "Valid")
          {
-             $(statusBtn).addClass("glyphicon-ok");
-         }
-         else if (status == "Expired") {
-             $(statusBtn).addClass("glyphicon-remove");
-         }
-         else if (status == "MarkedForDeletion") {
-             $(statusBtn).addClass("glyphicon-trash");
-         }
-}
-
+           $(img).attr("src", "/Images/valid.svg");
+        }
+         else if (status == "Expired")
+        {
+            $(img).attr("src", "/Images/expire.svg");
+        }
+         else if (status == "MarkedForDeletion") 
+        {
+            $(img).attr("src", "/Images/delete.svg");
+        }
+  }
+   
     function GetBool(colNum, value) {
         var input = $(value.elm).find("td").eq(colNum).find("input")[0];
         if (input.checked) {
@@ -332,7 +329,7 @@
         contentType: "application/json; charset=utf-8",
         success: function (data) {
                             SetCursor(initialBodyCursor, initialBtnCursor);
-            
+
             var content = 'Write-host  \'Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name: \\\'@Model.SubscriptionData.DisplayName\\\', Subscription id: \\\'@Model.SubscriptionData.Id\\\'.\'\n';
             content += 'Write-host  \'' + data.length + ' resources will be deleted\'\n';
             content += 'Write-host  \'Are you sure? y/n\'\n';
@@ -346,8 +343,8 @@
     for (var resNum = 0; resNum < data.length; resNum++)
     {
         var resource = data[resNum];
-        
-        
+
+
       var delResTemplate = 'Write-Host \'Deleting resource "{0}" from group "{1}"\'\n';
       content += delResTemplate.replace('{0}', resource.Name).replace('{1}', resource.Group);
 
@@ -361,11 +358,11 @@
         {
            content += 'Write-Host \'Unclaimed\'\n';
         }
-                    
+
         var remResTemplate = 'Remove-AzureRmResource -Force -ResourceId \'{0}\'\n';
         content += remResTemplate.replace('{0}', resource.AzureId);
 }
-  
+
    var today = new Date();
            var dd = String(today.getDate()).padStart(2, '0');
            var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -374,13 +371,13 @@
             var min = today.getMinutes();
 
             var todayString = mm + '-' + dd + '-' + yyyy + ':' + hh + '.' + min;
-  
+
            var fileName = 'DeleteObsoleteResource_' + '@Model.SubscriptionData.DisplayName' + '_' + todayString + '_.ps1';
 
            var blob = new Blob([content],
         {
            type: "text/plain;charset=utf-8",       });
-   
+
            var link = document.createElement("a");
            link.href = window.URL.createObjectURL(blob);
            link.download = fileName;
@@ -429,7 +426,7 @@
                         $(resourceRow).find('td').eq(expirationDateColumn).html(resource.ExpirationDate);
                         $(resourceRow).find('td').eq(expirationDateColumn).attr("title", resource.ExpirationDate);
 
-                        SetStatusIcon($(resourceRow).find('td').eq(statusColumn).find("button"), resource.Status);
+                        SetStatusIcon($(resourceRow).find('td').eq(statusColumn).find("img"), resource.Status);
                         $(resourceRow).find('td').eq(statusColumn).attr("title", resource.Status);
                     }
                 }
@@ -479,7 +476,7 @@
                             $(resourceRow).find('td').eq(expirationDateColumn).html(resource.ExpirationDate);
                             $(resourceRow).find('td').eq(expirationDateColumn).attr("title", resource.ExpirationDate);
 
-                            SetStatusIcon($(resourceRow).find('td').eq(statusColumn).find("button"), resource.Status);
+                            SetStatusIcon($(resourceRow).find('td').eq(statusColumn).find("img"), resource.Status);
                             $(resourceRow).find('td').eq(statusColumn).attr("title", resource.Status);
                         }
                     }
@@ -557,6 +554,7 @@
                 // Model at server is updated at controller method and will be used for table complete updating at refresh table
 
                 if (data.ConfirmedOwner) {
+
                     $(selectedRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
                 }
                 else {
@@ -568,7 +566,7 @@
                     $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
                     $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
 
-                    SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
+                    SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("img"), data.Status);
                     $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
                     RedrawResourceTable();
                 SetCursor(initialBodyCursor, initialBtnCursor);
@@ -608,7 +606,7 @@
                 $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
                 $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
 
-                SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
+                SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("img"), data.Status);
                 $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
 
                 RedrawResourceTable();
@@ -647,7 +645,7 @@
                 $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
                 $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
 
-                SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
+                SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("img"), data.Status);
                 $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
 
                 RedrawResourceTable();
@@ -664,9 +662,9 @@
 <h4>Subscription id: @Model.SubscriptionData.Id</h4>
 
 <br />
-<div class="panel panel-default" style="border:none;width:2400px">
+<div class="panel panel-default" style="border:none;width:1440px">
     <div class="row">
-        <div class="col-md-6 pull-left" style="width:250px;padding-right:20px">
+        <div class="col-md-6 pull-left" style="width:280px;padding-right:20px">
             <div class="row">
             <div class="panel panel-default">
                 <div style="text-align:left" class="panel-heading">Choose resources to view</div>
@@ -685,6 +683,7 @@
                 </div>
             </div>
         </div>
+ 
             <div class="row">
             <div class="panel panel-default" style="border:none">
                 <div class="panel-body">
@@ -715,7 +714,7 @@
 
         </div>
 
-        <div class="col-md-d6 pull-left" style="width:300px">
+        <div class="col-md-d6 pull-left" style="width:280px">
 
             <div class="panel panel-default">
                 <div style="text-align:left" class="panel-heading">Extend all resources in group</div>
@@ -725,48 +724,60 @@
 
                     </div>
                     <div style="align-content:center" class="row">
-                        <button onclick="ResourceGroupOp('extend')" style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resources
-                    </div>
+                        <button onclick="ResourceGroupOp('extend')" style="margin-left:15px" class="btn btn-xs tbl-btn">
+                         <img src="~/Images/extend.svg"/>
+                            </button>&nbsp;Extend resources
+                    </div>.
                     <div class="row">
-                        <button onclick="ResourceGroupOp('reserve')" style="margin-left:15px" class="btn btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resources
+                        <button onclick="ResourceGroupOp('reserve')" style="margin-left:15px" class="btn btn-xs glyphicon tbl-btn">
+                            <img src="~/Images/reserve.svg" />
+                        </button>&nbsp;Reserve resources
                     </div>
 
                 </div>
             </div>
         </div>
-        <div class="col-md-6 pull-left" style="width:250px">
+        <div class="col-md-6 pull-left" style="width:280px">
 
             <div class="panel panel-default">
                  <div style="text-align:left" class="panel-heading">Status Legend (check to view)</div>
                 <div class="panel-body">
                     <div class="row">
-                        <input id="showValidResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon glyphicon-ok tbl-btn" data-status=""></button>&nbsp;Valid
+                        <input id="showValidResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon tbl-btn" data-status=""><img src="~/Images/valid.svg"/></button>&nbsp;Valid
                     </div>
                     <div class="row">
-                        <input id="showExpiredResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon glyphicon-remove tbl-btn" data-status=""></button>&nbsp;Expired
+                        <input id="showExpiredResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon tbl-btn" data-status=""><img src="~/Images/expire.svg"/></button>&nbsp;Expired
                     </div>
                     <div class="row">
-                        <input id="showDeletedResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon glyphicon-trash tbl-btn" data-status=""></button>&nbsp;Marked for deletion
+                        <input id="showDeletedResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon tbl-btn" data-status=""><img src="~/Images/delete.svg"/></button>&nbsp;Marked for deletion
                     </div>
                 </div>
             </div>
         </div>
-        <div class="col-md-6 pull-left" style="width:250px">
+        <div class="col-md-6 pull-left" style="width:280px">
 
                 <div class="panel panel-default">
                     <div style="text-align:left" class="panel-heading">Actions Legend</div>
                     <div class="panel-body">
                         <div style="align-content:center" class="row">
-                            <button style="margin-left:15px" class="btn disabled btn-warning btn-xs glyphicon glyphicon-pencil tbl-btn"></button>&nbsp;Edit resource description
+                            <button style="margin-left:15px" class="btn disabled btn-xs glyphicon tbl-btn">
+                                                         <img src="~/Images/edit.svg"/>
+                                </button>&nbsp;Edit resource description
                         </div>
                         <div style="align-content:center" class="row">
-                            <button style="margin-left:15px" class="btn disabled btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resource
+                            <button style="margin-left:15px" class="btn disabled btn-xs glyphicon tbl-btn">
+                          <img src="~/Images/extend.svg"/>
+                               </button>&nbsp;Extend resource
                         </div>
                         <div class="row">
-                            <button style="margin-left:15px" class="btn disabled btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resource
+                            <button style="margin-left:15px" class="btn disabled btn-xs glyphicon tbl-btn">
+                                                         <img src="~/Images/reserve.svg"/>
+                                </button>&nbsp;Reserve resource
                         </div>
                         <div class="row">
-                            <button style="margin-left:15px" class="btn disabled btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn"></button>&nbsp;Reset resource
+                            <button style="margin-left:15px" class="btn disabled btn-xs  tbl-btn">
+                                                         <img src="~/Images/extend.svg"/>
+</button>&nbsp;Reset resource
                         </div>
 
                     </div>
@@ -779,34 +790,34 @@
     <table class="table table-hover table-bordered table-striped table-condensed sortable resizable" style="width:1700px" id="resourcesTable">
         <thead>
             <tr>
-                <th width="5%" data-defaultsign="status" onclick="SortResources(this)">
+                <th width="54px" data-defaultsign="status" onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Status)
                 </th>
-            <th width="14%" id="nameColumn" data-defaultsign="AZ" onclick="SortResources(this)">
+            <th width="280px" id="nameColumn" data-defaultsign="AZ" onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Name)
                 </th>
 
-                <th width="18%" data-defaultsign="AZ"  onclick="SortResources(this)">
+                <th width="280px" data-defaultsign="AZ"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Type)
                 </th>
-            <th width="9%" data-defaultsign="AZ" onclick="SortResources(this)">Resource<br/>Group</th>
-            <th width="8%" data-defaultsign="description" onclick="SortResources(this)" style="border-right:0px">
+            <th width="160px" data-defaultsign="AZ" onclick="SortResources(this)">Resource<br/>Group</th>
+            <th width="160px" data-defaultsign="description" onclick="SortResources(this)" style="border-right:0px">
                 @Html.DisplayNameFor(model => model.Resources.First().Description)
             </th>
 
-                <th width="6%" data-defaultsign="AZ"  onclick="SortResources(this)">
+                <th width="160px" data-defaultsign="AZ"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Owner)
                 </th>
-                <th width="7%" id="confirmedOwnerColumn" data-defaultsign="bool" onclick="SortResources(this)">
+                <th width="54px" id="confirmedOwnerColumn" data-defaultsign="bool" onclick="SortResources(this)">
                     Claimed
                 </th>
-                <th width="5%" data-defaultsign="month"  onclick="SortResources(this)">
+                <th width="90px" data-defaultsign="month"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().FirstFoundDate)
                 </th>
-                <th width="6%" data-defaultsign="month"  onclick="SortResources(this)">
+                <th width="90px" data-defaultsign="month"  onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().ExpirationDate)
                 </th>
-                <th width="8%" data-defaultsort="disabled">
+                <th width="90px" data-defaultsort="disabled">
                     Actions
                 </th>
             </tr>
@@ -816,8 +827,8 @@
             {
                 string rowClass = item.Expired ? "alert alert - warning" : null;
             <tr class="@rowClass" data-resource-id="@item.Id">
-                <td title="@item.Status" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                    <button style="text-align:center;vertical-align:middle" class="btn btn-xs btn-status glyphicon glyphicon-ok tbl-btn" data-status="@item.Status"></button>
+                <td title="@item.Status" style="text-align:center;ellipsis;overflow:hidden;white-space:nowrap">
+                    <img src="~/Images/valid.svg"/>
              </td>
                     <td title="@item.AzureResourceIdentifier" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                         @Html.Raw(HTMLUtilities.CreateAzureResourceAnchor(item.Name, item.AzureResourceIdentifier))
@@ -833,8 +844,9 @@
                             @Html.DisplayFor(modelItem => item.Description)
                         </div>
                         <div>
-                            <button class="btn btn-warning btn-xs glyphicon glyphicon-pencil tbl-btn" data-toggle="tooltip" title="Edit resource description" style="height:24px;width:32px"
+                            <button class="btn btn-xs glyphicon tbl-btn" data-toggle="tooltip" title="Edit resource description" style="height:24px;width:32px"
                                     onclick="OnEditDescription(this, '@item.Id', '@item.SubscriptionId')">
+                                <img src="~/Images/edit.svg" />
                             </button>
                         </div>
                     </td>
@@ -851,14 +863,20 @@
                         @Html.DisplayFor(modelItem => item.ExpirationDate)
                     </td>
                     <td>
-                        <button class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"
-                                data-toggle = "tooltip", title = "Extend expiration date by a short period of time. See subscription settings."></button>
-                        <button class="btn btn-success btn-xs glyphicon glyphicon-forward tbl-btn" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
-                                data-toggle = "tooltip", title = "Extend expiration date by a long period of time. See subscription settings."></button>
+                        <button class="btn btn-xs glyphicon tbl-btn" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"
+                                data-toggle="tooltip", title="Extend expiration date by a short period of time. See subscription settings.">
+                            <img src="~/Images/extend.svg">
+                        </button>
+                        <button class="btn btn-xs glyphicon -btn" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
+                                data-toggle = "tooltip", title = "Extend expiration date by a long period of time. See subscription settings.">
+                                                     <img src="~/Images/reserve.svg"/>
+                                                          </button>
                         @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
                         {
-                            <button class="btn btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
-                                    data-toggle = "tooltip", title = "Reset expiration date making resource unclaimed."></button>
+                            <button class="btn btn-xs glyphicon btn" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
+                                    data-toggle = "tooltip", title = "Reset expiration date making resource unclaimed.">
+                                                     <img src="~/Images/reset.svg"/>
+                                                          </button>
                         }
                     </td>
                 </tr>
@@ -923,4 +941,3 @@
     </div>
 </div>
     
-
