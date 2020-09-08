@@ -46,6 +46,8 @@ namespace CogsMinimizer.Shared
 
         public Subscription()
         {
+            this.Id = string.Empty;
+            this.DisplayName = string.Empty;
             this.ReserveIntervalInDays = 180;
             this.ExpirationIntervalInDays = 30;
             this.ExpirationUnclaimedIntervalInDays = 10;
