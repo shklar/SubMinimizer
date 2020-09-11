@@ -14,7 +14,7 @@
             $('.wait-crs').on('click', function () { $('body').css('cursor', 'wait'); $('.btn').css('cursor', 'wait'); })
         });
 
-        function validateInput(form) {
+        function validateInput() {
 
             var subscriptionName = $("#subscriptionName").val();
             if (subscriptionName.length == 0) {
@@ -28,7 +28,7 @@
                 return false;
             }
 
-            return form.submit();
+            return registerForm.submit();
         }
     </script>
 }
