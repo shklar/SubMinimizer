@@ -16,13 +16,13 @@
 
         function validateInput() {
 
-            var subscriptionName = $("#subscriptionName").val();
+            var subscriptionName = $("#subscriptionName").val().trim();
             if (subscriptionName.length == 0) {
                 alert("Subscription name can't be empty");
                 return false;
             }
 
-            var subscriptionId = $("#subscriptionId").val();
+            var subscriptionId = $("#subscriptionId").val().trim();
             if (subscriptionId.length == 0) {
                 alert("Subscription ID can't be empty");
                 return false;
