@@ -71,7 +71,7 @@
     var initialBtnCursor;
     var initialBodyCursor;
 
-    var statusColumn = 0;
+    var statusColumn = 2;
     var nameColumn = 1;
         var descriptionColumn = 4;
         var ownerColumn = 5;
@@ -814,15 +814,14 @@
     <table class="resource_table table table-hover table-bordered table-striped table-condensed sortable resizable" id="resourcesTable">
         <thead>
             <tr>
-                <th width="54px" data-defaultsign="status" onclick="SortResources(this)">
-                    @Html.DisplayNameFor(model => model.Resources.First().Status)
-                </th>
                 <th width="280px" id="nameColumn" data-defaultsign="AZ" onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Name)
                 </th>
-
                 <th width="280px" data-defaultsign="AZ" onclick="SortResources(this)">
                     @Html.DisplayNameFor(model => model.Resources.First().Type)
+                </th>
+                <th width="54px" data-defaultsign="status" onclick="SortResources(this)">
+                    @Html.DisplayNameFor(model => model.Resources.First().Status)
                 </th>
                 <th width="160px" data-defaultsign="AZ" onclick="SortResources(this)">Resource<br />Group</th>
                 <th width="160px" data-defaultsign="description" onclick="SortResources(this)" style="border-right:0px">
@@ -850,60 +849,60 @@
             @foreach (var item in Model.Resources)
             {
                 string rowClass = item.Expired ? "alert alert - warning" : null;
-                <tr class="@rowClass" data-resource-id="@item.Id">
-                    <td title="@item.Status" style="text-align:center;ellipsis;overflow:hidden;white-space:nowrap">
-                        <img src="~/Images/valid.svg" />
-                    </td>
-                    <td title="@item.AzureResourceIdentifier" style="color:#0078d4;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                        @Html.Raw(HTMLUtilities.CreateAzureResourceAnchor(item.Name, item.AzureResourceIdentifier))
-                    </td>
-                    <td title="@item.Type" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                        @Html.DisplayFor(modelItem => item.Type)
-                    </td>
-                    <td title="@item.ResourceGroup" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                        @Html.DisplayFor(modelItem => item.ResourceGroup)
-                    </td>
-                    <td title="@item.Description" style="border-right:0px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                        <div id="descrTxt">
-                            @Html.DisplayFor(modelItem => item.Description)
-                        </div>
-                        <div>
-                            <button class="btn btn-xs glyphicon tbl-btn" data-toggle="tooltip" title="Edit resource description" style="height:24px;width:32px"
-                                    onclick="OnEditDescription(this, '@item.Id', '@item.SubscriptionId')">
-                                <img src="~/Images/edit.svg" />
-                            </button>
-                        </div>
-                    </td>
-                    <td title="@item.Owner" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                        @Html.DisplayFor(modelItem => item.Owner)
-                    </td>
-                    <td style="text-align:center">
-                        @Html.CheckBoxFor(modelItem => item.ConfirmedOwner, new { disabled = "disabled" })
-                    </td>
-                    <td title="@item.FirstFoundDate" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                        @Html.DisplayFor(modelItem => item.FirstFoundDate)
-                    </td>
-                    <td title="@item.ExpirationDate" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
-                        @Html.DisplayFor(modelItem => item.ExpirationDate)
-                    </td>
-                    <td>
-                        <button class="btn btn-xs glyphicon tbl-btn" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"
-                                data-toggle="tooltip" , title="Extend expiration date by a short period of time. See subscription settings.">
-                            <img src="~/Images/extend.svg">
+            <tr class="@rowClass" data-resource-id="@item.Id">
+                <td title="@item.AzureResourceIdentifier" style="color:#0078d4;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.Raw(HTMLUtilities.CreateAzureResourceAnchor(item.Name, item.AzureResourceIdentifier))
+                </td>
+                <td title="@item.Type" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.Type)
+                </td>
+                <td title="@item.Status" style="text-align:center;ellipsis;overflow:hidden;white-space:nowrap">
+                    <img src="~/Images/valid.svg" />
+                </td>
+                <td title="@item.ResourceGroup" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.ResourceGroup)
+                </td>
+                <td title="@item.Description" style="border-right:0px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    <div id="descrTxt">
+                        @Html.DisplayFor(modelItem => item.Description)
+                    </div>
+                    <div>
+                        <button class="btn btn-xs glyphicon tbl-btn" data-toggle="tooltip" title="Edit resource description" style="height:24px;width:32px"
+                                onclick="OnEditDescription(this, '@item.Id', '@item.SubscriptionId')">
+                            <img src="~/Images/edit.svg" />
                         </button>
-                        <button class="btn btn-xs glyphicon -btn" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
-                                data-toggle="tooltip" , title="Extend expiration date by a long period of time. See subscription settings.">
-                            <img src="~/Images/reserve.svg" />
+                    </div>
+                </td>
+                <td title="@item.Owner" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.Owner)
+                </td>
+                <td style="text-align:center">
+                    @Html.CheckBoxFor(modelItem => item.ConfirmedOwner, new { disabled = "disabled" })
+                </td>
+                <td title="@item.FirstFoundDate" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.FirstFoundDate)
+                </td>
+                <td title="@item.ExpirationDate" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    @Html.DisplayFor(modelItem => item.ExpirationDate)
+                </td>
+                <td>
+                    <button class="btn btn-xs glyphicon tbl-btn" onclick="OnExtendResource(this, '@item.Id', '@item.SubscriptionId')"
+                            data-toggle="tooltip" , title="Extend expiration date by a short period of time. See subscription settings.">
+                        <img src="~/Images/extend.svg">
+                    </button>
+                    <button class="btn btn-xs glyphicon -btn" onclick="OnReserveResource(this, '@item.Id', '@item.SubscriptionId')"
+                            data-toggle="tooltip" , title="Extend expiration date by a long period of time. See subscription settings.">
+                        <img src="~/Images/reserve.svg" />
+                    </button>
+                    @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
+                    {
+                        <button class="btn btn-xs glyphicon btn" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
+                                data-toggle="tooltip" , title="Reset expiration date making resource unclaimed.">
+                            <img src="~/Images/reset.svg" />
                         </button>
-                        @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
-                        {
-                            <button class="btn btn-xs glyphicon btn" onclick="OnResetResource(this, '@item.Id', '@item.SubscriptionId')"
-                                    data-toggle="tooltip" , title="Reset expiration date making resource unclaimed.">
-                                <img src="~/Images/reset.svg" />
-                            </button>
-                        }
-                    </td>
-                </tr>
+                    }
+                </td>
+            </tr>
             }
         </tbody>
     </table>
