@@ -28,6 +28,9 @@
             TelemetryConfiguration.Active.InstrumentationKey = instrumentationKey;
             _telemetryClient = new TelemetryClient();
             _telemetryClient.Context.Session.Id = sessionId;
+            _telemetryClient.Context.User.Id = AzureAuthUtils.GetSignedInUserUniqueName();
+            _telemetryClient.Context.User.AccountId = AzureAuthUtils.GetSignedInUserUniqueName();
+            _telemetryClient.Context.User.AuthenticatedUserId = AzureAuthUtils.GetSignedInUserUniqueName();
         }
 
         /// <summary>

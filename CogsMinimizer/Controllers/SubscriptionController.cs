@@ -20,13 +20,16 @@ namespace CogsMinimizer.Controllers
     {
         public const int EXPIRATION_INTERVAL_IN_DAYS = 7;
 
+        private ITracer tracer = TracerFactory.CreateTracer();
 
         // Get resources marked for deletion from database
         [HttpPost]
         public ActionResult GetResourcesMarkedForDelete(string SubscriptionId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
-            
+
+            tracer.TraceInformation("Operation: Get delete resources script");
+
             using (DataAccess db = new DataAccess())
             {
                 var subscription = db.Subscriptions.FirstOrDefault(x => x.Id.Equals(SubscriptionId));
@@ -71,6 +74,8 @@ namespace CogsMinimizer.Controllers
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => Operation);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => Group);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            tracer.TraceInformation($"Operation:  Group resources {Operation}");
 
             List<object> resultList = new List<object>();
             using (DataAccess db = new DataAccess())
@@ -131,6 +136,9 @@ namespace CogsMinimizer.Controllers
         public ActionResult ResetResources(string SubscriptionId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+
+            tracer.TraceInformation("Operation: Reset resources");
 
             List<object> resultList = new List<object>();
             using (DataAccess db = new DataAccess())
@@ -300,6 +308,8 @@ namespace CogsMinimizer.Controllers
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
 
+            tracer.TraceInformation("Operation:  Reserve resource");
+
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
             {
@@ -336,6 +346,8 @@ namespace CogsMinimizer.Controllers
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
 
+            tracer.TraceInformation("Operation: Edit resource description");
+
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
             {
@@ -369,6 +381,8 @@ namespace CogsMinimizer.Controllers
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            tracer.TraceInformation("Operation:  Reset resource");
 
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
@@ -409,6 +423,8 @@ namespace CogsMinimizer.Controllers
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => ResourceId);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
+
+            tracer.TraceInformation("Operation: Extend resource");
 
             JsonResult result = new JsonResult();
             using (var db = new DataAccess())
@@ -516,10 +532,11 @@ namespace CogsMinimizer.Controllers
 
         public ActionResult Register()
         {
+            tracer.TraceInformation("Operation:  Register subscription");
             return View(new Subscription());
         }
 
-
+        
         //Deprecated flow - requires delgated ARM actions
         private ActionResult Connect([Bind(Include = "Id, OrganizationId, DisplayName")] Subscription subscription, string servicePrincipalObjectId)
         {
@@ -604,6 +621,8 @@ namespace CogsMinimizer.Controllers
         public ActionResult Disconnect([Bind(Include = "Id, OrganizationId")] Subscription subscription)
         {
             Diagnostics.EnsureArgumentNotNull(() => subscription);
+
+            tracer.TraceInformation("Operation: Disconnect subscription");
 
             if (ModelState.IsValid)
             {                             
