@@ -25,7 +25,7 @@
     <UseGlobalApplicationHostFile />
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-    <ApplicationInsightsResourceId>/subscriptions/b4b7d4c1-8c25-4da3-bf1c-e50f647a8130/resourcegroups/maxim/providers/microsoft.insights/components/SubMinimizerAI</ApplicationInsightsResourceId>
+    <ApplicationInsightsResourceId>/subscriptions/72930a30-8e57-4e97-98fe-02c1023ab43a/resourcegroups/EV_RES/providers/microsoft.insights/components/submin_ai</ApplicationInsightsResourceId>
     <Use64BitIISExpress />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
