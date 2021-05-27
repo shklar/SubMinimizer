@@ -39,6 +39,11 @@
     .table {
         table-layout: fixed;
     }
+
+   .table.summary, td
+   {
+       word-wrap:break-word
+   }
 </style>
 
 @section Scripts
@@ -68,6 +73,7 @@
 
         $(document).ready(function () {
 
+
             initialBodyCursor = $('body').first().css('cursor');
             initialBtnCursor = $('.btn').first().css('cursor');
 
@@ -85,14 +91,17 @@
                 {
                     if ($(btn).attr('data-status').length != 0) { SetStatusIcon(btn, $(btn).attr('data-status')); }
                 });
+
+            RedrawResourceTable();
+            RedrawResourceSummaryTable();
         });
 
-     $("#resourcesTable").colResizable({
-            liveDrag: true,
-            gripInnerHtml: "<div class='grip'></div>",
-            draggingClass: "dragging",
-            resizeMode: 'fit'
-        });
+    $("#resourcesTable").colResizable({
+        liveDrag: true,
+        gripInnerHtml: "<div class='grip'></div>",
+        draggingClass: "dragging",
+        resizeMode: 'fit'
+    }    );
 
      function SetStatusIcon(statusBtn, status)
      {
@@ -186,7 +195,7 @@
                 order: order, selector: selector, sortFunction: function (a, b) {
                     return GetDate(colNum, a) - GetDate(colNum, b);
                 }
-            });
+        });
         }
         else if (sortKind == "bool") {
             tinysort($('#resourcesTable tbody tr'), {
@@ -214,7 +223,68 @@
         }
     }
 
-    function RedrawResourceTable() {
+    function RedrawResourceSummaryTable()
+    {
+        $('#resourcesSummaryTableBody').empty();
+
+        var sumBody = $('#resourcesSummaryTableBody');
+        var users = {};
+
+        users['Unclaimed'] = [[], []];
+
+        var i = 0;
+        $('#resourcesTable tr').each(function ()
+        {
+            // skip table header
+            if ($(this).find('th').length != 0) {
+                return;
+            }
+
+            var ownerCol = $(this).find('#Owner');
+            var owner = $(ownerCol).attr('title');
+
+                if (owner.length == 0)
+                {
+                    owner = 'Unclaimed';
+                }
+
+                if (!(owner in users))
+                {
+                    users[owner] = [[], []];
+                }
+
+                var userStat = users[owner];
+
+            var nameCol = $(this).find('#Name');
+            var name = $(nameCol).attr('title');
+
+            var groupCol = $(this).find('#ResourceGroup');
+            var group = $(groupCol).attr('title');
+
+
+            var groups = userStat[0];
+            if (groups.indexOf(group) == -1)
+                {
+                    groups[groups.length] = group;
+                    console.log(groups);
+                }
+
+            var ress = userStat[1];
+            ress[ress.length] = name;
+
+            });
+
+        for (var u in users) {
+            var s = users[u];
+
+
+            $(sumBody).append("<tr><td>" + u + "</td><td>" + s[0].length + "</td><td>" + s[1].length + "</td></tr>");
+        }
+
+        console.log($(sumBody).html());
+    }
+
+function RedrawResourceTable() {
         if ($('#allResourcesRadio').is(":checked"))
         {
             FilterResources($('#allResourcesRadio'));
@@ -227,6 +297,7 @@
         {
             FilterResources($('#unclaimedResourcesRadio'));
         }
+
     }
 
     function IsStatusShown(resourceRow)
@@ -241,9 +312,42 @@
             return $('#showExpiredResourcesCheckBox').is(':checked');
         }
         else if (status == "MarkedForDeletion") {
+
             return $('#showDeletedResourcesCheckBox').is(':checked');
         }
     }
+
+    function CheckGroupVisible(resourceRow)
+    {
+        if (!$(resourceRow).is(':visible'))
+        {
+           return;
+        }
+
+        // Get  resource group filter
+        var filter = $('#groupName').val();
+
+        filter = $.trim(filter);
+        if (filter.length == 0)
+        {
+            return;
+        }
+
+
+        var groupCol = $(resourceRow).find('#ResourceGroup');
+        var group = $(groupCol).attr('title');
+
+        // Get  resource group of given resource
+       if (!group.match(filter))
+        {
+            $(resourceRow).hide();
+        }
+        else
+        {
+            $(resourceRow).show();
+        }
+    }
+
 
     function FilterResources(radioBtn) {
         if ($(radioBtn).attr('id') == 'allResourcesRadio')
@@ -262,6 +366,8 @@
                 {
                     $(this).hide();
                 }
+
+                CheckGroupVisible(this);
             });
         }
         else if ($(radioBtn).attr('id') == 'yourResourcesRadio')
@@ -289,6 +395,8 @@
                 {
                     $(this).hide();
                 }
+
+                CheckGroupVisible(this);
             });
         }
         else if ($(radioBtn).attr('id') == 'unclaimedResourcesRadio') {
@@ -314,9 +422,11 @@
 
                     }
                 }
-            });
+
+                CheckGroupVisible(this);
+    });
         }
-    }
+     }
 
     function OnGetDeleteResourcesScript() {
         SetCursor('wait', 'wait');
@@ -326,46 +436,127 @@
         dataType: "json",
         data: JSON.stringify({
         SubscriptionId: "@Model.SubscriptionData.Id"
-        }),
+   }),
 
 
         contentType: "application/json; charset=utf-8",
         success: function (data) {
                             SetCursor(initialBodyCursor, initialBtnCursor);
-            
-            var content = 'Write-host  \'Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name: \\\'@Model.SubscriptionData.DisplayName\\\', Subscription id: \\\'@Model.SubscriptionData.Id\\\'.\'\n';
-            content += 'Write-host  \'' + data.length + ' resources will be deleted\'\n';
-            content += 'Write-host  \'Are you sure? y/n\'\n';
-            content += '$confirm = Read-Host\n';
-           content += 'if ($confirm -ne \'y\')\n' +
-    '{\n' +  'return\n' +
-    '}\n' +
-'Connect-AzureRmAccount\n' +
-    'Set-AzureRmContext -Subscription \'@Model.SubscriptionData.Id\'\n';
+
+
+    var allRes = "";
+
+            var addResTemplate = `
+    DeleteResource '{1}' '{2}' '{3}' '{4}'
+    `;
 
     for (var resNum = 0; resNum < data.length; resNum++)
     {
         var resource = data[resNum];
-        
-        
-      var delResTemplate = 'Write-Host \'Deleting resource "{0}" from group "{1}"\'\n';
-      content += delResTemplate.replace('{0}', resource.Name).replace('{1}', resource.Group);
 
+        var addRec = addResTemplate.replace("{1}", resource.AzureId).replace('{2}', resource.Name);
+        addRec = addRec.replace("{3}", resource.Group);
 
       if (resource.ConfirmedOwner)
-         {
-          var claimResTemplate = 'Write-Host \'Last claimed "{0}"\'\n';
-          content += claimResTemplate.replace('{0}', resource.Owner);
-        }
+      {
+          addRec = addRec.replace("{4}", resource.Owner);
+       }
         else
         {
-           content += 'Write-Host \'Unclaimed\'\n';
+          addRec = addRec.replace("{4}", "");
         }
-                    
-        var remResTemplate = 'Remove-AzureRmResource -Force -ResourceId \'{0}\'\n';
-        content += remResTemplate.replace('{0}', resource.AzureId);
+
+        allRes += addRec;
+     }
+
+            var scriptTemplate =
+                `
+
+
+
+$subName = "{1}"
+$subId = "{2}"
+
+
+Write-host  ('Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name:' + $subName + ', Subscription id:'  + $subId)
+Write-host ('{3}' + ' resources will be deleted')
+Write-host  'Are you sure? y/n'
+$confirm = Read-Host
+if ($confirm -ne 'y')
+{
+return
 }
-  
+
+Connect-AzAccount
+Set-AzContext -Subscription $subId
+
+
+function CheckGroups($groups)
+{
+    for ($i = 0; $i -lt $groups.Count; $i++)
+    {
+      $group = $groups[$i]
+
+       try
+        {
+            Write-Host ('Check ' + $group + '  for emptiness.')
+            $gr = Get-AzResourceGroup -Name $group -ErrorAction Continue
+
+            $res = Get-AzResource -ResourceGroupName $group
+            if ($res.length -gt 0)
+            {
+                continue
+            }
+                Write-Host ($group + '  is empty, do you want delete it?')
+$confirm = Read-Host
+if ($confirm -ne 'y')
+{
+ continue
+}
+   Remove-AzResourceGroup -Name $group
+         }
+         catch
+         {
+            Write-Host ($group + ' isn''t found')
+         }
+    }
+}
+
+$global:groups = New-Object -TypeName 'System.Collections.ArrayList'
+
+function DeleteResource($id, $name, $group, $owner)
+{
+    $global:groups.Add($group)
+
+    Write-Host ('Deleting resource ' + $name + ' from group ' + $group)
+    if ($owner.length -gt 0)
+    {
+    Write-Host 'Owner: ' $owner
+    }
+    else
+    {
+    Write-Host 'Unclaimed'
+    }
+
+    Remove-AzResource -ResourceId $id
+}
+
+
+    {4}
+
+CheckGroups $global:groups
+
+
+    `;
+
+
+            var script = scriptTemplate.replace("{4}", allRes);
+            script = script.replace("{1}", '@Model.SubscriptionData.DisplayName');
+            script = script.replace("{2}", '@Model.SubscriptionData.Id');
+            script = script.replace("{3}", data.length);
+
+
+
    var today = new Date();
            var dd = String(today.getDate()).padStart(2, '0');
            var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
@@ -374,13 +565,13 @@
             var min = today.getMinutes();
 
             var todayString = mm + '-' + dd + '-' + yyyy + ':' + hh + '.' + min;
-  
+
            var fileName = 'DeleteObsoleteResource_' + '@Model.SubscriptionData.DisplayName' + '_' + todayString + '_.ps1';
 
-           var blob = new Blob([content],
+            var blob = new Blob([script],
         {
            type: "text/plain;charset=utf-8",       });
-   
+
            var link = document.createElement("a");
            link.href = window.URL.createObjectURL(blob);
            link.download = fileName;
@@ -435,6 +626,7 @@
                 }
 
                 RedrawResourceTable();
+                RedrawResourceSummaryTable();
                 SetCursor(initialBodyCursor, initialBtnCursor);
 
             }
@@ -485,6 +677,7 @@
                     }
 
                     RedrawResourceTable();
+                    RedrawResourceSummaryTable();
                     SetCursor(initialBodyCursor, initialBtnCursor);
                 }
             });
@@ -571,6 +764,7 @@
                     SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
                     $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
                     RedrawResourceTable();
+                    RedrawResourceSummaryTable();
                 SetCursor(initialBodyCursor, initialBtnCursor);
             }
         });
@@ -612,6 +806,7 @@
                 $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
 
                 RedrawResourceTable();
+                RedrawResourceSummaryTable();
                 SetCursor(initialBodyCursor, initialBtnCursor);
             }
         });
@@ -651,6 +846,7 @@
                 $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
 
                 RedrawResourceTable();
+                RedrawResourceSummaryTable();
 
                 SetCursor(initialBodyCursor, initialBtnCursor);
             }
@@ -668,51 +864,80 @@
     <div class="row">
         <div class="col-md-6 pull-left" style="width:250px;padding-right:20px">
             <div class="row">
-            <div class="panel panel-default">
-                <div style="text-align:left" class="panel-heading">Choose resources to view</div>
-                <div class="panel-body">
+                <div class="panel panel-default">
+                    <div style="text-align:left" class="panel-heading">Choose resources to view</div>
+                    <div class="panel-body">
+                        <div style="align-content:center" class="row">
+                            <span style="width:50px"></span>@Html.RadioButton("resource filter", "All resources", true, new { id = "allResourcesRadio", style = "margin-left:15px" }) All resources
+                        </div>
+                        <div class="row">
+                            <span style="width:50px"></span>@Html.RadioButton("resource filter", "My resources", false, new { id = "yourResourcesRadio", style = "margin-left:15px" }) My resources
+                        </div>
+                        <div class="row">
+                            <span style="width:50px"></span>@Html.RadioButton("resource filter", "Unclaimed resources", false, new { id = "unclaimedResourcesRadio", style = "margin-left:15px" })  Unclaimed resources
+                        </div>
 
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="panel panel-default" style="border:none">
+                    <div class="panel-body">
+                        <div class="row">
+                            @Html.ActionLink("Settings", "GetSettings",
+                                new
+                                {
+                                    Id = Model.SubscriptionData.Id,
+                                    OrganizationId = Model.SubscriptionData.OrganizationId,
+                                    DisplayName = Model.SubscriptionData.DisplayName
+                                },
+                                new { @class = "btn btn-warning btn-round wait-crs btn-cmd", @title = "Edit subscription settings" })
+                        </div>
+                        @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
+                        {
+                            <div class="row">
+                                <button class="btn btn-warning btn-round btn-cmd" title="Makes all resources unclaimed. Sets expiration date to established for unclaimed resources." onclick="OnResetResources()">Reset resources</button>
+                                <br />
+                            </div>
+                        }
+                        <div class="row">
+                            <button style="width:fit-content" class="btn btn-warning btn-round btn-cmd" title="Download delete resources script" onclick="OnGetDeleteResourcesScript()">Download delete resources script</button>
+                            <br />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-md-d6 pull-left" style="width:300px;padding-right:25px;padding-left:20px">
+         <div class="row">
+            <div class="panel panel-default">
+                <div style="text-align:left" class="panel-heading">Find resources in group</div>
+                <div class="panel-body">
+                    <div class="row" style="align-content:left;margin-left:0px;margin-right:20px;padding-bottom:10px;">
+                           <input id="groupName" name="GroupName" style="width:200px;" type="text" value="" />
+
+                 </div>
                     <div style="align-content:center" class="row">
-                        <span style="width:50px"></span>@Html.RadioButton("resource filter", "All resources", true, new { id = "allResourcesRadio", style = "margin-left:15px" }) All resources
-                    </div>
-                    <div class="row">
-                        <span style="width:50px"></span>@Html.RadioButton("resource filter", "My resources", false, new { id = "yourResourcesRadio", style = "margin-left:15px" }) My resources
-                    </div>
-                    <div class="row">
-                        <span style="width:50px"></span>@Html.RadioButton("resource filter", "Unclaimed resources", false, new { id = "unclaimedResourcesRadio", style = "margin-left:15px" })  Unclaimed resources
+                        <button onclick="RedrawResourceTable()" style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-search tbl-btn"></button>&nbsp;Find resources
                     </div>
 
                 </div>
             </div>
         </div>
-            <div class="row">
-            <div class="panel panel-default" style="border:none">
-                <div class="panel-body">
-                    <div class="row">
-                        @Html.ActionLink("Settings", "GetSettings",
-                            new
-                            {
-                                Id = Model.SubscriptionData.Id,
-                                OrganizationId = Model.SubscriptionData.OrganizationId,
-                                DisplayName = Model.SubscriptionData.DisplayName                               
-                            },
-                            new {@class = "btn btn-warning btn-round wait-crs btn-cmd", @title = "Edit subscription settings"})
-                    </div>
-                    @if (Model.SubscriptionData.ConnectedBy == User.Identity.Name)
-                    {
-                       <div class="row">
-                            <button class="btn btn-warning btn-round btn-cmd" title="Makes all resources unclaimed. Sets expiration date to established for unclaimed resources." onclick="OnResetResources()">Reset resources</button>
-                            <br />
-                        </div>
-                    }
-                    <div class="row">
-                        <button style="width:fit-content" class="btn btn-warning btn-round btn-cmd" title="Download delete resources script" onclick="OnGetDeleteResourcesScript()">Download delete resources script</button>
-                            <br />
-                        </div>                    
-                </div>
-            </div>
-            </div>
-
+           <div class="row">
+               <table id="resourcesSummaryTable" class="table table-hover table-bordered table-striped table-condensed sortable summary" style="width:280px" id="resourcesTable">
+                   <thead>                        
+                       <tr>
+                               <th>User</th>
+                               <th>Resource Groups</th>
+                               <th>Resources</th>
+                           </tr>
+                     </thead>
+                  <tbody id="resourcesSummaryTableBody"></tbody>
+                       </table>
+</div>
         </div>
 
         <div class="col-md-d6 pull-left" style="width:300px">
@@ -734,10 +959,11 @@
                 </div>
             </div>
         </div>
+       
         <div class="col-md-6 pull-left" style="width:250px">
 
             <div class="panel panel-default">
-                 <div style="text-align:left" class="panel-heading">Status Legend (check to view)</div>
+                <div style="text-align:left" class="panel-heading">Status Legend (check to view)</div>
                 <div class="panel-body">
                     <div class="row">
                         <input id="showValidResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon glyphicon-ok tbl-btn" data-status=""></button>&nbsp;Valid
@@ -753,26 +979,26 @@
         </div>
         <div class="col-md-6 pull-left" style="width:250px">
 
-                <div class="panel panel-default">
-                    <div style="text-align:left" class="panel-heading">Actions Legend</div>
-                    <div class="panel-body">
-                        <div style="align-content:center" class="row">
-                            <button style="margin-left:15px" class="btn disabled btn-warning btn-xs glyphicon glyphicon-pencil tbl-btn"></button>&nbsp;Edit resource description
-                        </div>
-                        <div style="align-content:center" class="row">
-                            <button style="margin-left:15px" class="btn disabled btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resource
-                        </div>
-                        <div class="row">
-                            <button style="margin-left:15px" class="btn disabled btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resource
-                        </div>
-                        <div class="row">
-                            <button style="margin-left:15px" class="btn disabled btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn"></button>&nbsp;Reset resource
-                        </div>
-
+            <div class="panel panel-default">
+                <div style="text-align:left" class="panel-heading">Actions Legend</div>
+                <div class="panel-body">
+                    <div style="align-content:center" class="row">
+                        <button style="margin-left:15px" class="btn disabled btn-warning btn-xs glyphicon glyphicon-pencil tbl-btn"></button>&nbsp;Edit resource description
                     </div>
+                    <div style="align-content:center" class="row">
+                        <button style="margin-left:15px" class="btn disabled btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resource
+                    </div>
+                    <div class="row">
+                        <button style="margin-left:15px" class="btn disabled btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resource
+                    </div>
+                    <div class="row">
+                        <button style="margin-left:15px" class="btn disabled btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn"></button>&nbsp;Reset resource
+                    </div>
+
                 </div>
             </div>
         </div>
+    </div>
 </div>
 
 <br/>
@@ -819,13 +1045,13 @@
                 <td title="@item.Status" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                     <button style="text-align:center;vertical-align:middle" class="btn btn-xs btn-status glyphicon glyphicon-ok tbl-btn" data-status="@item.Status"></button>
              </td>
-                    <td title="@item.AzureResourceIdentifier" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    <td id="Name" title="@item.AzureResourceIdentifier" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                         @Html.Raw(HTMLUtilities.CreateAzureResourceAnchor(item.Name, item.AzureResourceIdentifier))
                     </td>
                     <td title="@item.Type" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                         @Html.DisplayFor(modelItem => item.Type)
                     </td>
-                    <td title="@item.ResourceGroup" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+                    <td id="ResourceGroup" title="@item.ResourceGroup" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                         @Html.DisplayFor(modelItem => item.ResourceGroup)
                     </td>
                     <td title="@item.Description" style="border-right:0px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
@@ -838,7 +1064,7 @@
                             </button>
                         </div>
                     </td>
-              <td title="@item.Owner" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
+              <td id="Owner" title="@item.Owner" style="text-overflow:ellipsis;overflow:hidden;white-space:nowrap">
                         @Html.DisplayFor(modelItem => item.Owner)
                     </td>
                     <td style="text-align:center">
