@@ -73,6 +73,7 @@
 
         $(document).ready(function () {
 
+
             initialBodyCursor = $('body').first().css('cursor');
             initialBtnCursor = $('.btn').first().css('cursor');
 
@@ -272,7 +273,7 @@
             ress[ress.length] = name;
 
             });
-        
+
         for (var u in users) {
             var s = users[u];
 
@@ -435,45 +436,126 @@ function RedrawResourceTable() {
         dataType: "json",
         data: JSON.stringify({
         SubscriptionId: "@Model.SubscriptionData.Id"
-        }),
+   }),
 
 
         contentType: "application/json; charset=utf-8",
         success: function (data) {
                             SetCursor(initialBodyCursor, initialBtnCursor);
 
-            var content = 'Write-host  \'Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name: \\\'@Model.SubscriptionData.DisplayName\\\', Subscription id: \\\'@Model.SubscriptionData.Id\\\'.\'\n';
-            content += 'Write-host  \'' + data.length + ' resources will be deleted\'\n';
-            content += 'Write-host  \'Are you sure? y/n\'\n';
-            content += '$confirm = Read-Host\n';
-           content += 'if ($confirm -ne \'y\')\n' +
-    '{\n' +  'return\n' +
-    '}\n' +
-'Connect-AzureRmAccount\n' +
-    'Set-AzureRmContext -Subscription \'@Model.SubscriptionData.Id\'\n';
+
+    var allRes = "";
+
+            var addResTemplate = `
+    DeleteResource '{1}' '{2}' '{3}' '{4}'
+    `;
 
     for (var resNum = 0; resNum < data.length; resNum++)
     {
         var resource = data[resNum];
 
-
-      var delResTemplate = 'Write-Host \'Deleting resource "{0}" from group "{1}"\'\n';
-      content += delResTemplate.replace('{0}', resource.Name).replace('{1}', resource.Group);
-
+        var addRec = addResTemplate.replace("{1}", resource.AzureId).replace('{2}', resource.Name);
+        addRec = addRec.replace("{3}", resource.Group);
 
       if (resource.ConfirmedOwner)
-         {
-          var claimResTemplate = 'Write-Host \'Last claimed "{0}"\'\n';
-          content += claimResTemplate.replace('{0}', resource.Owner);
-        }
+      {
+          addRec = addRec.replace("{4}", resource.Owner);
+       }
         else
         {
-           content += 'Write-Host \'Unclaimed\'\n';
+          addRec = addRec.replace("{4}", "");
         }
 
-        var remResTemplate = 'Remove-AzureRmResource -Force -ResourceId \'{0}\'\n';
-        content += remResTemplate.replace('{0}', resource.AzureId);
+        allRes += addRec;
+     }
+
+            var scriptTemplate =
+                `
+
+
+
+$subName = "{1}"
+$subId = "{2}"
+
+
+Write-host  ('Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name:' + $subName + ', Subscription id:'  + $subId)
+Write-host ('{3}' + ' resources will be deleted')
+Write-host  'Are you sure? y/n'
+$confirm = Read-Host
+if ($confirm -ne 'y')
+{
+return
 }
+
+Connect-AzAccount
+Set-AzContext -Subscription $subId
+
+
+function CheckGroups($groups)
+{
+    for ($i = 0; $i -lt $groups.Count; $i++)
+    {
+      $group = $groups[$i]
+
+       try
+        {
+            Write-Host ('Check ' + $group + '  for emptiness.')
+            $gr = Get-AzResourceGroup -Name $group -ErrorAction Continue
+
+            $res = Get-AzResource -ResourceGroupName $group
+            if ($res.length -gt 0)
+            {
+                continue
+            }
+                Write-Host ($group + '  is empty, do you want delete it?')
+$confirm = Read-Host
+if ($confirm -ne 'y')
+{
+ continue
+}
+   Remove-AzResourceGroup -Name $group
+         }
+         catch
+         {
+            Write-Host ($group + ' isn''t found')
+         }
+    }
+}
+
+$global:groups = New-Object -TypeName 'System.Collections.ArrayList'
+
+function DeleteResource($id, $name, $group, $owner)
+{
+    $global:groups.Add($group)
+
+    Write-Host ('Deleting resource ' + $name + ' from group ' + $group)
+    if ($owner.length -gt 0)
+    {
+    Write-Host 'Owner: ' $owner
+    }
+    else
+    {
+    Write-Host 'Unclaimed'
+    }
+
+    Remove-AzResource -ResourceId $id
+}
+
+
+    {4}
+
+CheckGroups $global:groups
+
+
+    `;
+
+
+            var script = scriptTemplate.replace("{4}", allRes);
+            script = script.replace("{1}", '@Model.SubscriptionData.DisplayName');
+            script = script.replace("{2}", '@Model.SubscriptionData.Id');
+            script = script.replace("{3}", data.length);
+
+
 
    var today = new Date();
            var dd = String(today.getDate()).padStart(2, '0');
@@ -486,7 +568,7 @@ function RedrawResourceTable() {
 
            var fileName = 'DeleteObsoleteResource_' + '@Model.SubscriptionData.DisplayName' + '_' + todayString + '_.ps1';
 
-           var blob = new Blob([content],
+            var blob = new Blob([script],
         {
            type: "text/plain;charset=utf-8",       });
 
