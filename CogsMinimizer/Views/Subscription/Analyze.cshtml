@@ -8,7 +8,6 @@
 @Styles.Render("~/Content/css")
 <link href="~/Content/bootstrap-sortable.css" rel="stylesheet" />
 <link href="~/Content/main.css" rel="stylesheet" />
-
 <style>
     .btn-round {
         border-radius: 12px;
@@ -53,476 +52,619 @@
     <script src="~/Scripts/bootstrap-sortable.js"></script>
 
     <script>
-
     var initialBtnCursor;
     var initialBodyCursor;
 
     var statusColumn = 0;
     var nameColumn = 1;
-        var descriptionColumn = 4;
-        var ownerColumn = 5;
-        var expirationDateColumn = 8;
+    var descriptionColumn = 4;
+    var ownerColumn = 5;
+    var expirationDateColumn = 8;
 
-        function SetCursor(bodyCursor, btnCursor) {
-        $('body').css('cursor', bodyCursor);
-        $('.btn').css('cursor', btnCursor);
+    function SetCursor(bodyCursor, btnCursor) {
+    $('body').css('cursor', bodyCursor);
+    $('.btn').css('cursor', btnCursor);
     }
 
-        $(document).ready(function () {
+    $(document).ready(function () {
 
 
-            initialBodyCursor = $('body').first().css('cursor');
-            initialBtnCursor = $('.btn').first().css('cursor');
+    initialBodyCursor = $('body').first().css('cursor');
+    initialBtnCursor = $('.btn').first().css('cursor');
 
-            // In addition to calling controller action buttons click will cause setting cursor to wait while being over body and buttons
-            $('.wait-crs').on('click', function () { SetCursor('wait', 'wait'); });
+    // In addition to calling controller action buttons click will cause setting cursor to wait while being over body and buttons
+    $('.wait-crs').on('click', function () { SetCursor('wait', 'wait'); });
 
-            $('input:radio').change(function () {
-                FilterResources(this);
-            });
+    $('input:radio').change(function () {
+    FilterResources(this);
+    });
 
-            $("[data-toggle='tooltip']").tooltip({trigger: 'hover'});
+    $("[data-toggle='tooltip']").tooltip({trigger: 'hover'});
 
-            $('.btn-status').each(
-                function(index, btn)
-                {
-                    if ($(btn).attr('data-status').length != 0) { SetStatusIcon(btn, $(btn).attr('data-status')); }
-                });
+    $('.btn-status').each(
+    function(index, btn)
+    {
+    if ($(btn).attr('data-status').length != 0) { SetStatusIcon(btn, $(btn).attr('data-status')); }
+    });
 
-            RedrawResourceTable();
-            RedrawResourceSummaryTable();
-        });
+    RedrawResourceTable();
+        RedrawResourceSummaryTable();
+        FillFindInGroup(false);
+        FillGroupOps(false);
+    });
 
     $("#resourcesTable").colResizable({
-        liveDrag: true,
-        gripInnerHtml: "<div class='grip'></div>",
-        draggingClass: "dragging",
-        resizeMode: 'fit'
+    liveDrag: true,
+    gripInnerHtml: "<div class='grip'></div>",
+    draggingClass: "dragging",
+    resizeMode: 'fit'
     }    );
 
+
+        function FillGroupOps(openDropDown)
+        {
+            var filter = $('#groupName2').val();
+
+            var groups = [];
+
+            @foreach (var @resource in Model.Resources)
+            {
+                 @:groups.push('@resource.ResourceGroup');
+            }
+
+            var uniGroups = [];
+
+            for (g = 0; g < groups.length; g++) {
+                var group = groups[g];
+                if (filter != "")
+                {
+                    if (group.indexOf(filter) == -1)
+                    {
+                        continue;
+                    }
+                }
+
+                if (uniGroups.indexOf(group) == -1) {
+                    uniGroups.push(group);
+                }
+            }
+
+
+            uniGroups.sort();
+
+            $('#opsGroupUl').empty();
+
+            for (var g = 0; g < uniGroups.length; g++)
+            {
+                var group = uniGroups[g];
+                var row = "<li style='margin-left:15px'><a href='javascript:onSelectGroup2(\"" + group + "\")'>" + group + "</a></li>";
+                $('#opsGroupUl').append(row);
+            }
+
+            if (openDropDown) {
+                openDropdown('opsGroupsDD');
+            }
+        }
+
+        function FillFindInGroup(openDropDown)
+        {
+            var filter = $('#groupName').val();
+
+            var groups = [];
+
+            @foreach (var @resource in Model.Resources)
+            {
+                 @:groups.push('@resource.ResourceGroup');
+            }
+
+            var uniGroups = [];
+
+            for (g = 0; g < groups.length; g++) {
+                var group = groups[g];
+                if (filter != "")
+                {
+                    if (group.indexOf(filter) == -1)
+                    {
+                        continue;
+                    }
+                }
+
+                if (uniGroups.indexOf(group) == -1) {
+                    uniGroups.push(group);
+                }
+            }
+
+
+            uniGroups.sort();
+
+            $('#findGroupUl').empty();
+
+            for (var g = 0; g < uniGroups.length; g++)
+            {
+                var group = uniGroups[g];
+                var row = "<li style='margin-left:15px'><a href='javascript:onSelectGroup(\"" + group + "\")'>" + group + "</a></li>";
+                $('#findGroupUl').append(row);
+            }
+
+            if (openDropDown) {
+                openDropdown('findInGroupsDD');
+            }
+        }
+
+        function onSelectGroup2(group) {
+
+            $('#groupName2').val(group);
+            FillGroupOps(true);
+        }
+
+        function onSelectGroup(group) {
+
+            $('#groupName').val(group);
+            FillFindInGroup(true);
+        }
+
+        function isDropdownOpened(id)
+        {
+
+            var select = "#" + id;
+            var isOpened = $(select).hasClass("open");
+
+            return isOpened;
+        }
+
+        function openDropdown(id) {
+            if (!isDropdownOpened(id)) {
+                var select = "#" + id;
+                $(select).addClass("open");
+            }
+            else
+            {
+            }
+       }
+
+        function closeDropdown(id) {
+            if (isDropdownOpened(id))
+            {
+                var select = "#" + id;
+                $(select).removeClass("open");
+            }
+        }
+
+        function toggleDropdown(id) {
+
+            if (isDropdownOpened(id)) {
+                closeDropdown(id);
+            }
+            else {
+                openDropdown(id);
+            }
+        }
+
      function SetStatusIcon(statusBtn, status)
-     {
-         $(statusBtn).attr('class', '');
+    {
+    $(statusBtn).attr('class', '');
 
-         $(statusBtn).addClass("glyphicon");
-         $(statusBtn).addClass("btn");
-         $(statusBtn).addClass("tbl-btn");
-         $(statusBtn).addClass("btn-status");
-         $(statusBtn).addClass("btn-xs");
+    $(statusBtn).addClass("glyphicon");
+    $(statusBtn).addClass("btn");
+    $(statusBtn).addClass("tbl-btn");
+    $(statusBtn).addClass("btn-status");
+    $(statusBtn).addClass("btn-xs");
 
-         if (status == "Valid")
-         {
-             $(statusBtn).addClass("glyphicon-ok");
-         }
-         else if (status == "Expired") {
-             $(statusBtn).addClass("glyphicon-remove");
-         }
-         else if (status == "MarkedForDeletion") {
-             $(statusBtn).addClass("glyphicon-trash");
-         }
-}
+    if (status == "Valid")
+    {
+    $(statusBtn).addClass("glyphicon-ok");
+    }
+    else if (status == "Expired") {
+    $(statusBtn).addClass("glyphicon-remove");
+    }
+    else if (status == "MarkedForDeletion") {
+    $(statusBtn).addClass("glyphicon-trash");
+    }
+    }
 
     function GetBool(colNum, value) {
-        var input = $(value.elm).find("td").eq(colNum).find("input")[0];
-        if (input.checked) {
+    var input = $(value.elm).find("td").eq(colNum).find("input")[0];
+    if (input.checked) {
     return 1;
-        }
-        else
-        {
-            return 0;
-        }
+    }
+    else
+    {
+    return 0;
+    }
     }
 
     function GetDescription(colNum, value) {
-        var description = $(value.elm).find("td").eq(colNum).attr("title");
-        return description;
-}
+    var description = $(value.elm).find("td").eq(colNum).attr("title");
+    return description;
+    }
 
     function GetStatus(colNum, value) {
-        var status = $(value.elm).find("td").eq(colNum).attr("title");
+    var status = $(value.elm).find("td").eq(colNum).attr("title");
 
-        if (status == "Valid")
-        {
-            return 0;
-        }
-        else if (status == "Expired") {
-            return 1;
-        }
-        else if (status == "MarkedForDeletion") {
-            return 2;
-        }
-}
+    if (status == "Valid")
+    {
+    return 0;
+    }
+    else if (status == "Expired") {
+    return 1;
+    }
+    else if (status == "MarkedForDeletion") {
+    return 2;
+    }
+    }
 
     function GetDate(colNum, value)
     {
-        var dateAsString = $(value.elm).find("td").eq(colNum).html();
-        var dateParts = dateAsString.split('/');
-        var date = new Date(dateParts[2], dateParts[0], dateParts[1]);
-        return date;
+    var dateAsString = $(value.elm).find("td").eq(colNum).html();
+    var dateParts = dateAsString.split('/');
+    var date = new Date(dateParts[2], dateParts[0], dateParts[1]);
+    return date;
     }
 
     function SortResources(th) {
 
-        if ($('#resourcesTable tbody tr').length == 0)
-        {
-            return;
-        }
+    if ($('#resourcesTable tbody tr').length == 0)
+    {
+    return;
+    }
 
-        var order = "asc";
-        if ($(th).hasClass("down")) {
-            order = "desc";
-        }
+    var order = "asc";
+    if ($(th).hasClass("down")) {
+    order = "desc";
+    }
 
-        var colNum = $(th).index();
-        var selector = "td:nth-child(" + (colNum + 1) + ")";
+    var colNum = $(th).index();
+    var selector = "td:nth-child(" + (colNum + 1) + ")";
 
-        var sortKind = "Text";
-        if ($(th).attr("data-defaultsign") == "month") {
-            sortKind = "Date";
-        }
-        else if ($(th).attr("data-defaultsign") == "bool") {
-            sortKind = "bool";
-        }
-        else if ($(th).attr("data-defaultsign") == "status") {
-            sortKind = "status";
-        }
+    var sortKind = "Text";
+    if ($(th).attr("data-defaultsign") == "month") {
+    sortKind = "Date";
+    }
+    else if ($(th).attr("data-defaultsign") == "bool") {
+    sortKind = "bool";
+    }
+    else if ($(th).attr("data-defaultsign") == "status") {
+    sortKind = "status";
+    }
 
-        if (sortKind == "Date") {
-            tinysort($('#resourcesTable tbody tr'), {
-                order: order, selector: selector, sortFunction: function (a, b) {
-                    return GetDate(colNum, a) - GetDate(colNum, b);
-                }
-        });
-        }
-        else if (sortKind == "bool") {
-            tinysort($('#resourcesTable tbody tr'), {
-                order: order, selector: selector, sortFunction: function (a, b) {
-                    return GetBool(colNum, a) - GetBool(colNum, b);
-                }
-            });
-        }
-        else if (sortKind == "description") {
-            tinysort($('#resourcesTable tbody tr'), {
-                order: order, selector: selector, sortFunction: function (a, b) {
-                    return GetDescription(colNum, a) - GetDescription(colNum, b);
-                }
-                });
-        }
-        else if (sortKind == "status") {
-            tinysort($('#resourcesTable tbody tr'), {
-                order: order, selector: selector, sortFunction: function (a, b) {
-                    return GetStatus(colNum, a) - GetStatus(colNum, b);
-                }
-            });
-        }
-        else {
-            tinysort($('#resourcesTable tbody tr'), { order: order, selector: selector });
-        }
+    if (sortKind == "Date") {
+    tinysort($('#resourcesTable tbody tr'), {
+    order: order, selector: selector, sortFunction: function (a, b) {
+    return GetDate(colNum, a) - GetDate(colNum, b);
+    }
+    });
+    }
+    else if (sortKind == "bool") {
+    tinysort($('#resourcesTable tbody tr'), {
+    order: order, selector: selector, sortFunction: function (a, b) {
+    return GetBool(colNum, a) - GetBool(colNum, b);
+    }
+    });
+    }
+    else if (sortKind == "description") {
+    tinysort($('#resourcesTable tbody tr'), {
+    order: order, selector: selector, sortFunction: function (a, b) {
+    return GetDescription(colNum, a) - GetDescription(colNum, b);
+    }
+    });
+    }
+    else if (sortKind == "status") {
+    tinysort($('#resourcesTable tbody tr'), {
+    order: order, selector: selector, sortFunction: function (a, b) {
+    return GetStatus(colNum, a) - GetStatus(colNum, b);
+    }
+    });
+    }
+    else {
+    tinysort($('#resourcesTable tbody tr'), { order: order, selector: selector });
+    }
     }
 
     function RedrawResourceSummaryTable()
     {
-        $('#resourcesSummaryTableBody').empty();
+    $('#resourcesSummaryTableBody').empty();
 
-        var sumBody = $('#resourcesSummaryTableBody');
-        var users = {};
+    var sumBody = $('#resourcesSummaryTableBody');
+    var users = {};
 
-        users['Unclaimed'] = [[], []];
+    users['Unclaimed'] = [[], []];
 
-        var i = 0;
-        $('#resourcesTable tr').each(function ()
-        {
-            // skip table header
-            if ($(this).find('th').length != 0) {
-                return;
-            }
-
-            var ownerCol = $(this).find('#Owner');
-            var owner = $(ownerCol).html();
-            owner = owner.trim();
-                if (owner.length == 0)
-                {
-                    owner = 'Unclaimed';
-                }
-
-                if (!(owner in users))
-                {
-                    users[owner] = [[], []];
-                }
-
-                var userStat = users[owner];
-
-            var nameCol = $(this).find('#Name');
-            var name = $(nameCol).attr('title');
-
-            var groupCol = $(this).find('#ResourceGroup');
-            var group = $(groupCol).attr('title');
-
-
-            var groups = userStat[0];
-            if (groups.indexOf(group) == -1)
-                {
-                    groups[groups.length] = group;
-                    console.log(groups);
-                }
-
-            var ress = userStat[1];
-            ress[ress.length] = name;
-
-            });
-
-        for (var u in users) {
-            var s = users[u];
-
-
-            $(sumBody).append("<tr><td>" + u + "</td><td>" + s[0].length + "</td><td>" + s[1].length + "</td></tr>");
-        }
-
-        console.log($(sumBody).html());
+    var i = 0;
+    $('#resourcesTable tr').each(function ()
+    {
+    // skip table header
+    if ($(this).find('th').length != 0) {
+    return;
     }
 
-function RedrawResourceTable() {
-        if ($('#allResourcesRadio').is(":checked"))
-        {
-            FilterResources($('#allResourcesRadio'));
-        }
-        else if ($('#yourResourcesRadio').is(":checked"))
-        {
-            FilterResources($('#yourResourcesRadio'));
-        }
-        else if ($('#unclaimedResourcesRadio').is(":checked"))
-        {
-            FilterResources($('#unclaimedResourcesRadio'));
-        }
+    var ownerCol = $(this).find('#Owner');
+    var owner = $(ownerCol).html();
+    owner = owner.trim();
+    if (owner.length == 0)
+    {
+    owner = 'Unclaimed';
+    }
 
+    if (!(owner in users))
+    {
+    users[owner] = [[], []];
+    }
+
+    var userStat = users[owner];
+
+    var nameCol = $(this).find('#Name');
+    var name = $(nameCol).attr('title');
+
+    var groupCol = $(this).find('#ResourceGroup');
+    var group = $(groupCol).attr('title');
+
+
+    var groups = userStat[0];
+    if (groups.indexOf(group) == -1)
+    {
+    groups[groups.length] = group;
+    console.log(groups);
+    }
+
+    var ress = userStat[1];
+    ress[ress.length] = name;
+
+    });
+
+    for (var u in users) {
+    var s = users[u];
+
+
+    $(sumBody).append("<tr><td>" + u + "</td><td>" + s[0].length + "</td><td>" + s[1].length + "</td></tr>");
+    }
+
+    console.log($(sumBody).html());
+    }
+
+    function RedrawResourceTable() {
+    if ($('#allResourcesRadio').is(":checked"))
+    {
+    FilterResources($('#allResourcesRadio'));
+    }
+    else if ($('#yourResourcesRadio').is(":checked"))
+    {
+    FilterResources($('#yourResourcesRadio'));
+    }
+    else if ($('#unclaimedResourcesRadio').is(":checked"))
+    {
+    FilterResources($('#unclaimedResourcesRadio'));
+    }
+
+        closeDropdown('findInGroupsDD');
+        closeDropdown('opsGroupsDD');
     }
 
     function IsStatusShown(resourceRow)
     {
-        var status = $(resourceRow).find('td').eq(statusColumn).attr('title');
-        if (status == "Valid")
-        {
-            return $('#showValidResourcesCheckBox').is(':checked');
-        }
-        else if (status == "Expired")
-        {
-            return $('#showExpiredResourcesCheckBox').is(':checked');
-        }
-        else if (status == "MarkedForDeletion") {
+    var status = $(resourceRow).find('td').eq(statusColumn).attr('title');
+    if (status == "Valid")
+    {
+    return $('#showValidResourcesCheckBox').is(':checked');
+    }
+    else if (status == "Expired")
+    {
+    return $('#showExpiredResourcesCheckBox').is(':checked');
+    }
+    else if (status == "MarkedForDeletion") {
 
-            return $('#showDeletedResourcesCheckBox').is(':checked');
-        }
+    return $('#showDeletedResourcesCheckBox').is(':checked');
+    }
     }
 
     function CheckGroupVisible(resourceRow)
     {
-        if (!$(resourceRow).is(':visible'))
-        {
-           return;
-        }
+    if (!$(resourceRow).is(':visible'))
+    {
+    return;
+    }
 
-        // Get  resource group filter
-        var filter = $('#groupName').val();
+    // Get  resource group filter
+    var filter = $('#groupName').val();
 
-        filter = $.trim(filter);
-        if (filter.length == 0)
-        {
-            return;
-        }
+    filter = $.trim(filter);
+    if (filter.length == 0)
+    {
+    return;
+    }
 
 
-        var groupCol = $(resourceRow).find('#ResourceGroup');
-        var group = $(groupCol).attr('title');
+    var groupCol = $(resourceRow).find('#ResourceGroup');
+    var group = $(groupCol).attr('title');
 
-        // Get  resource group of given resource
-       if (!group.match(filter))
-        {
-            $(resourceRow).hide();
-        }
-        else
-        {
-            $(resourceRow).show();
-        }
+    // Get  resource group of given resource
+    if (!group.match(filter))
+    {
+    $(resourceRow).hide();
+    }
+    else
+    {
+    $(resourceRow).show();
+    }
     }
 
 
     function FilterResources(radioBtn) {
-        if ($(radioBtn).attr('id') == 'allResourcesRadio')
-        {
-            $('#resourcesTable').find('tr').each(function () {
-                // skip table header
-                if ($(this).find('th').length != 0) {
-                    return;
-                }
+    if ($(radioBtn).attr('id') == 'allResourcesRadio')
+    {
+    $('#resourcesTable').find('tr').each(function () {
+    // skip table header
+    if ($(this).find('th').length != 0) {
+    return;
+    }
 
-                if (IsStatusShown(this))
-                {
-                    $(this).show();
-                }
-                else
-                {
-                    $(this).hide();
-                }
+    if (IsStatusShown(this))
+    {
+    $(this).show();
+    }
+    else
+    {
+    $(this).hide();
+    }
 
-                CheckGroupVisible(this);
-            });
-        }
-        else if ($(radioBtn).attr('id') == 'yourResourcesRadio')
-        {
-            var currentUser = $.trim(@Html.Raw(Json.Encode(ViewData["UserId"])));
-            $('#resourcesTable').find('tr').each(function ()
-            {
-                // skip table header
-                if ($(this).find('th').length != 0) {
-                    return;
-                }
-
-                var resourceOwner = $.trim($(this).find('td').eq(ownerColumn).html());
-                if (resourceOwner == currentUser)
-                {
-                    if (IsStatusShown(this)) {
-                        $(this).show();
-                    }
-                    else
-                    {
-                        $(this).hide();
-                    }
-                }
-                else
-                {
-                    $(this).hide();
-                }
-
-                CheckGroupVisible(this);
-            });
-        }
-        else if ($(radioBtn).attr('id') == 'unclaimedResourcesRadio') {
-            $('#resourcesTable tr').each(function () {
-                // skip table header
-                if ($(this).find('th').length != 0) {
-                    return;
-                }
-
-                var confirmedUser = $(this).find('td #item_ConfirmedOwner').is(':checked');
-                if (confirmedUser)
-                {
-                   $(this).hide();
-                }
-                else
-                {
-                    if (IsStatusShown(this)) {
-                        $(this).show();
-                    }
-                    else
-                    {
-                        $(this).hide();
-
-                    }
-                }
-
-                CheckGroupVisible(this);
+    CheckGroupVisible(this);
     });
-        }
-     }
+    }
+    else if ($(radioBtn).attr('id') == 'yourResourcesRadio')
+    {
+    var currentUser = $.trim(@Html.Raw(Json.Encode(ViewData["UserId"])));
+    $('#resourcesTable').find('tr').each(function ()
+    {
+    // skip table header
+    if ($(this).find('th').length != 0) {
+    return;
+    }
+
+    var resourceOwner = $.trim($(this).find('td').eq(ownerColumn).html());
+    if (resourceOwner == currentUser)
+    {
+    if (IsStatusShown(this)) {
+    $(this).show();
+    }
+    else
+    {
+    $(this).hide();
+    }
+    }
+    else
+    {
+    $(this).hide();
+    }
+
+    CheckGroupVisible(this);
+    });
+    }
+    else if ($(radioBtn).attr('id') == 'unclaimedResourcesRadio') {
+    $('#resourcesTable tr').each(function () {
+    // skip table header
+    if ($(this).find('th').length != 0) {
+    return;
+    }
+
+    var confirmedUser = $(this).find('td #item_ConfirmedOwner').is(':checked');
+    if (confirmedUser)
+    {
+    $(this).hide();
+    }
+    else
+    {
+    if (IsStatusShown(this)) {
+    $(this).show();
+    }
+    else
+    {
+    $(this).hide();
+
+    }
+    }
+
+    CheckGroupVisible(this);
+    });
+    }
+    }
 
     function OnGetDeleteResourcesScript() {
-        SetCursor('wait', 'wait');
+    SetCursor('wait', 'wait');
     $.ajax({
-        url: "/Subscription/GetResourcesMarkedForDelete",
-        type: "POST",
-        dataType: "json",
-        data: JSON.stringify({
-        SubscriptionId: "@Model.SubscriptionData.Id"
-   }),
+    url: "/Subscription/GetResourcesMarkedForDelete",
+    type: "POST",
+    dataType: "json",
+    data: JSON.stringify({
+    SubscriptionId: "@Model.SubscriptionData.Id"
+    }),
 
 
-        contentType: "application/json; charset=utf-8",
-        success: function (data) {
-                            SetCursor(initialBodyCursor, initialBtnCursor);
+    contentType: "application/json; charset=utf-8",
+    success: function (data) {
+    SetCursor(initialBodyCursor, initialBtnCursor);
 
 
     var allRes = "";
 
-            var addResTemplate = `
+    var addResTemplate = `
     DeleteResource '{1}' '{2}' '{3}' '{4}'
     `;
 
     for (var resNum = 0; resNum < data.length; resNum++)
     {
-        var resource = data[resNum];
+    var resource = data[resNum];
 
-        var addRec = addResTemplate.replace("{1}", resource.AzureId).replace('{2}', resource.Name);
-        addRec = addRec.replace("{3}", resource.Group);
+    var addRec = addResTemplate.replace("{1}", resource.AzureId).replace('{2}', resource.Name);
+    addRec = addRec.replace("{3}", resource.Group);
 
-      if (resource.ConfirmedOwner)
-      {
-          addRec = addRec.replace("{4}", resource.Owner);
-       }
-        else
-        {
-          addRec = addRec.replace("{4}", "");
-        }
+    if (resource.ConfirmedOwner)
+    {
+    addRec = addRec.replace("{4}", resource.Owner);
+    }
+    else
+    {
+    addRec = addRec.replace("{4}", "");
+    }
 
-        allRes += addRec;
-     }
+    allRes += addRec;
+    }
 
-            var scriptTemplate =
-                `
-
-
-
-$subName = "{1}"
-$subId = "{2}"
+    var scriptTemplate =
+    `
 
 
-Write-host  ('Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name:' + $subName + ', Subscription id:'  + $subId)
-Write-host ('{3}' + ' resources will be deleted')
-Write-host  'Are you sure? y/n'
-$confirm = Read-Host
-if ($confirm -ne 'y')
-{
-return
-}
 
-Connect-AzAccount
-Set-AzContext -Subscription $subId
+    $subName = "{1}"
+    $subId = "{2}"
 
 
-function CheckGroups($groups)
-{
+    Write-host  ('Running this script will permanently delete all the resources in the subscription that have been identified as obsolete using SubMinimizer. Subscription name:' + $subName + ', Subscription id:'  + $subId)
+    Write-host ('{3}' + ' resources will be deleted')
+    Write-host  'Are you sure? y/n'
+    $confirm = Read-Host
+    if ($confirm -ne 'y')
+    {
+    return
+    }
+
+    Connect-AzAccount
+    Set-AzContext -Subscription $subId
+
+
+    function CheckGroups($groups)
+    {
     for ($i = 0; $i -lt $groups.Count; $i++)
     {
-      $group = $groups[$i]
+    $group = $groups[$i]
 
-       try
-        {
-            Write-Host ('Check ' + $group + '  for emptiness.')
-            $gr = Get-AzResourceGroup -Name $group -ErrorAction Continue
+    try
+    {
+    Write-Host ('Check ' + $group + '  for emptiness.')
+    $gr = Get-AzResourceGroup -Name $group -ErrorAction Continue
 
-            $res = Get-AzResource -ResourceGroupName $group
-            if ($res.length -gt 0)
-            {
-                continue
-            }
-                Write-Host ($group + '  is empty, do you want delete it?')
-$confirm = Read-Host
-if ($confirm -ne 'y')
-{
- continue
-}
-   Remove-AzResourceGroup -Name $group
-         }
-         catch
-         {
-            Write-Host ($group + ' isn''t found')
-         }
+    $res = Get-AzResource -ResourceGroupName $group
+    if ($res.length -gt 0)
+    {
+    continue
     }
-}
+    Write-Host ($group + '  is empty, do you want delete it?')
+    $confirm = Read-Host
+    if ($confirm -ne 'y')
+    {
+    continue
+    }
+    Remove-AzResourceGroup -Name $group
+    }
+    catch
+    {
+    Write-Host ($group + ' isn''t found')
+    }
+    }
+    }
 
-$global:groups = New-Object -TypeName 'System.Collections.ArrayList'
+    $global:groups = New-Object -TypeName 'System.Collections.ArrayList'
 
-function DeleteResource($id, $name, $group, $owner)
-{
+    function DeleteResource($id, $name, $group, $owner)
+    {
     $global:groups.Add($group)
 
     Write-Host ('Deleting resource ' + $name + ' from group ' + $group)
@@ -536,318 +678,320 @@ function DeleteResource($id, $name, $group, $owner)
     }
 
     Remove-AzResource -ResourceId $id
-}
+    }
 
 
     {4}
 
-CheckGroups $global:groups
+    CheckGroups $global:groups
 
 
     `;
 
 
-            var script = scriptTemplate.replace("{4}", allRes);
-            script = script.replace("{1}", '@Model.SubscriptionData.DisplayName');
-            script = script.replace("{2}", '@Model.SubscriptionData.Id');
-            script = script.replace("{3}", data.length);
+    var script = scriptTemplate.replace("{4}", allRes);
+    script = script.replace("{1}", '@Model.SubscriptionData.DisplayName');
+    script = script.replace("{2}", '@Model.SubscriptionData.Id');
+    script = script.replace("{3}", data.length);
 
 
 
-   var today = new Date();
-           var dd = String(today.getDate()).padStart(2, '0');
-           var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
-          var yyyy = today.getFullYear();
-            var hh = today.getHours();
-            var min = today.getMinutes();
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+    var hh = today.getHours();
+    var min = today.getMinutes();
 
-            var todayString = mm + '-' + dd + '-' + yyyy + ':' + hh + '.' + min;
+    var todayString = mm + '-' + dd + '-' + yyyy + ':' + hh + '.' + min;
 
-           var fileName = 'DeleteObsoleteResource_' + '@Model.SubscriptionData.DisplayName' + '_' + todayString + '_.ps1';
+    var fileName = 'DeleteObsoleteResource_' + '@Model.SubscriptionData.DisplayName' + '_' + todayString + '_.ps1';
 
-            var blob = new Blob([script],
-        {
-           type: "text/plain;charset=utf-8",       });
+    var blob = new Blob([script],
+    {
+    type: "text/plain;charset=utf-8",       });
 
-           var link = document.createElement("a");
-           link.href = window.URL.createObjectURL(blob);
-           link.download = fileName;
-           link.click();
+    var link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = fileName;
+    link.click();
 
-}
+    }
     });
-}
+    }
 
-    function ResourceGroupOp(opName) {
-        var selectedGroup = $('#groupList').val();
-        if (selectedGroup == '') {
-            alert("Please select resource group");
-            return;
-        }
+        function ResourceGroupOp(opName) {
 
-        SetCursor('wait', 'wait');
-        $.ajax({
-            url: "/Subscription/ResourceGroupOperation",
-            type: "POST",
-            dataType: "json",
-            data: JSON.stringify({
-                Operation: opName,
-                Group: selectedGroup,
-                SubscriptionId: "@Model.SubscriptionData.Id"
-            }),
-
-            contentType: "application/json; charset=utf-8",
-            success: function (data) {
-                for (var resNum = 0; resNum < data.length; resNum++) {
-                    var resource = data[resNum];
-                    // let's find resource raw in resource table in order to update appropriate values
-                    var rowSelector = "#resourcesTable tr[data-resource-id='" + resource.Id + "']";
-                    var resourceRow = $(rowSelector).first();
-                    if (resourceRow != null) {
-                        if (resource.ConfirmedOwner) {
-                            $(resourceRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
-                        }
-                        else {
-                            $(resourceRow).find('#item_ConfirmedOwner').prop('checked', '');
-                        }
-
-                        $(resourceRow).find('td').eq(ownerColumn).html(resource.Owner);
-                        $(resourceRow).find('td').eq(ownerColumn).attr("title", resource.Owner);
-
-                        $(resourceRow).find('td').eq(expirationDateColumn).html(resource.ExpirationDate);
-                        $(resourceRow).find('td').eq(expirationDateColumn).attr("title", resource.ExpirationDate);
-
-                        SetStatusIcon($(resourceRow).find('td').eq(statusColumn).find("button"), resource.Status);
-                        $(resourceRow).find('td').eq(statusColumn).attr("title", resource.Status);
-                    }
-                }
-
-                RedrawResourceTable();
-                RedrawResourceSummaryTable();
-                SetCursor(initialBodyCursor, initialBtnCursor);
-
+            var selectedGroups = $('#opsGroupUl li').length;
+            if (selectedGroups == 0) {
+                alert("Please select resource group");
+                return;
             }
-        });
+
+            var filter = $('#groupName2').val();
+    SetCursor('wait', 'wait');
+    $.ajax({
+    url: "/Subscription/ResourceGroupOperation",
+    type: "POST",
+    dataType: "json",
+    data: JSON.stringify({
+    Operation: opName,
+    Group: filter,
+    SubscriptionId: "@Model.SubscriptionData.Id"
+    }),
+
+    contentType: "application/json; charset=utf-8",
+    success: function (data) {
+    for (var resNum = 0; resNum < data.length; resNum++) {
+    var resource = data[resNum];
+    // let's find resource raw in resource table in order to update appropriate values
+    var rowSelector = "#resourcesTable tr[data-resource-id='" + resource.Id + "']";
+    var resourceRow = $(rowSelector).first();
+    if (resourceRow != null) {
+    if (resource.ConfirmedOwner) {
+    $(resourceRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
+    }
+    else {
+    $(resourceRow).find('#item_ConfirmedOwner').prop('checked', '');
+    }
+
+    $(resourceRow).find('td').eq(ownerColumn).html(resource.Owner);
+    $(resourceRow).find('td').eq(ownerColumn).attr("title", resource.Owner);
+
+    $(resourceRow).find('td').eq(expirationDateColumn).html(resource.ExpirationDate);
+    $(resourceRow).find('td').eq(expirationDateColumn).attr("title", resource.ExpirationDate);
+
+    SetStatusIcon($(resourceRow).find('td').eq(statusColumn).find("button"), resource.Status);
+    $(resourceRow).find('td').eq(statusColumn).attr("title", resource.Status);
+    }
+    }
+
+    RedrawResourceTable();
+    RedrawResourceSummaryTable();
+    SetCursor(initialBodyCursor, initialBtnCursor);
+
+    }
+    });
 
 
     }
 
 
     function OnResetResources() {
-        $('#resetRessConfDialog').modal('show');
+    $('#resetRessConfDialog').modal('show');
     }
 
     function OnResetResourcesImpl() {
-            SetCursor('wait', 'wait');
-            $('#resetRessConfDialog').modal('hide');
-            $.ajax({
-                url: "/Subscription/ResetResources",
-                type: "POST",
-                dataType: "json",
-                data: JSON.stringify({
-                    SubscriptionId: '@Model.SubscriptionData.Id'
-                }),
-                contentType: "application/json; charset=utf-8",
-                success: function (data) {
-                    for (var resNum = 0; resNum < data.length; resNum++) {
-                        var resource = data[resNum];
-                        // let's find resource raw in resource table in order to update appropriate values
-                        var rowSelector = "#resourcesTable tr[data-resource-id='" + resource.Id + "']";
-                        var resourceRow = $(rowSelector).first();
-                        if (resourceRow != null) {
-                            if (resource.ConfirmedOwner) {
-                                $(resourceRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
-                            }
-                            else {
-                                $(resourceRow).find('#item_ConfirmedOwner').prop('checked', '');
-                            }
+    SetCursor('wait', 'wait');
+    $('#resetRessConfDialog').modal('hide');
+    $.ajax({
+    url: "/Subscription/ResetResources",
+    type: "POST",
+    dataType: "json",
+    data: JSON.stringify({
+    SubscriptionId: '@Model.SubscriptionData.Id'
+    }),
+    contentType: "application/json; charset=utf-8",
+    success: function (data) {
+    for (var resNum = 0; resNum < data.length; resNum++) {
+    var resource = data[resNum];
+    // let's find resource raw in resource table in order to update appropriate values
+    var rowSelector = "#resourcesTable tr[data-resource-id='" + resource.Id + "']";
+    var resourceRow = $(rowSelector).first();
+    if (resourceRow != null) {
+    if (resource.ConfirmedOwner) {
+    $(resourceRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
+    }
+    else {
+    $(resourceRow).find('#item_ConfirmedOwner').prop('checked', '');
+    }
 
-                            $(resourceRow).find('td').eq(ownerColumn).html(resource.Owner);
-                            $(resourceRow).find('td').eq(ownerColumn).attr("title", resource.Owner);
+    $(resourceRow).find('td').eq(ownerColumn).html(resource.Owner);
+    $(resourceRow).find('td').eq(ownerColumn).attr("title", resource.Owner);
 
-                            $(resourceRow).find('td').eq(expirationDateColumn).html(resource.ExpirationDate);
-                            $(resourceRow).find('td').eq(expirationDateColumn).attr("title", resource.ExpirationDate);
+    $(resourceRow).find('td').eq(expirationDateColumn).html(resource.ExpirationDate);
+    $(resourceRow).find('td').eq(expirationDateColumn).attr("title", resource.ExpirationDate);
 
-                            SetStatusIcon($(resourceRow).find('td').eq(statusColumn).find("button"), resource.Status);
-                            $(resourceRow).find('td').eq(statusColumn).attr("title", resource.Status);
-                        }
-                    }
+    SetStatusIcon($(resourceRow).find('td').eq(statusColumn).find("button"), resource.Status);
+    $(resourceRow).find('td').eq(statusColumn).attr("title", resource.Status);
+    }
+    }
 
-                    RedrawResourceTable();
-                    RedrawResourceSummaryTable();
-                    SetCursor(initialBodyCursor, initialBtnCursor);
-                }
-            });
-        }
+    RedrawResourceTable();
+    RedrawResourceSummaryTable();
+    SetCursor(initialBodyCursor, initialBtnCursor);
+    }
+    });
+    }
 
-            function OnEditDescription(editBtn, resID, subscrID) {
-            $(editBtn).tooltip('hide');
+    function OnEditDescription(editBtn, resID, subscrID) {
+    $(editBtn).tooltip('hide');
 
-            var selectedRow = $(editBtn).parents("tr");
-            var resourceId = $(selectedRow).attr("data-resource-id");
-            var resourceName = $(selectedRow).find("td").eq(nameColumn).find("a").text();
-            // multi line value is padded by spaces at beginning/ending. let's trim it
-            var resourceDescription = $.trim($(selectedRow).find("td").eq(descriptionColumn).attr("title"));
+    var selectedRow = $(editBtn).parents("tr");
+    var resourceId = $(selectedRow).attr("data-resource-id");
+    var resourceName = $(selectedRow).find("td").eq(nameColumn).find("a").text();
+    // multi line value is padded by spaces at beginning/ending. let's trim it
+    var resourceDescription = $.trim($(selectedRow).find("td").eq(descriptionColumn).attr("title"));
 
-            $('#resourceId').html(resourceId);
-            $('#resourceName').html(resourceName);
-            $('#resourceDescription').val(resourceDescription);
-            $('#descriptionDialog').modal('show');
-        }
+    $('#resourceId').html(resourceId);
+    $('#resourceName').html(resourceName);
+    $('#resourceDescription').val(resourceDescription);
+    $('#descriptionDialog').modal('show');
+    }
 
-        function OnSaveDescription()
-        {
-            SetCursor('wait', 'wait');
+    function OnSaveDescription()
+    {
+    SetCursor('wait', 'wait');
 
-            var resourceId = $('#resourceId').html();
-            var resourceDescription = $('#resourceDescription').val();
-            $.ajax({
-                url: "/Subscription/SaveResourceDescription",
-                type: "POST",
-                dataType: "json",
-                data: JSON.stringify({
-                    SubscriptionId: '@Model.SubscriptionData.Id',
-                    ResourceId: resourceId,
-                    Description: resourceDescription
-                }),
-                contentType: "application/json; charset=utf-8",
-                success: function (data) {
-                    // let's find resource raw in resource table in order to update appropriate values
-                    var rowSelector = "#resourcesTable tr[data-resource-id='" + resourceId + "']";
-                    var resourceRow = $(rowSelector).first();
-                    if (resourceRow != null) {
+    var resourceId = $('#resourceId').html();
+    var resourceDescription = $('#resourceDescription').val();
+    $.ajax({
+    url: "/Subscription/SaveResourceDescription",
+    type: "POST",
+    dataType: "json",
+    data: JSON.stringify({
+    SubscriptionId: '@Model.SubscriptionData.Id',
+    ResourceId: resourceId,
+    Description: resourceDescription
+    }),
+    contentType: "application/json; charset=utf-8",
+    success: function (data) {
+    // let's find resource raw in resource table in order to update appropriate values
+    var rowSelector = "#resourcesTable tr[data-resource-id='" + resourceId + "']";
+    var resourceRow = $(rowSelector).first();
+    if (resourceRow != null) {
 
-                   $(resourceRow).find('td').eq(descriptionColumn).find("#descrTxt").html(data.Description);
-                   $(resourceRow).find('td').eq(descriptionColumn).attr("title", data.Description);
-                    }
+    $(resourceRow).find('td').eq(descriptionColumn).find("#descrTxt").html(data.Description);
+    $(resourceRow).find('td').eq(descriptionColumn).attr("title", data.Description);
+    }
 
-                    $('#descriptionDialog').modal('hide');
-                    SetCursor(initialBodyCursor, initialBtnCursor);
-                }
-            });
-            }
+    $('#descriptionDialog').modal('hide');
+    SetCursor(initialBodyCursor, initialBtnCursor);
+    }
+    });
+    }
 
     function OnResetResource(resetBtn, resID, subscrID) {
-        SetCursor('wait', 'wait');
-        $(resetBtn).tooltip('hide');
-        // meanwhile somehow previous row button is disabled. so we allow repetitive operations
-        //        $(resetBtn).prop('disabled', 'disabled');
-        var selectedRow = $(resetBtn).parents("tr");
-        $.ajax({
-            url: "/Subscription/ResetResource",
-            type: "POST",
-            dataType: "json",
-            data: JSON.stringify({
-                ResourceId: resID,
-                SubscriptionId: subscrID
-            }),
-            contentType: "application/json; charset=utf-8",
-            success: function (data) {
-                // Let's update expiration date, validity status, resource owner
-                // Model at server is updated at controller method and will be used for table complete updating at refresh table
+    SetCursor('wait', 'wait');
+    $(resetBtn).tooltip('hide');
+    // meanwhile somehow previous row button is disabled. so we allow repetitive operations
+    //        $(resetBtn).prop('disabled', 'disabled');
+    var selectedRow = $(resetBtn).parents("tr");
+    $.ajax({
+    url: "/Subscription/ResetResource",
+    type: "POST",
+    dataType: "json",
+    data: JSON.stringify({
+    ResourceId: resID,
+    SubscriptionId: subscrID
+    }),
+    contentType: "application/json; charset=utf-8",
+    success: function (data) {
+    // Let's update expiration date, validity status, resource owner
+    // Model at server is updated at controller method and will be used for table complete updating at refresh table
 
-                if (data.ConfirmedOwner) {
-                    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
-                }
-                else {
-                    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', '');
-                }
+    if (data.ConfirmedOwner) {
+    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
+    }
+    else {
+    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', '');
+    }
 
-                    $(selectedRow).find('td').eq(ownerColumn).html(data.Owner);
-                    $(selectedRow).find('td').eq(ownerColumn).attr("title", data.Owner);
-                    $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
-                    $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
+    $(selectedRow).find('td').eq(ownerColumn).html(data.Owner);
+    $(selectedRow).find('td').eq(ownerColumn).attr("title", data.Owner);
+    $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
+    $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
 
-                    SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
-                    $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
-                    RedrawResourceTable();
-                    RedrawResourceSummaryTable();
-                SetCursor(initialBodyCursor, initialBtnCursor);
-            }
-        });
+    SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
+    $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
+    RedrawResourceTable();
+    RedrawResourceSummaryTable();
+    SetCursor(initialBodyCursor, initialBtnCursor);
+    }
+    });
     }
 
     function OnReserveResource(reserveBtn, resID, subscrID) {
-        $(reserveBtn).tooltip('hide');
-        // meanwhile somehow previous row button is disabled. so we allow repetitive operations
-        //        $(reserveBtn).prop('disabled', 'disabled');
-        SetCursor('wait', 'wait');
-        var selectedRow = $(reserveBtn).parents("tr");
-        $.ajax({
-            url: "/Subscription/ReserveResource",
-            type: "POST",
-            dataType: "json",
-            data: JSON.stringify({
-                ResourceId: resID,
-                SubscriptionId: subscrID
-            }),
-            contentType: "application/json; charset=utf-8",
-            success: function(data) {
-                // Let's update expiration date, validity status, resource owner
-                // Model at server is updated at controller method and will be used for table complete updating at refresh table
+    $(reserveBtn).tooltip('hide');
+    // meanwhile somehow previous row button is disabled. so we allow repetitive operations
+    //        $(reserveBtn).prop('disabled', 'disabled');
+    SetCursor('wait', 'wait');
+    var selectedRow = $(reserveBtn).parents("tr");
+    $.ajax({
+    url: "/Subscription/ReserveResource",
+    type: "POST",
+    dataType: "json",
+    data: JSON.stringify({
+    ResourceId: resID,
+    SubscriptionId: subscrID
+    }),
+    contentType: "application/json; charset=utf-8",
+    success: function(data) {
+    // Let's update expiration date, validity status, resource owner
+    // Model at server is updated at controller method and will be used for table complete updating at refresh table
 
-                if (data.ConfirmedOwner) {
-                    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
-                }
-                else
-                {
-                    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', '');
-                }
+    if (data.ConfirmedOwner) {
+    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
+    }
+    else
+    {
+    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', '');
+    }
 
-                $(selectedRow).find('td').eq(ownerColumn).html(data.Owner);
-                $(selectedRow).find('td').eq(ownerColumn).attr("title", data.Owner);
-                $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
-                $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
+    $(selectedRow).find('td').eq(ownerColumn).html(data.Owner);
+    $(selectedRow).find('td').eq(ownerColumn).attr("title", data.Owner);
+    $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
+    $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
 
-                SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
-                $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
+    SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
+    $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
 
-                RedrawResourceTable();
-                RedrawResourceSummaryTable();
-                SetCursor(initialBodyCursor, initialBtnCursor);
-            }
-        });
+    RedrawResourceTable();
+    RedrawResourceSummaryTable();
+    SetCursor(initialBodyCursor, initialBtnCursor);
+    }
+    });
     }
 
     function OnExtendResource(extendBtn, resID, subscrID) {
-        $(extendBtn).tooltip('hide');
-// meanwhile somehow previous row button is disabled. so we allow repetitive operations
-//        $(extendBtn).prop('disabled', 'disabled');
-        SetCursor('wait', 'wait');
-        var selectedRow = $(extendBtn).parents("tr");
-        $.ajax({
-           url: "/Subscription/ExtendResource",
-            type: "POST",
-            dataType: "json",
-            data: JSON.stringify({
-                ResourceId: resID,
-                SubscriptionId: subscrID
-            }),
-            contentType: "application/json; charset=utf-8",
-            success: function(data) {
-                // Let's update expiration date, validity status, resource owner
-                // Model at server is updated at controller method and will be used for table complete updating at refresh table
-                if (data.ConfirmedOwner) {
-                    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
-                }
-                else {
-                    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', '');
-                }
+    $(extendBtn).tooltip('hide');
+    // meanwhile somehow previous row button is disabled. so we allow repetitive operations
+    //        $(extendBtn).prop('disabled', 'disabled');
+    SetCursor('wait', 'wait');
+    var selectedRow = $(extendBtn).parents("tr");
+    $.ajax({
+    url: "/Subscription/ExtendResource",
+    type: "POST",
+    dataType: "json",
+    data: JSON.stringify({
+    ResourceId: resID,
+    SubscriptionId: subscrID
+    }),
+    contentType: "application/json; charset=utf-8",
+    success: function(data) {
+    // Let's update expiration date, validity status, resource owner
+    // Model at server is updated at controller method and will be used for table complete updating at refresh table
+    if (data.ConfirmedOwner) {
+    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', 'checked');
+    }
+    else {
+    $(selectedRow).find('#item_ConfirmedOwner').prop('checked', '');
+    }
 
-                $(selectedRow).find('td').eq(ownerColumn).html(data.Owner);
-                $(selectedRow).find('td').eq(ownerColumn).attr("title", data.Owner);
-                $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
-                $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
+    $(selectedRow).find('td').eq(ownerColumn).html(data.Owner);
+    $(selectedRow).find('td').eq(ownerColumn).attr("title", data.Owner);
+    $(selectedRow).find('td').eq(expirationDateColumn).html(data.ExpirationDate);
+    $(selectedRow).find('td').eq(expirationDateColumn).attr("title", data.ExpirationDate);
 
-                SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
-                $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
+    SetStatusIcon($(selectedRow).find('td').eq(statusColumn).find("button"), data.Status);
+    $(selectedRow).find('td').eq(statusColumn).attr("title", data.Status);
 
-                RedrawResourceTable();
-                RedrawResourceSummaryTable();
+    RedrawResourceTable();
+    RedrawResourceSummaryTable();
 
-                SetCursor(initialBodyCursor, initialBtnCursor);
-            }
-        });
+    SetCursor(initialBodyCursor, initialBtnCursor);
+    }
+    });
     }
     </script>
 }
@@ -907,18 +1051,33 @@ CheckGroups $global:groups
 
         </div>
 
-        <div class="col-md-d6 pull-left" style="width:300px;padding-right:25px;padding-left:20px">
+        <div class="col-md-d6 pull-left" style="width:350px;padding-right:25px;padding-left:20px">
             <div class="row">
                 <div class="panel panel-default">
                     <div style="text-align:left" class="panel-heading">Find resources in group</div>
                     <div class="panel-body">
                         <div class="row" style="align-content:left;margin-left:0px;margin-right:20px;padding-bottom:10px;">
-                            <input id="groupName" name="GroupName" style="width:200px;" type="text" value="" />
+                            <input id="groupName" onkeyup="FillFindInGroup(true)" name="GroupName" style="width:250px;" type="text" value="" />
+                        </div>
 
-                        </div>
                         <div style="align-content:center" class="row">
-                            <button onclick="RedrawResourceTable()" style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-search tbl-btn"></button>&nbsp;Find resources
-                        </div>
+                            <div class="col-md-d6 pull-left">
+                                <div id="findInGroupsDD" class="dropdown" style="margin-left:15px;width:250px">
+                                    <button style="vertical-align:central;width:250px;" class="btn btn-default dropdown-toggle" type="button" id="findGroupDropdownMenu" onclick="javascript:toggleDropdown('findInGroupsDD')" aria-haspopup="true" aria-expanded="true">
+                                        <span style="align-content:flex-start;width:200px;overflow:hidden;text-overflow:ellipsis;" id="first">Choose group</span>
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul id="findGroupUl" class="dropdown-menu" aria-labelledby="findGroupDropdownMenu" style="width:250px;">
+                                    </ul>
+                                </div>
+                            </div> <!-- end of dropdown col-->
+
+                            <div class="col-md-d6 pull-left">
+                                <button onclick="RedrawResourceTable()" style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-search tbl-btn"></button>
+                            </div>
+                        </div> <!-- end of row dd+btn-->
+
+
 
                     </div>
                 </div>
@@ -937,20 +1096,55 @@ CheckGroups $global:groups
             </div>
         </div>
 
-        <div class="col-md-d6 pull-left" style="width:300px">
+        <div class="col-md-d6 pull-left" style="width:450px;padding-right:25px;padding-left:20px">
+            <div class="row">
+                <div class="panel panel-default">
+                    <div style="text-align:left" class="panel-heading">Extend all resources in group</div>
+                    <div class="panel-body">
+                        <div class="row" style="align-content:left;margin-left:0px;margin-right:20px;padding-bottom:10px;">
+                            <input id="groupName2" onkeyup="FillGroupOps(true)" name="GroupName2" style="width:250px;" type="text" value="" />
+                        </div>
+
+                        <div style="align-content:center" class="row">
+                                <div class="col-md-d6 pull-left">
+                                <div id="opsGroupsDD" class="dropdown" style="margin-left:15px;width:250px">
+                                    <button style="vertical-align:central;width:250px;" class="btn btn-default dropdown-toggle" type="button" id="opsGroupDropdownMenu" onclick="javascript:toggleDropdown('opsGroupsDD')" aria-haspopup="true" aria-expanded="true">
+                                        <span style="align-content:flex-start;width:200px;overflow:hidden;text-overflow:ellipsis;" id="first">Choose group</span>
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul id="opsGroupUl" class="dropdown-menu" aria-labelledby="findGroupDropdownMenu" style="width:250px;">
+                                    </ul>
+                                </div>
+                            </div> <!-- end of dropdown col-->
+                            <div style="width:110px" class="col-md-d6 pull-left">
+                                <button onclick="ResourceGroupOp('extend')" style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>
+                                <button onclick="ResourceGroupOp('reserve')" style="margin-left:15px" class="btn btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>
+                            </div>
+                        </div> <!-- end of row +btn-->
+
+
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 pull-left" style="width:250px">
 
             <div class="panel panel-default">
-                <div style="text-align:left" class="panel-heading">Extend all resources in group</div>
+                <div style="text-align:left" class="panel-heading">Actions Legend</div>
                 <div class="panel-body">
-                    <div class="row" style="align-content:left;margin-left:0px;margin-right:20px;padding-bottom:10px;">
-                        @Html.DropDownList("groupList", Model.GroupList, "Select resource group")
-
+                    <div style="align-content:center" class="row">
+                        <button style="margin-left:15px" class="btn disabled btn-warning btn-xs glyphicon glyphicon-pencil tbl-btn"></button>&nbsp;Edit resource description
                     </div>
                     <div style="align-content:center" class="row">
-                        <button onclick="ResourceGroupOp('extend')" style="margin-left:15px" class="btn btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resources
+                        <button style="margin-left:15px" class="btn disabled btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resource
                     </div>
                     <div class="row">
-                        <button onclick="ResourceGroupOp('reserve')" style="margin-left:15px" class="btn btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resources
+                        <button style="margin-left:15px" class="btn disabled btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resource
+                    </div>
+                    <div class="row">
+                        <button style="margin-left:15px" class="btn disabled btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn"></button>&nbsp;Reset resource
                     </div>
 
                 </div>
@@ -971,27 +1165,6 @@ CheckGroups $global:groups
                     <div class="row">
                         <input id="showDeletedResourcesCheckBox" onchange="RedrawResourceTable()" style="margin-left:15px;vertical-align:middle" type="checkbox" checked="checked" /><button style="margin-left:20px" class="btn btn-status btn-xs glyphicon glyphicon-trash tbl-btn" data-status=""></button>&nbsp;Marked for deletion
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6 pull-left" style="width:250px">
-
-            <div class="panel panel-default">
-                <div style="text-align:left" class="panel-heading">Actions Legend</div>
-                <div class="panel-body">
-                    <div style="align-content:center" class="row">
-                        <button style="margin-left:15px" class="btn disabled btn-warning btn-xs glyphicon glyphicon-pencil tbl-btn"></button>&nbsp;Edit resource description
-                    </div>
-                    <div style="align-content:center" class="row">
-                        <button style="margin-left:15px" class="btn disabled btn-info btn-xs glyphicon glyphicon-play tbl-btn"></button>&nbsp;Extend resource
-                    </div>
-                    <div class="row">
-                        <button style="margin-left:15px" class="btn disabled btn-success btn-xs glyphicon glyphicon-forward tbl-btn"></button>&nbsp;Reserve resource
-                    </div>
-                    <div class="row">
-                        <button style="margin-left:15px" class="btn disabled btn-default btn-xs glyphicon glyphicon-step-backward tbl-btn"></button>&nbsp;Reset resource
-                    </div>
-
                 </div>
             </div>
         </div>
