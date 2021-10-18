@@ -43,7 +43,7 @@ namespace CogsMinimizer.Controllers
 
                 // Let's compose result list in order to fill resources table at view
                 foreach (Resource resource in subscriptionResourceList)
-                {
+                {    
                     resultList.Add(new
                     {
                         Id = resource.Id,
@@ -69,7 +69,6 @@ namespace CogsMinimizer.Controllers
         public ActionResult ResourceGroupOperation(string Operation, string Group, string SubscriptionId)
         {
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => Operation);
-            Diagnostics.EnsureStringNotNullOrWhiteSpace(() => Group);
             Diagnostics.EnsureStringNotNullOrWhiteSpace(() => SubscriptionId);
 
             List<object> resultList = new List<object>();
@@ -84,11 +83,19 @@ namespace CogsMinimizer.Controllers
 
  
                 // Let's compose result list in order to fill resources table at view
-                List<Resource> subscriptionResourceList = db.Resources.Where(r => r.SubscriptionId == SubscriptionId && r.ResourceGroup == Group).ToList();
+                    List<Resource> subscriptionResourceList = db.Resources.Where(r => r.SubscriptionId == SubscriptionId).ToList();
 
                 // Let's compose result list in order to fill resources table at view
                 foreach (Resource resource in subscriptionResourceList)
                 {
+                    if (Group != null && Group != "")
+                    {
+                        if (resource.ResourceGroup.IndexOf(Group) == -1)
+                        {
+                  continue;
+                        }
+                    }
+
                     switch (Operation)
                     {
                         case "extend":
@@ -142,6 +149,7 @@ namespace CogsMinimizer.Controllers
                     throw new ArgumentException(string.Format("Subscription with ID '{0}' wasn't found.", SubscriptionId));
                 }
 
+                
                 string currentUser = AzureAuthUtils.GetSignedInUserUniqueName();
                 if (currentUser != subscription.ConnectedBy)
                 {
