@@ -15,8 +15,9 @@ namespace CogsMinimizer.Controllers
 {
     public class SubMinimizerController : Controller
     {
+        private ITracer tracer = TracerFactory.CreateTracer();
 
-        protected override void OnException(ExceptionContext context)
+       protected override void OnException(ExceptionContext context)
         {
             context.ExceptionHandled = true;
             context.HttpContext.Response.Clear();
@@ -26,7 +27,7 @@ namespace CogsMinimizer.Controllers
             var stack = excep.StackTrace ?? string.Empty;
             var text = $"Exception happened. Message: {excep.Message} Stack: {stack}";
 
-            System.Diagnostics.Trace.TraceError(text);
+            tracer.TraceError(text);
      
             context.Result = RedirectToAction("Error", "Home", new { Exception = context.Exception.Message});
         }

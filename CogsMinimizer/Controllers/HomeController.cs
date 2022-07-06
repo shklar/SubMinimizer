@@ -14,6 +14,8 @@ namespace CogsMinimizer.Controllers
     {
         private DataAccess db = new DataAccess();
 
+        private ITracer tracer = TracerFactory.CreateTracer();
+
         public ActionResult Index()
         {
             HomeIndexViewModel model = null;
@@ -21,7 +23,7 @@ namespace CogsMinimizer.Controllers
             if (ClaimsPrincipal.Current.Identity.IsAuthenticated)
             {
                 var userName = ClaimsPrincipal.Current.Identity.Name;
-                System.Diagnostics.Trace.TraceInformation($"Home/Index opened by {userName}");
+                tracer.TraceInformation($"Home/Index opened by {userName}");
                 model = new HomeIndexViewModel();
                 model.UserOrganizations = new Dictionary<string, Organization>();
                 model.UserSubscriptions = new Dictionary<string, Subscription>();
@@ -58,7 +60,7 @@ namespace CogsMinimizer.Controllers
             if (ClaimsPrincipal.Current.Identity.IsAuthenticated)
             {
                 var userName = ClaimsPrincipal.Current.Identity.Name;
-                System.Diagnostics.Trace.TraceInformation($"Home/Index opened by {userName}");
+                tracer.TraceInformation($"Home/Index opened by {userName}");
                 model = new HomeIndexViewModel();
                 model.UserOrganizations = new Dictionary<string, Organization>();
                 model.UserSubscriptions = new Dictionary<string, Subscription>();
@@ -73,7 +75,7 @@ namespace CogsMinimizer.Controllers
                     model.UserOrganizations.Add(org.Id, org);
                     var subscriptions = AzureResourceManagerUtil.GetUserSubscriptions(org.Id);
 
-                    System.Diagnostics.Trace.TraceInformation($"Found {subscriptions.Count} subscriptions for {userName} ");
+                    tracer.TraceInformation($"Found {subscriptions.Count} subscriptions for {userName} ");
 
                     if (subscriptions != null)
                     {
